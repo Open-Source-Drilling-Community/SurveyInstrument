@@ -23,7 +23,7 @@ jobs:
       run: docker push digiwells/norcedrillingsurveyinstrumentservice:stable
 
     - name: Build WebApp Docker image
-     run: docker build --file "${{ github.workspace }}/WebApp/Dockerfile" --tag digiwells/norcedrillingsurveyinstrumentwebappclient:stable .
+      run: docker build --file "${{ github.workspace }}/WebApp/Dockerfile" --tag digiwells/norcedrillingsurveyinstrumentwebappclient:stable .
 
     - name: Push Docker image for WebApp to DockerHub
-     run: docker push digiwells/norcedrillingsurveyinstrumentwebappclient:stable
+      run: docker push digiwells/norcedrillingsurveyinstrumentwebappclient:stable

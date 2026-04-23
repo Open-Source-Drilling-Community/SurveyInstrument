@@ -18,39 +18,39 @@ jobs:
       contents: read
 
     steps:
-      - name: Check out code
-        uses: actions/checkout@v4
+    - name: Check out code
+      uses: actions/checkout@v4
 
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: 8.0.x
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: 8.0.x
 
-      - name: Resolve package version
-        id: version
-        shell: bash
-        run: |
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            VERSION="${{ github.event.inputs.version }}"
-          else
-            VERSION="${GITHUB_REF_NAME#webpages-v}"
-          fi
+    - name: Resolve package version
+      id: version
+      shell: bash
+      run: |
+        if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+          VERSION="${{ github.event.inputs.version }}"
+        else
+          VERSION="${GITHUB_REF_NAME#webpages-v}"
+        fi
 
-          if [ -z "$VERSION" ]; then
-            echo "Package version is empty."
-            exit 1
-          fi
+        if [ -z "$VERSION" ]; then
+          echo "Package version is empty."
+          exit 1
+        fi
 
-          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+        echo "version=$VERSION" >> "$GITHUB_OUTPUT"
 
-      - name: Restore
-        run: dotnet restore WebPages/WebPages.csproj
+    - name: Restore
+      run: dotnet restore WebPages/WebPages.csproj
 
-      - name: Build
-        run: dotnet build WebPages/WebPages.csproj --configuration Release --no-restore
+    - name: Build
+      run: dotnet build WebPages/WebPages.csproj --configuration Release --no-restore
 
-      - name: Pack
-        run: dotnet pack WebPages/WebPages.csproj --configuration Release --no-build -p:PackageVersion=${{ steps.version.outputs.version }} --output ${{ github.workspace }}/artifacts
+    - name: Pack
+      run: dotnet pack WebPages/WebPages.csproj --configuration Release --no-build -p:PackageVersion=${{ steps.version.outputs.version }} --output ${{ github.workspace }}/artifacts
 
-      - name: Push to NuGet.org
-        run: dotnet nuget push "${{ github.workspace }}/artifacts/NORCE.Drilling.SurveyInstrument.WebPages.${{ steps.version.outputs.version }}.nupkg" --api-key "${{ secrets.NUGET_API_KEY }}" --source https://api.nuget.org/v3/index.json --skip-duplicate
+    - name: Push to NuGet.org
+      run: dotnet nuget push "${{ github.workspace }}/artifacts/NORCE.Drilling.SurveyInstrument.WebPages.${{ steps.version.outputs.version }}.nupkg" --api-key "${{ secrets.NUGET_API_KEY }}" --source https://api.nuget.org/v3/index.json --skip-duplicate

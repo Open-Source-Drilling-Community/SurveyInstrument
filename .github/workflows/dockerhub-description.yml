@@ -16,9 +16,9 @@ jobs:
         repository: digiwells/norcedrillingsurveyinstrumentservice
         readme-filepath: ./Service/README.md
     - name: Docker Hub Description for WebApp
-     uses: peter-evans/dockerhub-description@v4
-     with:
-       username: ${{ secrets.DOCKERHUB_USERNAME }}
-       password: ${{ secrets.DOCKERHUB_PASSWORD }}
-       repository: digiwells/norcedrillingsurveyinstrumentwebappclient
-       readme-filepath: ./WebApp/README.md
+      uses: peter-evans/dockerhub-description@v4
+      with:
+        username: ${{ secrets.DOCKERHUB_USERNAME }}
+        password: ${{ secrets.DOCKERHUB_PASSWORD }}
+        repository: digiwells/norcedrillingsurveyinstrumentwebappclient
+        readme-filepath: ./WebApp/README.md
