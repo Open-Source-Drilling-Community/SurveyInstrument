@@ -18,7 +18,7 @@
     <RepositoryType>git</RepositoryType>
     <PackageProjectUrl>https://github.com/Open-Source-Drilling-Community/SurveyInstrument</PackageProjectUrl>
     <PackageReadmeFile>README.md</PackageReadmeFile>
-    <GeneratePackageOnBuild>False</GeneratePackageOnBuild>
+    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
   </PropertyGroup>
 
   <ItemGroup>
@@ -31,8 +31,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Include="..\ModelSharedOut\SurveyInstrumentMergedModel.cs"
-             Link="GeneratedDtos\%(RecursiveDir)%(Filename)%(Extension)" />
+    <Compile Include="..\ModelSharedOut\SurveyInstrumentMergedModel.cs" Link="GeneratedDtos\%(RecursiveDir)%(Filename)%(Extension)" />
   </ItemGroup>
 
 </Project>
