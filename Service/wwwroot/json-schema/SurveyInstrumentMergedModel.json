@@ -1,0 +1,878 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "ModelShared (Service)",
+    "description": "Data model containing model dependencies of the clients of the current microservice (WebApp, ServiceTest)",
+    "version": "1.0"
+  },
+  "paths": {
+    "/ErrorSource": {
+      "get": {
+        "tags": [
+          "ErrorSource"
+        ],
+        "operationId": "GetAllErrorSourceId",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "format": "uuid"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "ErrorSource"
+        ],
+        "operationId": "PostErrorSource",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ErrorSource"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ErrorSource"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/ErrorSource"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/ErrorSource/MetaInfo": {
+      "get": {
+        "tags": [
+          "ErrorSource"
+        ],
+        "operationId": "GetAllErrorSourceMetaInfo",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/MetaInfo"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/ErrorSource/{id}": {
+      "get": {
+        "tags": [
+          "ErrorSource"
+        ],
+        "operationId": "GetErrorSourceById",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorSource"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "ErrorSource"
+        ],
+        "operationId": "PutErrorSourceById",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ErrorSource"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ErrorSource"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/ErrorSource"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "ErrorSource"
+        ],
+        "operationId": "DeleteErrorSourceById",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/ErrorSource/HeavyData": {
+      "get": {
+        "tags": [
+          "ErrorSource"
+        ],
+        "operationId": "GetAllErrorSource",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ErrorSource"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/SurveyInstrument": {
+      "get": {
+        "tags": [
+          "SurveyInstrument"
+        ],
+        "operationId": "GetAllSurveyInstrumentId",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "format": "uuid"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "SurveyInstrument"
+        ],
+        "operationId": "PostSurveyInstrument",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SurveyInstrument"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SurveyInstrument"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/SurveyInstrument"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/SurveyInstrument/MetaInfo": {
+      "get": {
+        "tags": [
+          "SurveyInstrument"
+        ],
+        "operationId": "GetAllSurveyInstrumentMetaInfo",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/MetaInfo"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/SurveyInstrument/{id}": {
+      "get": {
+        "tags": [
+          "SurveyInstrument"
+        ],
+        "operationId": "GetSurveyInstrumentById",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SurveyInstrument"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "SurveyInstrument"
+        ],
+        "operationId": "PutSurveyInstrumentById",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SurveyInstrument"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SurveyInstrument"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/SurveyInstrument"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "SurveyInstrument"
+        ],
+        "operationId": "DeleteSurveyInstrumentById",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/SurveyInstrument/LightData": {
+      "get": {
+        "tags": [
+          "SurveyInstrument"
+        ],
+        "operationId": "GetAllSurveyInstrumentLight",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SurveyInstrumentLight"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/SurveyInstrument/HeavyData": {
+      "get": {
+        "tags": [
+          "SurveyInstrument"
+        ],
+        "operationId": "GetAllSurveyInstrument",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SurveyInstrument"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/SurveyInstrumentUsageStatistics": {
+      "get": {
+        "tags": [
+          "SurveyInstrumentUsageStatistics"
+        ],
+        "operationId": "GetSurveyInstrumentUsageStatistics",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UsageStatisticsSurveyInstrument"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "CountPerDay": {
+        "type": "object",
+        "properties": {
+          "Date": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "Count": {
+            "type": "integer",
+            "format": "int64"
+          }
+        }
+      },
+      "History": {
+        "type": "object",
+        "properties": {
+          "Data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CountPerDay"
+            },
+            "nullable": true
+          }
+        }
+      },
+      "SurveyInstrumentLight": {
+        "type": "object",
+        "properties": {
+          "MetaInfo": {
+            "$ref": "#/components/schemas/MetaInfo"
+          },
+          "Name": {
+            "type": "string",
+            "nullable": true
+          },
+          "Description": {
+            "type": "string",
+            "nullable": true
+          },
+          "CreationDate": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "LastModificationDate": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          }
+        }
+      },
+      "UsageStatisticsSurveyInstrument": {
+        "type": "object",
+        "properties": {
+          "LastSaved": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "BackUpInterval": {
+            "type": "string",
+            "format": "date-span"
+          },
+          "GetAllSurveyInstrumentIdPerDay": {
+            "$ref": "#/components/schemas/History"
+          },
+          "GetAllSurveyInstrumentMetaInfoPerDay": {
+            "$ref": "#/components/schemas/History"
+          },
+          "GetSurveyInstrumentByIdPerDay": {
+            "$ref": "#/components/schemas/History"
+          },
+          "GetAllSurveyInstrumentLightPerDay": {
+            "$ref": "#/components/schemas/History"
+          },
+          "GetAllSurveyInstrumentPerDay": {
+            "$ref": "#/components/schemas/History"
+          },
+          "PostSurveyInstrumentPerDay": {
+            "$ref": "#/components/schemas/History"
+          },
+          "PutSurveyInstrumentByIdPerDay": {
+            "$ref": "#/components/schemas/History"
+          },
+          "DeleteSurveyInstrumentByIdPerDay": {
+            "$ref": "#/components/schemas/History"
+          },
+          "GetAllErrorSourceIdPerDay": {
+            "$ref": "#/components/schemas/History"
+          },
+          "GetAllErrorSourceMetaInfoPerDay": {
+            "$ref": "#/components/schemas/History"
+          },
+          "GetErrorSourceByIdPerDay": {
+            "$ref": "#/components/schemas/History"
+          },
+          "GetAllErrorSourcePerDay": {
+            "$ref": "#/components/schemas/History"
+          },
+          "PostErrorSourcePerDay": {
+            "$ref": "#/components/schemas/History"
+          },
+          "PutErrorSourceByIdPerDay": {
+            "$ref": "#/components/schemas/History"
+          },
+          "DeleteErrorSourceByIdPerDay": {
+            "$ref": "#/components/schemas/History"
+          }
+        }
+      },
+      "ErrorCode": {
+        "enum": [
+          "XYM1",
+          "XYM2",
+          "XYM3",
+          "XYM4",
+          "SAG",
+          "DRFR",
+          "DRFS",
+          "DSFS",
+          "DSTG",
+          "XYM3E",
+          "XYM4E",
+          "SAGE",
+          "XCLH",
+          "XCLL",
+          "XCLA",
+          "ABXY_TI1S",
+          "ABXY_TI2S",
+          "ABIXY_TI1S",
+          "ABIXY_TI2S",
+          "ABZ",
+          "ASXY_TI1S",
+          "ASXY_TI2S",
+          "ASXY_TI3S",
+          "ASZ",
+          "MBXY_TI1",
+          "MBXY_TI2",
+          "MBZ",
+          "MSXY_TI1",
+          "MSXY_TI2",
+          "MSXY_TI3",
+          "MSZ",
+          "AMID",
+          "DEC_U",
+          "DEC_OS",
+          "DEC_OH",
+          "DEC_OI",
+          "DECR",
+          "DBH_U",
+          "DBH_OS",
+          "DBH_OH",
+          "DBH_OI",
+          "DBHR",
+          "AXYZ_XYB",
+          "AXYZ_ZB",
+          "AXYZ_SF",
+          "AXYZ_MIS",
+          "AXY_B",
+          "AXY_SF",
+          "AXY_MS",
+          "AXY_GB",
+          "GXYZ_XYB1",
+          "GXYZ_XYB2",
+          "GXYZ_XYRN",
+          "GXYZ_XYG1",
+          "GXYZ_XYG2",
+          "GXYZ_XYG3",
+          "GXYZ_XYG4",
+          "GXYZ_ZB",
+          "GXYZ_ZRN",
+          "GXYZ_ZG1",
+          "GXYZ_ZG2",
+          "GXYZ_SF",
+          "GXYZ_MIS",
+          "GXY_B1",
+          "GXY_B2",
+          "GXY_RN",
+          "GXY_G1",
+          "GXY_G2",
+          "GXY_G3",
+          "GXY_G4",
+          "GXY_SF",
+          "GXY_MIS",
+          "EXT_REF",
+          "EXT_TIE",
+          "EXT_MIS",
+          "GXYZ_GD",
+          "GXYZ_RW",
+          "GXY_GD",
+          "GXY_RW",
+          "GZ_GD",
+          "GZ_RW"
+        ],
+        "type": "string"
+      },
+      "ErrorSource": {
+        "type": "object",
+        "properties": {
+          "MetaInfo": {
+            "$ref": "#/components/schemas/MetaInfo"
+          },
+          "ErrorCode": {
+            "$ref": "#/components/schemas/ErrorCode"
+          },
+          "Description": {
+            "type": "string",
+            "nullable": true
+          },
+          "Index": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "IsSystematic": {
+            "type": "boolean"
+          },
+          "IsRandom": {
+            "type": "boolean"
+          },
+          "IsGlobal": {
+            "type": "boolean"
+          },
+          "SingularIssues": {
+            "type": "boolean"
+          },
+          "IsContinuous": {
+            "type": "boolean"
+          },
+          "IsStationary": {
+            "type": "boolean"
+          },
+          "KOperatorImposed": {
+            "type": "boolean"
+          },
+          "Magnitude": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "MagnitudeQuantity": {
+            "type": "string",
+            "nullable": true
+          },
+          "UseInclinationInterval": {
+            "type": "boolean"
+          },
+          "StartInclination": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "EndInclination": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "InitInclination": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          }
+        }
+      },
+      "SurveyInstrument": {
+        "type": "object",
+        "properties": {
+          "MetaInfo": {
+            "$ref": "#/components/schemas/MetaInfo"
+          },
+          "Name": {
+            "type": "string",
+            "nullable": true
+          },
+          "Description": {
+            "type": "string",
+            "nullable": true
+          },
+          "CreationDate": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "LastModificationDate": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "ModelType": {
+            "$ref": "#/components/schemas/SurveyInstrumentModelType"
+          },
+          "ErrorSourceList": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ErrorSource"
+            },
+            "nullable": true
+          },
+          "Dip": {
+            "type": "number",
+            "format": "double"
+          },
+          "Declination": {
+            "type": "number",
+            "format": "double"
+          },
+          "Gravity": {
+            "type": "number",
+            "format": "double"
+          },
+          "BField": {
+            "type": "number",
+            "format": "double"
+          },
+          "Convergence": {
+            "type": "number",
+            "format": "double"
+          },
+          "Latitude": {
+            "type": "number",
+            "format": "double"
+          },
+          "EarthRotRate": {
+            "type": "number",
+            "format": "double"
+          },
+          "CantAngle": {
+            "type": "number",
+            "format": "double"
+          },
+          "GyroRunningSpeed": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "ExtRefInitInc": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "GyroSwitching": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "GyroMinDist": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "GyroNoiseRed": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "UseRelDepthError": {
+            "type": "boolean"
+          },
+          "RelDepthError": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "UseMisalignment": {
+            "type": "boolean"
+          },
+          "Misalignment": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "UseTrueInclination": {
+            "type": "boolean"
+          },
+          "TrueInclination": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "UseReferenceError": {
+            "type": "boolean"
+          },
+          "ReferenceError": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "UseDrillStringMag": {
+            "type": "boolean"
+          },
+          "DrillStringMag": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "UseGyroCompassError": {
+            "type": "boolean"
+          },
+          "GyroCompassError": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          }
+        }
+      },
+      "SurveyInstrumentModelType": {
+        "enum": [
+          "MWD_WolffDeWardt",
+          "Gyro_WolffDeWardt",
+          "MWD_ISCWSA",
+          "Gyro_ISCWSA"
+        ],
+        "type": "string"
+      },
+      "MetaInfo": {
+        "type": "object",
+        "properties": {
+          "ID": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "HttpHostName": {
+            "type": "string",
+            "nullable": true
+          },
+          "HttpHostBasePath": {
+            "type": "string",
+            "nullable": true
+          },
+          "HttpEndPoint": {
+            "type": "string",
+            "nullable": true
+          }
+        }
+      }
+    }
+  }
+}

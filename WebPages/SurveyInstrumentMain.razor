@@ -1,0 +1,238 @@
+@page "/SurveyInstrument"
+@inject ILogger<SurveyInstrumentMain> logger
+@inject ISnackbar Snackbar
+@inject ISurveyInstrumentAPIUtils Api
+
+<MudUnitAndReferenceChoiceTag HttpHost="@Api.HostNameUnitConversion"
+                              HttpBasePath="@Api.HostBasePathUnitConversion"
+                              HttpController="UnitSystem/"
+                              UnitSystemName="@DataUtils.UnitAndReferenceParameters.UnitSystemName"
+                              UnitSystemNameChanged="@DataUtils.UpdateUnitSystemName">
+    @if (surveyInstrumentList == null)
+    {
+        <p><em>Loading...</em></p>
+    }
+    else
+    {
+        <div hidden="@isHiddenMainPanel">
+            <MudDataGrid T="SurveyInstrument" MultiSelection="true" Items="@surveyInstrumentList" SelectedItemsChanged="@SelectedItemsChanged"
+                         EditMode="DataGridEditMode.Cell"
+                         Hover="true" RowClick="@RowClicked"
+                         SortMode="SortMode.Multiple" QuickFilter="@_surveyInstrumentFilter" Filterable="false"
+                         ReadOnly="false" ColumnResizeMode="ResizeMode.Column" Elevation="0">
+                <ToolBarContent>
+                    <MudText Typo="Typo.h6">SurveyInstrument</MudText>
+                    <MudButton OnClick="@AddSurveyInstrument" Color="@Color.Success" Class="add-item-btn">Add</MudButton>
+                    <MudButton OnClick="@DeleteSelectedSurveyInstrument" Color="@Color.Error" Class="add-item-btn">Delete</MudButton>
+                    <MudSpacer />
+                    <MudTextField @bind-Value="_searchString" Placeholder="Search" Adornment="Adornment.Start" Immediate="true"
+                                  AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0" />
+                </ToolBarContent>
+                <Columns>
+                    <SelectColumn T="SurveyInstrument" />
+                    <PropertyColumn Property="x => x.Name" Title="@DataUtils.SurveyInstrumentNameLabel" CellStyle="width: 25%;" Sortable="true" Editable="false" />
+                    <PropertyColumn Property="x => x.ModelType" Title="@DataUtils.SurveyInstrumentModelTypeLabel" CellStyle="width: 20%;" Sortable="true" Editable="false" />
+                    <PropertyColumn Property="x => x.Description" Title="@DataUtils.SurveyInstrumentDescrLabel" CellStyle="width: 50%;" Sortable="true" Editable="false" />
+                    <TemplateColumn CellStyle="width: 5%;">
+                        <EditTemplate>
+                            <MudIconButton Size="@Size.Small" Icon="@Icons.Material.Outlined.Delete" OnClick="(() => DeleteSurveyInstrument(context.Item.MetaInfo.ID))" />
+                        </EditTemplate>
+                    </TemplateColumn>
+                </Columns>
+                <PagerContent>
+                    <MudDataGridPager T="SurveyInstrument" />
+                </PagerContent>
+            </MudDataGrid>
+        </div>
+    }
+    @if (isHiddenMainPanel && currentSurveyInstrument != null)
+    {
+        <SurveyInstrumentEdit CurrentSurveyInstrument="@currentSurveyInstrument" AvailableErrorSourceList="@errorSourceList" OnUpdate="@ShowMainPanel" />
+    }
+</MudUnitAndReferenceChoiceTag>
+
+@code {
+    private List<SurveyInstrument> surveyInstrumentList = new();
+    private List<SurveyInstrument> selectedSurveyInstrumentList = new();
+    private SurveyInstrument? currentSurveyInstrument;
+    private List<ErrorSource>? errorSourceList;
+    public bool isHiddenMainPanel;
+    public bool isHiddenEditPanel;
+    private string? _searchString;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            isHiddenMainPanel = false;
+            isHiddenEditPanel = true;
+            currentSurveyInstrument = null;
+
+            logger.LogInformation("Trying to load list of ErrorSource from client: {Host}", Api.HostNameSurveyInstrument);
+            var errorSourceTask = Api.ClientSurveyInstrument.GetAllErrorSourceAsync();
+            logger.LogInformation("Trying to load list of SurveyInstrument from client: {Host}", Api.HostNameSurveyInstrument);
+            var surveyInstrumentTask = Api.ClientSurveyInstrument.GetAllSurveyInstrumentAsync();
+
+            List<Task> loadingTaskList = [surveyInstrumentTask, errorSourceTask];
+            while (loadingTaskList.Count > 0)
+            {
+                Task finishedTask = await Task.WhenAny(loadingTaskList);
+                if (finishedTask == surveyInstrumentTask)
+                {
+                    try
+                    {
+                        surveyInstrumentList = (await surveyInstrumentTask).ToList();
+                        surveyInstrumentList.Sort((t1, t2) => string.Compare(t1.Name, t2.Name, StringComparison.OrdinalIgnoreCase));
+                    }
+                    catch (ApiException ex)
+                    {
+                        logger.LogError(ex, "Impossible to load SurveyInstrument from client");
+                        Snackbar.Add("Impossible to load SurveyInstrument from client", Severity.Warning);
+                    }
+                }
+                else if (finishedTask == errorSourceTask)
+                {
+                    try
+                    {
+                        errorSourceList = (await errorSourceTask).ToList();
+                        errorSourceList.Sort((f1, f2) => string.Compare(f1.ErrorCode.ToString(), f2.ErrorCode.ToString(), StringComparison.OrdinalIgnoreCase));
+                    }
+                    catch (ApiException ex)
+                    {
+                        logger.LogError(ex, "Impossible to load ErrorSource from client");
+                        Snackbar.Add("Impossible to load ErrorSource from client", Severity.Warning);
+                    }
+                }
+                loadingTaskList.Remove(finishedTask);
+            }
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Problem SurveyInstrument initialization");
+            Snackbar.Add("Problem SurveyInstrument initialization", Severity.Error);
+        }
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task AddSurveyInstrument()
+    {
+        try
+        {
+            MetaInfo metaInfo = new() { ID = Guid.NewGuid(), HttpHostName = Api.HostNameSurveyInstrument, HttpHostBasePath = Api.HostBasePathSurveyInstrument, HttpEndPoint = "SurveyInstrument/" };
+            DateTimeOffset creationDate = DateTimeOffset.UtcNow;
+            SurveyInstrument surveyInstrument = new()
+            {
+                MetaInfo = metaInfo,
+                Name = DataUtils.DEFAULT_NAME_SurveyInstrument,
+                Description = DataUtils.DEFAULT_DESCR_SurveyInstrument,
+                CreationDate = creationDate,
+                LastModificationDate = creationDate,
+                ModelType = SurveyInstrumentModelType.MWD_WolffDeWardt,
+                ErrorSourceList = [],
+                Gravity = 9.80665,
+                BField = 50000e-9,
+                EarthRotRate = 7.2921159e-5,
+            };
+            await Api.ClientSurveyInstrument.PostSurveyInstrumentAsync(surveyInstrument);
+            await OnInitializedAsync();
+
+            SurveyInstrument? addedSurveyInstrument = surveyInstrumentList.FirstOrDefault(d => d.MetaInfo?.ID == surveyInstrument.MetaInfo.ID);
+            if (addedSurveyInstrument != null)
+            {
+                Snackbar.Add("SurveyInstrument posted successfully", Severity.Success);
+                await EditSurveyInstrument(addedSurveyInstrument.MetaInfo.ID);
+            }
+            else
+            {
+                Snackbar.Add("Could not retrieve the added SurveyInstrument", Severity.Warning);
+            }
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Impossible to add a new SurveyInstrument");
+            Snackbar.Add("Impossible to add a new SurveyInstrument", Severity.Warning);
+        }
+    }
+
+    private async Task RowClicked(DataGridRowClickEventArgs<SurveyInstrument> args)
+    {
+        await EditSurveyInstrument(args.Item.MetaInfo.ID);
+    }
+
+    private async Task EditSurveyInstrument(Guid id)
+    {
+        try
+        {
+            currentSurveyInstrument = await Api.ClientSurveyInstrument.GetSurveyInstrumentByIdAsync(id);
+            if (currentSurveyInstrument != null)
+            {
+                isHiddenMainPanel = true;
+                isHiddenEditPanel = false;
+                await InvokeAsync(StateHasChanged);
+            }
+            else
+            {
+                Snackbar.Add("Impossible to load SurveyInstrument", Severity.Warning);
+            }
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Impossible to load SurveyInstrument to be edited");
+            Snackbar.Add("Impossible to load SurveyInstrument to be edited", Severity.Warning);
+        }
+    }
+
+    private async Task DeleteSurveyInstrument(Guid id)
+    {
+        try
+        {
+            await Api.ClientSurveyInstrument.DeleteSurveyInstrumentByIdAsync(id);
+            await OnInitializedAsync();
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Impossible to delete SurveyInstrument");
+            Snackbar.Add("Impossible to delete SurveyInstrument", Severity.Warning);
+        }
+    }
+
+    private async Task DeleteSelectedSurveyInstrument()
+    {
+        try
+        {
+            foreach (SurveyInstrument surveyInstrument in selectedSurveyInstrumentList)
+            {
+                await Api.ClientSurveyInstrument.DeleteSurveyInstrumentByIdAsync(surveyInstrument.MetaInfo.ID);
+            }
+            await OnInitializedAsync();
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Impossible to delete all SurveyInstrument");
+            Snackbar.Add("Impossible to delete all selected SurveyInstrument", Severity.Warning);
+        }
+    }
+
+    private Func<SurveyInstrument, bool> _surveyInstrumentFilter => x =>
+    {
+        if (string.IsNullOrWhiteSpace(_searchString))
+        {
+            return true;
+        }
+
+        return $"{x.Name} {x.Description} {x.ModelType}".Contains(_searchString, StringComparison.OrdinalIgnoreCase);
+    };
+
+    private void SelectedItemsChanged(HashSet<SurveyInstrument> items)
+    {
+        selectedSurveyInstrumentList.Clear();
+        selectedSurveyInstrumentList.InsertRange(0, items);
+    }
+
+    private async void ShowMainPanel()
+    {
+        isHiddenMainPanel = false;
+        isHiddenEditPanel = true;
+        await OnInitializedAsync();
+    }
+}

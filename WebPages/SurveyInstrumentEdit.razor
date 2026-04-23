@@ -1,0 +1,612 @@
+@implements IUnitAwareComponent
+@inject ILogger<SurveyInstrumentEdit> logger
+@inject ISnackbar Snackbar
+@inject ISurveyInstrumentAPIUtils Api
+
+<MudText Class="mt-4 mb-4" Typo="Typo.h6">Edit SurveyInstrument</MudText>
+<MudContainer Class="d-flex flex-row mt-4 mb-4">
+    <MudButton Class="me-1" Variant="Variant.Filled" Color="Color.Success" OnClick="Update">Update</MudButton>
+    <MudButton Class="me-1" Variant="Variant.Filled" OnClick="Cancel">Cancel</MudButton>
+</MudContainer>
+
+<MudExpansionPanels Class="mt-4 mb-4" MultiExpansion="true">
+    <MudExpansionPanel Text="General" Expanded="true">
+        <MudGrid>
+            <MudItem xs="12" sm="4" md="4">
+                <MudTextField @bind-Value="@name" Label="Name" Variant="Variant.Filled" />
+            </MudItem>
+            <MudItem xs="12" sm="8" md="8">
+                <MudTextField @bind-Value="@descr" Label="Description" Variant="Variant.Filled" />
+            </MudItem>
+            <MudItem xs="12" sm="6" md="6">
+                <MudSelect T="SurveyInstrumentModelFamily" Label="Main Type" @bind-Value="@modelFamily" Dense="true" Variant="Variant.Filled">
+                    @foreach (SurveyInstrumentModelFamily value in Enum.GetValues<SurveyInstrumentModelFamily>())
+                    {
+                        <MudSelectItem Value="@value">@DisplayModelFamily(value)</MudSelectItem>
+                    }
+                </MudSelect>
+            </MudItem>
+            <MudItem xs="12" sm="6" md="6">
+                <MudSelect T="SurveyInstrumentToolFamily" Label="Tool Type" @bind-Value="@toolFamily" Dense="true" Variant="Variant.Filled">
+                    @foreach (SurveyInstrumentToolFamily value in Enum.GetValues<SurveyInstrumentToolFamily>())
+                    {
+                        <MudSelectItem Value="@value">@DisplayToolFamily(value)</MudSelectItem>
+                    }
+                </MudSelect>
+            </MudItem>
+            @if (!IsIscwsa)
+            {
+                @WolffDeWardtParameterFields
+            }
+        </MudGrid>
+    </MudExpansionPanel>
+
+    @if (IsIscwsaMagnetic)
+    {
+        <MudExpansionPanel Text="ISCWSA Magnetic Error Model" Expanded="true">
+            <MudGrid>
+                <MudItem xs="12">
+                    <MudText Typo="Typo.h6">Depth Error Terms</MudText>
+                </MudItem>
+                @ErrorSourceMagnitudeField("DRFR", ErrorCode.DRFR)
+                @ErrorSourceMagnitudeField("DSFS", ErrorCode.DSFS)
+                @ErrorSourceMagnitudeField("DSTG", ErrorCode.DSTG)
+                <MudItem xs="12">
+                    <MudText Typo="Typo.h6">Accelerometer Source Terms</MudText>
+                </MudItem>
+                @ErrorSourceMagnitudeField("ABXY-TI1S", ErrorCode.ABXY_TI1S)
+                @ErrorSourceMagnitudeField("ABXY-TI2S", ErrorCode.ABXY_TI2S)
+                @ErrorSourceMagnitudeField("ABZ", ErrorCode.ABZ)
+                @ErrorSourceMagnitudeField("ASXY_TI1S", ErrorCode.ASXY_TI1S)
+                @ErrorSourceMagnitudeField("ASXY_TI2S", ErrorCode.ASXY_TI2S)
+                @ErrorSourceMagnitudeField("ASXY_TI3S", ErrorCode.ASXY_TI3S)
+                @ErrorSourceMagnitudeField("ASZ", ErrorCode.ASZ)
+                <MudItem xs="12">
+                    <MudText Typo="Typo.h6">Magnetometer Sensor Terms</MudText>
+                </MudItem>
+                @ErrorSourceMagnitudeField("MBXY-TI1", ErrorCode.MBXY_TI1)
+                @ErrorSourceMagnitudeField("MBXY-TI2", ErrorCode.MBXY_TI2)
+                @ErrorSourceMagnitudeField("MBZ", ErrorCode.MBZ)
+                @ErrorSourceMagnitudeField("MSXY-TI1", ErrorCode.MSXY_TI1)
+                @ErrorSourceMagnitudeField("MSXY-TI2", ErrorCode.MSXY_TI2)
+                @ErrorSourceMagnitudeField("MSXY-TI3", ErrorCode.MSXY_TI3)
+                @ErrorSourceMagnitudeField("MSZ", ErrorCode.MSZ)
+                <MudItem xs="12">
+                    <MudText Typo="Typo.h6">BH-Dependent Declination Source Terms</MudText>
+                </MudItem>
+                @ErrorSourceMagnitudeField("DEC-U", ErrorCode.DEC_U)
+                @ErrorSourceMagnitudeField("DEC-OS", ErrorCode.DEC_OS)
+                @ErrorSourceMagnitudeField("DEC-OH", ErrorCode.DEC_OH)
+                @ErrorSourceMagnitudeField("DEC-OI", ErrorCode.DEC_OI)
+                @ErrorSourceMagnitudeField("DECR", ErrorCode.DECR)
+                <MudItem xs="12">
+                    <MudText Typo="Typo.h6">Declination Source Terms</MudText>
+                </MudItem>
+                @ErrorSourceMagnitudeField("DBH-U", ErrorCode.DBH_U)
+                @ErrorSourceMagnitudeField("DBH-OS", ErrorCode.DBH_OS)
+                @ErrorSourceMagnitudeField("DBH-OH", ErrorCode.DBH_OH)
+                @ErrorSourceMagnitudeField("DBH-OI", ErrorCode.DBH_OI)
+                @ErrorSourceMagnitudeField("DBHR", ErrorCode.DBHR)
+                <MudItem xs="12">
+                    <MudText Typo="Typo.h6">Misalignment Terms</MudText>
+                </MudItem>
+                @ErrorSourceMagnitudeField("SAGE", ErrorCode.SAGE)
+                @ErrorSourceMagnitudeField("XYM1", ErrorCode.XYM1)
+                @ErrorSourceMagnitudeField("XYM2", ErrorCode.XYM2)
+                @ErrorSourceMagnitudeField("XYM3E", ErrorCode.XYM3E)
+                @ErrorSourceMagnitudeField("XYM4E", ErrorCode.XYM4E)
+                <MudItem xs="12">
+                    <MudText Typo="Typo.h6">Axial Magnetic Interference Terms</MudText>
+                </MudItem>
+                @ErrorSourceMagnitudeField("AMID", ErrorCode.AMID)
+            </MudGrid>
+        </MudExpansionPanel>
+    }
+
+    @if (IsIscwsaGyro)
+    {
+        <MudExpansionPanel Text="ISCWSA Gyro Error Model" Expanded="true">
+            <MudGrid>
+                <MudItem xs="12">
+                    <MudText Typo="Typo.h6">Depth and Course Length Terms</MudText>
+                </MudItem>
+                @OptionalGyroErrorSourceField(ErrorCode.DRFS)
+                @OptionalGyroErrorSourceField(ErrorCode.XCLA)
+
+                <MudItem xs="12">
+                    <MudText Typo="Typo.h6">Misalignment Terms</MudText>
+                </MudItem>
+                @OptionalGyroErrorSourceField(ErrorCode.SAG)
+                @OptionalGyroErrorSourceField(ErrorCode.XYM3)
+                @OptionalGyroErrorSourceField(ErrorCode.XYM4)
+
+                <MudItem xs="12">
+                    <MudText Typo="Typo.h6">Accelerometer Interference Terms</MudText>
+                </MudItem>
+                @OptionalGyroErrorSourceField(ErrorCode.ABIXY_TI1S)
+                @OptionalGyroErrorSourceField(ErrorCode.ABIXY_TI2S)
+
+                <MudItem xs="12">
+                    <MudText Typo="Typo.h6">Gyro 3-Axis Accelerometer Terms</MudText>
+                </MudItem>
+                @OptionalGyroErrorSourceField(ErrorCode.AXYZ_XYB)
+                @OptionalGyroErrorSourceField(ErrorCode.AXYZ_ZB)
+                @OptionalGyroErrorSourceField(ErrorCode.AXYZ_SF)
+                @OptionalGyroErrorSourceField(ErrorCode.AXYZ_MIS)
+
+                <MudItem xs="12">
+                    <MudText Typo="Typo.h6">Gyro 2-Axis Accelerometer Terms</MudText>
+                </MudItem>
+                @OptionalGyroErrorSourceField(ErrorCode.AXY_B)
+                @OptionalGyroErrorSourceField(ErrorCode.AXY_SF)
+                @OptionalGyroErrorSourceField(ErrorCode.AXY_MS)
+                @OptionalGyroErrorSourceField(ErrorCode.AXY_GB)
+
+                <MudItem xs="12">
+                    <MudText Typo="Typo.h6">Gyro 3-Axis Stationary Terms</MudText>
+                </MudItem>
+                @OptionalGyroErrorSourceField(ErrorCode.GXYZ_XYB1)
+                @OptionalGyroErrorSourceField(ErrorCode.GXYZ_XYB2)
+                @OptionalGyroErrorSourceField(ErrorCode.GXYZ_XYRN)
+                @OptionalGyroErrorSourceField(ErrorCode.GXYZ_XYG1)
+                @OptionalGyroErrorSourceField(ErrorCode.GXYZ_XYG2)
+                @OptionalGyroErrorSourceField(ErrorCode.GXYZ_XYG3)
+                @OptionalGyroErrorSourceField(ErrorCode.GXYZ_XYG4)
+                @OptionalGyroErrorSourceField(ErrorCode.GXYZ_ZB)
+                @OptionalGyroErrorSourceField(ErrorCode.GXYZ_ZRN)
+                @OptionalGyroErrorSourceField(ErrorCode.GXYZ_ZG1)
+                @OptionalGyroErrorSourceField(ErrorCode.GXYZ_ZG2)
+                @OptionalGyroErrorSourceField(ErrorCode.GXYZ_SF)
+                @OptionalGyroErrorSourceField(ErrorCode.GXYZ_MIS)
+
+                <MudItem xs="12">
+                    <MudText Typo="Typo.h6">Gyro 2-Axis Stationary Terms</MudText>
+                </MudItem>
+                @OptionalGyroErrorSourceField(ErrorCode.GXY_B1)
+                @OptionalGyroErrorSourceField(ErrorCode.GXY_B2)
+                @OptionalGyroErrorSourceField(ErrorCode.GXY_RN)
+                @OptionalGyroErrorSourceField(ErrorCode.GXY_G1)
+                @OptionalGyroErrorSourceField(ErrorCode.GXY_G2)
+                @OptionalGyroErrorSourceField(ErrorCode.GXY_G3)
+                @OptionalGyroErrorSourceField(ErrorCode.GXY_G4)
+                @OptionalGyroErrorSourceField(ErrorCode.GXY_SF)
+                @OptionalGyroErrorSourceField(ErrorCode.GXY_MIS)
+
+                <MudItem xs="12">
+                    <MudText Typo="Typo.h6">External Reference and Tie-On Terms</MudText>
+                </MudItem>
+                @OptionalGyroErrorSourceField(ErrorCode.EXT_REF)
+                @OptionalGyroErrorSourceField(ErrorCode.EXT_TIE)
+                @OptionalGyroErrorSourceField(ErrorCode.EXT_MIS)
+
+                <MudItem xs="12">
+                    <MudText Typo="Typo.h6">Continuous Gyro Drift Terms</MudText>
+                </MudItem>
+                @OptionalGyroErrorSourceField(ErrorCode.GXYZ_GD)
+                @OptionalGyroErrorSourceField(ErrorCode.GXYZ_RW)
+                @OptionalGyroErrorSourceField(ErrorCode.GXY_GD)
+                @OptionalGyroErrorSourceField(ErrorCode.GXY_RW)
+                @OptionalGyroErrorSourceField(ErrorCode.GZ_GD)
+                @OptionalGyroErrorSourceField(ErrorCode.GZ_RW)
+            </MudGrid>
+        </MudExpansionPanel>
+    }
+
+</MudExpansionPanels>
+
+@code {
+    private enum SurveyInstrumentModelFamily
+    {
+        WolffDeWardt,
+        ISCWSA
+    }
+
+    private enum SurveyInstrumentToolFamily
+    {
+        MWD,
+        Gyro
+    }
+
+    [CascadingParameter]
+    private MudUnitAndReferenceChoiceTag? Parent { get; set; }
+
+    [Parameter]
+    public SurveyInstrument? CurrentSurveyInstrument { get; set; }
+
+    [Parameter]
+    public List<ErrorSource>? AvailableErrorSourceList { get; set; }
+
+    [Parameter]
+    public Action? OnUpdate { get; set; }
+
+    private string? name;
+    private string? descr;
+    private SurveyInstrumentModelFamily modelFamily = SurveyInstrumentModelFamily.WolffDeWardt;
+    private SurveyInstrumentToolFamily toolFamily = SurveyInstrumentToolFamily.MWD;
+    private double? relDepthError;
+    private double? misalignment;
+    private double? trueInclination;
+    private double? referenceError;
+    private double? drillStringMag;
+    private double? gyroCompassError;
+
+    private bool IsGyro => toolFamily == SurveyInstrumentToolFamily.Gyro;
+    private bool IsIscwsa => modelFamily == SurveyInstrumentModelFamily.ISCWSA;
+    private bool IsIscwsaGyro => IsIscwsa && IsGyro;
+    private bool IsIscwsaMagnetic => IsIscwsa && !IsGyro;
+    private string MissingErrorSourceText { get; } = "Not available";
+
+    private RenderFragment WolffDeWardtParameterFields => @<text>
+    <MudItem xs="12" sm="4" md="3">
+        <MudInputWithUnitAdornment VariantType="Variant.Filled"
+                                   QuantityName="ProportionSmall"
+                                   QuantityLabel="Relative Depth Error"
+                                   SIValueNullable="@relDepthError"
+                                   SIValueNullableChanged="@(val => relDepthError = val)" />
+    </MudItem>
+    <MudItem xs="12" sm="4" md="3">
+        <MudInputWithUnitAdornment VariantType="Variant.Filled"
+                                   QuantityName="PlaneAngleDrilling"
+                                   QuantityLabel="Misalignment"
+                                   SIValueNullable="@misalignment"
+                                   SIValueNullableChanged="@(val => misalignment = val)" />
+    </MudItem>
+    <MudItem xs="12" sm="4" md="3">
+        <MudInputWithUnitAdornment VariantType="Variant.Filled"
+                                   QuantityName="PlaneAngleDrilling"
+                                   QuantityLabel="True Inclination"
+                                   SIValueNullable="@trueInclination"
+                                   SIValueNullableChanged="@(val => trueInclination = val)" />
+    </MudItem>
+    <MudItem xs="12" sm="4" md="3">
+        <MudInputWithUnitAdornment VariantType="Variant.Filled"
+                                   QuantityName="PlaneAngleDrilling"
+                                   QuantityLabel="Reference Error"
+                                   SIValueNullable="@referenceError"
+                                   SIValueNullableChanged="@(val => referenceError = val)" />
+    </MudItem>
+@if (!IsGyro)
+    {
+    <MudItem xs="12" sm="4" md="3">
+        <MudInputWithUnitAdornment VariantType="Variant.Filled"
+                                   QuantityName="PlaneAngleDrilling"
+                                   QuantityLabel="Drill String Magnetization"
+                                   SIValueNullable="@drillStringMag"
+                                   SIValueNullableChanged="@(val => drillStringMag = val)" />
+    </MudItem>
+    }
+@if (IsGyro)
+    {
+    <MudItem xs="12" sm="4" md="3">
+        <MudInputWithUnitAdornment VariantType="Variant.Filled"
+                                   QuantityName="PlaneAngleDrilling"
+                                   QuantityLabel="Gyro Compass Error"
+                                   SIValueNullable="@gyroCompassError"
+                                   SIValueNullableChanged="@(val => gyroCompassError = val)" />
+    </MudItem>
+    }
+</text>;
+
+private RenderFragment ErrorSourceMagnitudeField(string label, params ErrorCode[] codes) => @<MudItem xs="12" sm="4" md="3">
+@if (FindErrorSource(codes) != null)
+{
+        <MudInputWithUnitAdornment VariantType="Variant.Filled"
+                                   QuantityName="@ErrorSourceQuantity(codes)"
+                                   QuantityLabel="@label"
+                                   SIValueNullable="@ErrorSourceMagnitude(codes)"
+                                   SIValueNullableChanged="@((double? val) => UpdateErrorSourceMagnitude(codes, val))" />
+}
+else
+{
+        <MudTextField T="string" Value="@MissingErrorSourceText" Label="@label" Variant="Variant.Filled" ReadOnly="true" />
+}
+</MudItem>;
+
+private RenderFragment OptionalGyroErrorSourceField(ErrorCode code) => @<text>
+    <MudItem xs="12" sm="4" md="3">
+        <MudCheckBox T="bool"
+                     Label="@DisplayErrorCode(code)"
+                     Value="@IsErrorSourceSelected(code)"
+                     ValueChanged="@((bool selected) => SetErrorSourceSelected(code, selected))"
+                     Disabled="@(FindErrorSource(code) == null)" />
+    </MudItem>
+    @if (IsErrorSourceSelected(code))
+    {
+        @ErrorSourceMagnitudeField(DisplayErrorCode(code), code)
+    }
+</text>;
+
+protected override async Task OnInitializedAsync()
+{
+    try
+    {
+        if (Parent == null)
+        {
+            throw new ArgumentNullException(nameof(Parent), "SurveyInstrumentEdit page must exist within a MudUnitAndReferenceChoiceTag");
+        }
+        Parent.Add(this);
+        ManageUnits();
+
+        if (CurrentSurveyInstrument != null && CurrentSurveyInstrument.MetaInfo != null)
+        {
+            CopyFrom(CurrentSurveyInstrument);
+        }
+        else
+        {
+            logger.LogError("Current SurveyInstrument is null or badly formed");
+            Snackbar.Add("Current SurveyInstrument is null or badly formed", Severity.Error);
+        }
+    }
+    catch (Exception ex)
+    {
+        logger.LogError(ex, "Problem on SurveyInstrument initialization");
+        Snackbar.Add("Problem on SurveyInstrument initialization", Severity.Error);
+    }
+    await InvokeAsync(StateHasChanged);
+}
+
+public void ManageUnits()
+{
+}
+
+private void CopyFrom(SurveyInstrument surveyInstrument)
+{
+    name = surveyInstrument.Name;
+    descr = surveyInstrument.Description;
+    SetModelFamilies(surveyInstrument.ModelType);
+    relDepthError = surveyInstrument.RelDepthError;
+    misalignment = surveyInstrument.Misalignment;
+    trueInclination = surveyInstrument.TrueInclination;
+    referenceError = surveyInstrument.ReferenceError;
+    drillStringMag = surveyInstrument.DrillStringMag;
+    gyroCompassError = surveyInstrument.GyroCompassError;
+}
+
+private async Task Update()
+{
+    try
+    {
+        if (CurrentSurveyInstrument != null && CurrentSurveyInstrument.MetaInfo != null)
+        {
+            SurveyInstrument surveyInstrument = new()
+            {
+                MetaInfo = CurrentSurveyInstrument.MetaInfo,
+                Name = name,
+                Description = descr,
+                CreationDate = CurrentSurveyInstrument.CreationDate,
+                LastModificationDate = DateTimeOffset.UtcNow,
+                ModelType = GetModelType(),
+                ErrorSourceList = BuildErrorSourceList(),
+                GyroRunningSpeed = CurrentSurveyInstrument.GyroRunningSpeed,
+                ExtRefInitInc = CurrentSurveyInstrument.ExtRefInitInc,
+                GyroSwitching = CurrentSurveyInstrument.GyroSwitching,
+                GyroMinDist = CurrentSurveyInstrument.GyroMinDist,
+                GyroNoiseRed = CurrentSurveyInstrument.GyroNoiseRed,
+                UseRelDepthError = relDepthError != null,
+                RelDepthError = relDepthError,
+                UseMisalignment = misalignment != null,
+                Misalignment = misalignment,
+                UseTrueInclination = trueInclination != null,
+                TrueInclination = trueInclination,
+                UseReferenceError = referenceError != null,
+                ReferenceError = referenceError,
+                UseDrillStringMag = !IsGyro && drillStringMag != null,
+                DrillStringMag = !IsGyro ? drillStringMag : null,
+                UseGyroCompassError = IsGyro && gyroCompassError != null,
+                GyroCompassError = IsGyro ? gyroCompassError : null,
+            };
+            await Api.ClientSurveyInstrument.PutSurveyInstrumentByIdAsync(CurrentSurveyInstrument.MetaInfo.ID, surveyInstrument);
+            logger.LogInformation("Updated the SurveyInstrument successfully");
+            Snackbar.Add("Updated the SurveyInstrument successfully", Severity.Success);
+            OnUpdate?.Invoke();
+        }
+        else
+        {
+            Snackbar.Add("Problem while updating the SurveyInstrument", Severity.Warning);
+        }
+    }
+    catch (ApiException ex)
+    {
+        logger.LogError(ex, "Problem while updating the SurveyInstrument");
+        Snackbar.Add("Problem while updating the SurveyInstrument", Severity.Warning);
+    }
+}
+
+private void Cancel()
+{
+    OnUpdate?.Invoke();
+}
+
+private List<ErrorSource> BuildErrorSourceList()
+{
+    if (CurrentSurveyInstrument?.ErrorSourceList == null)
+    {
+        return [];
+    }
+
+    List<ErrorSource> errorSources = CurrentSurveyInstrument.ErrorSourceList.ToList();
+    if (IsIscwsaMagnetic)
+    {
+        foreach (ErrorCode code in DisplayedIscwsaMagneticCodes())
+        {
+            if (!errorSources.Any(x => x.ErrorCode == code))
+            {
+                ErrorSource? source = AvailableErrorSourceList?.FirstOrDefault(x => x.ErrorCode == code);
+                if (source != null)
+                {
+                    errorSources.Add(source);
+                }
+            }
+        }
+    }
+
+    return errorSources;
+}
+
+private IEnumerable<ErrorCode> DisplayedIscwsaMagneticCodes()
+{
+    yield return ErrorCode.DRFR;
+    yield return ErrorCode.DSFS;
+    yield return ErrorCode.DSTG;
+    yield return ErrorCode.ABXY_TI1S;
+    yield return ErrorCode.ABXY_TI2S;
+    yield return ErrorCode.ABZ;
+    yield return ErrorCode.ASXY_TI1S;
+    yield return ErrorCode.ASXY_TI2S;
+    yield return ErrorCode.ASXY_TI3S;
+    yield return ErrorCode.ASZ;
+    yield return ErrorCode.MBXY_TI1;
+    yield return ErrorCode.MBXY_TI2;
+    yield return ErrorCode.MBZ;
+    yield return ErrorCode.MSXY_TI1;
+    yield return ErrorCode.MSXY_TI2;
+    yield return ErrorCode.MSXY_TI3;
+    yield return ErrorCode.MSZ;
+    yield return ErrorCode.DEC_U;
+    yield return ErrorCode.DEC_OS;
+    yield return ErrorCode.DEC_OH;
+    yield return ErrorCode.DEC_OI;
+    yield return ErrorCode.DECR;
+    yield return ErrorCode.DBH_U;
+    yield return ErrorCode.DBH_OS;
+    yield return ErrorCode.DBH_OH;
+    yield return ErrorCode.DBH_OI;
+    yield return ErrorCode.DBHR;
+    yield return ErrorCode.AMID;
+    yield return ErrorCode.SAGE;
+    yield return ErrorCode.XYM1;
+    yield return ErrorCode.XYM2;
+    yield return ErrorCode.XYM3E;
+    yield return ErrorCode.XYM4E;
+    yield return ErrorCode.XCLH;
+    yield return ErrorCode.XCLL;
+}
+
+private IEnumerable<ErrorCode> DisplayedIscwsaGyroCodes()
+{
+    HashSet<ErrorCode> magneticCodes = DisplayedIscwsaMagneticCodes().ToHashSet();
+    return Enum.GetValues<ErrorCode>().Where(code => !magneticCodes.Contains(code));
+}
+
+private ErrorSource? FindErrorSource(params ErrorCode[] codes)
+{
+    if (CurrentSurveyInstrument?.ErrorSourceList != null)
+    {
+        ErrorSource? current = CurrentSurveyInstrument.ErrorSourceList.FirstOrDefault(x => codes.Contains(x.ErrorCode));
+        if (current != null)
+        {
+            return current;
+        }
+    }
+
+    return AvailableErrorSourceList?.FirstOrDefault(x => codes.Contains(x.ErrorCode));
+}
+
+private bool IsErrorSourceSelected(ErrorCode code)
+{
+    return CurrentSurveyInstrument?.ErrorSourceList?.Any(x => x.ErrorCode == code) == true;
+}
+
+private void SetErrorSourceSelected(ErrorCode code, bool selected)
+{
+    if (CurrentSurveyInstrument == null)
+    {
+        return;
+    }
+
+    CurrentSurveyInstrument.ErrorSourceList ??= [];
+    ErrorSource? currentSource = CurrentSurveyInstrument.ErrorSourceList.FirstOrDefault(x => x.ErrorCode == code);
+
+    if (selected)
+    {
+        if (currentSource == null)
+        {
+            ErrorSource? availableSource = AvailableErrorSourceList?.FirstOrDefault(x => x.ErrorCode == code);
+            if (availableSource != null)
+            {
+                CurrentSurveyInstrument.ErrorSourceList.Add(availableSource);
+            }
+        }
+    }
+    else if (currentSource != null)
+    {
+        CurrentSurveyInstrument.ErrorSourceList.Remove(currentSource);
+    }
+}
+
+private static string DisplayErrorCode(ErrorCode code)
+{
+    return code.ToString().Replace('_', '-');
+}
+
+private bool HasErrorSource(params ErrorCode[] codes)
+{
+    return CurrentSurveyInstrument?.ErrorSourceList?.Any(x => codes.Contains(x.ErrorCode)) == true;
+}
+
+private string ErrorSourceQuantity(params ErrorCode[] codes)
+{
+    return FindErrorSource(codes)?.MagnitudeQuantity ?? "ProportionSmall";
+}
+
+private double? ErrorSourceMagnitude(params ErrorCode[] codes)
+{
+    return FindErrorSource(codes)?.Magnitude;
+}
+
+private void UpdateErrorSourceMagnitude(ErrorCode[] codes, double? value)
+{
+    if (CurrentSurveyInstrument == null)
+    {
+        return;
+    }
+
+    CurrentSurveyInstrument.ErrorSourceList ??= [];
+    ErrorSource? source = CurrentSurveyInstrument.ErrorSourceList.FirstOrDefault(x => codes.Contains(x.ErrorCode));
+    if (source == null)
+    {
+        source = AvailableErrorSourceList?.FirstOrDefault(x => codes.Contains(x.ErrorCode));
+        if (source != null)
+        {
+            CurrentSurveyInstrument.ErrorSourceList.Add(source);
+        }
+    }
+
+    if (source != null)
+    {
+        source.Magnitude = value;
+    }
+}
+
+private void SetModelFamilies(SurveyInstrumentModelType modelType)
+{
+    modelFamily = modelType is SurveyInstrumentModelType.MWD_ISCWSA or SurveyInstrumentModelType.Gyro_ISCWSA
+        ? SurveyInstrumentModelFamily.ISCWSA
+        : SurveyInstrumentModelFamily.WolffDeWardt;
+    toolFamily = modelType is SurveyInstrumentModelType.Gyro_WolffDeWardt or SurveyInstrumentModelType.Gyro_ISCWSA
+        ? SurveyInstrumentToolFamily.Gyro
+        : SurveyInstrumentToolFamily.MWD;
+}
+
+private SurveyInstrumentModelType GetModelType()
+{
+    return (modelFamily, toolFamily) switch
+    {
+        (SurveyInstrumentModelFamily.WolffDeWardt, SurveyInstrumentToolFamily.MWD) => SurveyInstrumentModelType.MWD_WolffDeWardt,
+        (SurveyInstrumentModelFamily.WolffDeWardt, SurveyInstrumentToolFamily.Gyro) => SurveyInstrumentModelType.Gyro_WolffDeWardt,
+        (SurveyInstrumentModelFamily.ISCWSA, SurveyInstrumentToolFamily.MWD) => SurveyInstrumentModelType.MWD_ISCWSA,
+        _ => SurveyInstrumentModelType.Gyro_ISCWSA,
+    };
+}
+
+private static string DisplayModelFamily(SurveyInstrumentModelFamily value)
+{
+    return value == SurveyInstrumentModelFamily.WolffDeWardt ? "Wolff and de Wardt" : "ISCWSA";
+}
+
+private static string DisplayToolFamily(SurveyInstrumentToolFamily value)
+{
+    return value == SurveyInstrumentToolFamily.MWD ? "Magnetic" : "Gyroscopic";
+}
+
+}

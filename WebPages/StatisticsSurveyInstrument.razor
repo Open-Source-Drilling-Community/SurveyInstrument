@@ -1,0 +1,98 @@
+@page "/StatisticsSurveyInstrument"
+@inject ILogger<StatisticsSurveyInstrument> logger
+@inject ISnackbar Snackbar
+@inject ISurveyInstrumentAPIUtils Api
+
+@if (statistics_ == null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <div hidden="@isHiddenMainPanel">
+        <MudText Class="mt-4 mb-4" Typo="Typo.h5"><strong>Usage Statistics</strong></MudText>
+        <div style="width: 90%; margin: auto">
+            <MudGrid>
+                <MudItem xs="6">
+                    <MudText Typo="Typo.h6">Total count:</MudText>
+                </MudItem>
+                <MudItem xs="6">
+                    <MudText Typo="Typo.body1">@totalCount_</MudText>
+                </MudItem>
+                <MudItem xs="6">
+                    <MudText Typo="Typo.h6">SurveyInstrument count:</MudText>
+                </MudItem>
+                <MudItem xs="6">
+                    <MudText Typo="Typo.body1">@surveyInstrumentCount_</MudText>
+                </MudItem>
+                <MudItem xs="6">
+                    <MudText Typo="Typo.h6">ErrorSource count:</MudText>
+                </MudItem>
+                <MudItem xs="6">
+                    <MudText Typo="Typo.body1">@errorSourceCount_</MudText>
+                </MudItem>
+            </MudGrid>
+        </div>
+    </div>
+}
+
+@code {
+    private UsageStatisticsSurveyInstrument statistics_ = null!;
+    private long totalCount_;
+    private long surveyInstrumentCount_;
+    private long errorSourceCount_;
+    private bool isHiddenMainPanel = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            statistics_ = await Api.ClientSurveyInstrument.GetSurveyInstrumentUsageStatisticsAsync();
+            if (statistics_ != null)
+            {
+                surveyInstrumentCount_ =
+                    Sum(statistics_.GetAllSurveyInstrumentIdPerDay) +
+                    Sum(statistics_.GetAllSurveyInstrumentMetaInfoPerDay) +
+                    Sum(statistics_.GetSurveyInstrumentByIdPerDay) +
+                    Sum(statistics_.GetAllSurveyInstrumentLightPerDay) +
+                    Sum(statistics_.GetAllSurveyInstrumentPerDay) +
+                    Sum(statistics_.PostSurveyInstrumentPerDay) +
+                    Sum(statistics_.PutSurveyInstrumentByIdPerDay) +
+                    Sum(statistics_.DeleteSurveyInstrumentByIdPerDay);
+
+                errorSourceCount_ =
+                    Sum(statistics_.GetAllErrorSourceIdPerDay) +
+                    Sum(statistics_.GetAllErrorSourceMetaInfoPerDay) +
+                    Sum(statistics_.GetErrorSourceByIdPerDay) +
+                    Sum(statistics_.GetAllErrorSourcePerDay) +
+                    Sum(statistics_.PostErrorSourcePerDay) +
+                    Sum(statistics_.PutErrorSourceByIdPerDay) +
+                    Sum(statistics_.DeleteErrorSourceByIdPerDay);
+
+                totalCount_ = surveyInstrumentCount_ + errorSourceCount_;
+            }
+            isHiddenMainPanel = false;
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Problem UsageStatistics initialization");
+            Snackbar.Add("Problem UsageStatistics initialization", Severity.Error);
+        }
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private static long Sum(History? history)
+    {
+        if (history?.Data == null)
+        {
+            return 0;
+        }
+
+        long total = 0;
+        foreach (CountPerDay count in history.Data)
+        {
+            total += count.Count;
+        }
+        return total;
+    }
+}

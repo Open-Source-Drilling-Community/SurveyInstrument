@@ -1,0 +1,38 @@
+<Project Sdk="Microsoft.NET.Sdk.Razor">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <AddRazorSupportForMvc>true</AddRazorSupportForMvc>
+    <AssemblyName>NORCE.Drilling.SurveyInstrument.WebPages</AssemblyName>
+    <RootNamespace>NORCE.Drilling.SurveyInstrument.WebPages</RootNamespace>
+    <PackageId>NORCE.Drilling.SurveyInstrument.WebPages</PackageId>
+    <Title>NORCE.Drilling.SurveyInstrument.WebPages</Title>
+    <Authors>Eric Cayeux</Authors>
+    <Company>NORCE</Company>
+    <Description>Reusable Razor class library containing the SurveyInstrument web pages.</Description>
+    <PackageTags>surveyinstrument;drilling;blazor;razor;mudblazor</PackageTags>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <RepositoryUrl>https://github.com/Open-Source-Drilling-Community/SurveyInstrument</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageProjectUrl>https://github.com/Open-Source-Drilling-Community/SurveyInstrument</PackageProjectUrl>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <GeneratePackageOnBuild>False</GeneratePackageOnBuild>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="MudBlazor" Version="8.7.0" />
+    <PackageReference Include="OSDC.UnitConversion.DrillingRazorMudComponents" Version="3.3.21" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="README.md" Pack="true" PackagePath="\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="..\ModelSharedOut\SurveyInstrumentMergedModel.cs"
+             Link="GeneratedDtos\%(RecursiveDir)%(Filename)%(Extension)" />
+  </ItemGroup>
+
+</Project>
