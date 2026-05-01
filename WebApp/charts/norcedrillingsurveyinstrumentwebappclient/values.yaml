@@ -34,6 +34,16 @@ service:
 ingress:
   enabled: true
   className: public
+  annotations:
+    # nginx-ingress: Enable case-insensitive path matching
+    # This allows requests like /SurveyInstrument/webapp to match /surveyinstrument/webapp
+    nginx.ingress.kubernetes.io/server-snippet: |
+      location ~* ^/([a-zA-Z0-9]+)/(api|webapp)(/|$) {
+        set  ;
+        set  ;
+        set  ;
+        rewrite ^/(.*)$ // break;
+      }
   hosts:
     - host: localhost
       paths:
