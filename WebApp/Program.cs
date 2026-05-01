@@ -35,7 +35,6 @@ app.UseForwardedHeaders();
 
 var basePath = "/surveyinstrument/webapp";
 
-
 app.Use(async (context, next) => {
     var path = context.Request.Path.Value;
     var pathLower = path.ToLower();
@@ -71,6 +70,8 @@ app.MapBlazorHub();
 app.MapFallbackToPage("/_Host");
 
 app.Run();
+
+
 
 
 

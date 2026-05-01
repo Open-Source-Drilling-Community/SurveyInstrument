@@ -35,32 +35,27 @@ ingress:
   enabled: true
   className: public
   annotations:
-    # nginx-ingress: Enable case-insensitive path matching
-    # This allows requests like /SurveyInstrument/api to match /surveyinstrument/api
-    nginx.ingress.kubernetes.io/server-snippet: |
-      location ~* ^/([a-zA-Z0-9]+)/(api|webapp)(/|$) {
-        set $project $1;
-        set $endpoint $2;
-        set $rest $3;
-        rewrite ^/(.*)$ /${project,,}/${endpoint,,}${rest} break;
-      }
+    # nginx-ingress: Enable regex path matching for case-insensitive routing
+    # This allows /SurveyInstrument/api to match the same route as /surveyinstrument/api
+    nginx.ingress.kubernetes.io/use-regex: "true"
   hosts:
     - host: localhost
       paths:
-        - path: /surveyinstrument/api
-          pathType: Prefix
+        # Regex pattern matches /surveyinstrument/api or /SurveyInstrument/api, etc.
+        - path: /(?i)surveyinstrument/api
+          pathType: ImplementationSpecific
     - host: dev.digiwells.no
       paths:
-        - path: /surveyinstrument/api
-          pathType: Prefix
+        - path: /(?i)surveyinstrument/api
+          pathType: ImplementationSpecific
     - host: app.digiwells.no
       paths:
-        - path: /surveyinstrument/api
-          pathType: Prefix
+        - path: /(?i)surveyinstrument/api
+          pathType: ImplementationSpecific
     - host: awe.web.intra.norceresearch.no
       paths:
-        - path: /surveyinstrument/api
-          pathType: Prefix
+        - path: /(?i)surveyinstrument/api
+          pathType: ImplementationSpecific
 resources: {}
   # We usually recommend not to specify default resources and to leave this as a conscious
   # choice for the user. This also increases chances charts run on environments with little

@@ -33,7 +33,6 @@ var app = builder.Build();
 var basePath = "/surveyinstrument/api";
 var scheme = "http";
 
-
 app.Use(async (context, next) => {
     var path = context.Request.Path.Value;
     var pathLower = path.ToLower();
@@ -90,6 +89,8 @@ app.MapControllers();
 app.MapFallbackToFile("index.html");
 
 app.Run();
+
+
 
 
 
