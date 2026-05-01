@@ -52,6 +52,17 @@ else
 
 //app.UseHttpsRedirection();
 app.UseStaticFiles();
+
+app.Use(async (context, next) => {
+    var path = context.Request.Path.Value;
+    if (path.StartsWith($"/SurveyInstrument/api", System.StringComparison.OrdinalIgnoreCase))
+    {
+        var normalizedPath = $"/SurveyInstrument" + path.Substring(path.IndexOf("/api", System.StringComparison.OrdinalIgnoreCase));
+        context.Request.Path = normalizedPath;
+    }
+    await next();
+});
+
 app.UseRouting();
 
 string relativeSwaggerPath = "/swagger/merged/swagger.json";
@@ -73,16 +84,6 @@ app.UseCors(cors => cors
                         .AllowCredentials()
            );
 
-
-app.Use(async (context, next) => {
-    var path = context.Request.Path.Value;
-    if (path.StartsWith($"/SurveyInstrument/api", System.StringComparison.OrdinalIgnoreCase))
-    {
-        var normalizedPath = $"/SurveyInstrument" + path.Substring(path.IndexOf("/api", System.StringComparison.OrdinalIgnoreCase));
-        context.Request.Path = normalizedPath;
-    }
-    await next();
-});
 
 app.MapControllers();
 app.MapFallbackToFile("index.html");
