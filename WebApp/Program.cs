@@ -32,18 +32,20 @@ var app = builder.Build();
 
 app.UseForwardedHeaders();
 
+
+var basePath = "/surveyinstrument/webapp";
+
 app.Use(async (context, next) => {
     var path = context.Request.Path.Value;
-    if (path.StartsWith($"/SurveyInstrument/webapp", StringComparison.OrdinalIgnoreCase))
+    var pathLower = path.ToLower();
+    if (pathLower.StartsWith("/surveyinstrument/webapp", System.StringComparison.Ordinal))
     {
-        var normalizedPath = $"/SurveyInstrument" + path.Substring(path.IndexOf("/webapp", StringComparison.OrdinalIgnoreCase));
+        var normalizedPath = "/surveyinstrument" + path.Substring(path.IndexOf("/webapp", System.StringComparison.OrdinalIgnoreCase));
         context.Request.Path = normalizedPath;
     }
     await next();
 });
-
-// This needs to match with what is defined in "charts/<helm-chart-name>/templates/values.yaml ingress.Path
-app.UsePathBase("/SurveyInstrument/webapp");
+app.UsePathBase(basePath);
 
 if (!String.IsNullOrEmpty(builder.Configuration["SurveyInstrumentHostURL"]))
     Configuration.SurveyInstrumentHostURL = builder.Configuration["SurveyInstrumentHostURL"];
@@ -68,3 +70,11 @@ app.MapBlazorHub();
 app.MapFallbackToPage("/_Host");
 
 app.Run();
+
+
+
+
+
+
+
+

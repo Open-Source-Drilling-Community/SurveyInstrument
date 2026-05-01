@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -30,19 +30,22 @@ builder.Services.AddSwaggerGen(config =>
 
 var app = builder.Build();
 
-var basePath = "/SurveyInstrument/api";
+var basePath = "/surveyinstrument/api";
 var scheme = "http";
+
+
+
 
 app.Use(async (context, next) => {
     var path = context.Request.Path.Value;
-    if (path.StartsWith($"/SurveyInstrument/api", System.StringComparison.OrdinalIgnoreCase))
+    var pathLower = path.ToLower();
+    if (pathLower.StartsWith("/surveyinstrument/api", System.StringComparison.Ordinal))
     {
-        var normalizedPath = $"/SurveyInstrument" + path.Substring(path.IndexOf("/api", System.StringComparison.OrdinalIgnoreCase));
+        var normalizedPath = "/surveyinstrument" + path.Substring(path.IndexOf("/api", System.StringComparison.OrdinalIgnoreCase));
         context.Request.Path = normalizedPath;
     }
     await next();
 });
-
 app.UsePathBase(basePath);
 
 app.UseForwardedHeaders(new ForwardedHeadersOptions
@@ -89,3 +92,13 @@ app.MapControllers();
 app.MapFallbackToFile("index.html");
 
 app.Run();
+
+
+
+
+
+
+
+
+
+

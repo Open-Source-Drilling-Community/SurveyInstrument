@@ -37,19 +37,19 @@ ingress:
   hosts:
     - host: localhost
       paths:
-        - path: /SurveyInstrument/webapp
+        - path: /surveyinstrument/webapp
           pathType: Prefix
     - host: dev.digiwells.no
       paths:
-        - path: /SurveyInstrument/webapp
+        - path: /surveyinstrument/webapp
           pathType: Prefix
     - host: app.digiwells.no
       paths:
-        - path: /SurveyInstrument/webapp
+        - path: /surveyinstrument/webapp
           pathType: Prefix
     - host: awe.web.intra.norceresearch.no
       paths:
-        - path: /SurveyInstrument/webapp
+        - path: /surveyinstrument/webapp
           pathType: Prefix
 resources: {}
   # We usually recommend not to specify default resources and to leave this as a conscious
