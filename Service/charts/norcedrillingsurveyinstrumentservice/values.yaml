@@ -39,10 +39,10 @@ ingress:
     # This allows requests like /SurveyInstrument/api to match /surveyinstrument/api
     nginx.ingress.kubernetes.io/server-snippet: |
       location ~* ^/([a-zA-Z0-9]+)/(api|webapp)(/|$) {
-        set  ;
-        set  ;
-        set  ;
-        rewrite ^/(.*)$ // break;
+        set $project $1;
+        set $endpoint $2;
+        set $rest $3;
+        rewrite ^/(.*)$ /${project,,}/${endpoint,,}${rest} break;
       }
   hosts:
     - host: localhost
