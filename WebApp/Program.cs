@@ -53,6 +53,17 @@ app.UseStaticFiles();
 
 app.UseRouting();
 
+
+app.Use(async (context, next) => {
+    var path = context.Request.Path.Value;
+    if (path.StartsWith($"/SurveyInstrument/webapp", StringComparison.OrdinalIgnoreCase))
+    {
+        var normalizedPath = $"/SurveyInstrument" + path.Substring(path.IndexOf("/webapp", StringComparison.OrdinalIgnoreCase));
+        context.Request.Path = normalizedPath;
+    }
+    await next();
+});
+
 app.MapBlazorHub();
 app.MapFallbackToPage("/_Host");
 

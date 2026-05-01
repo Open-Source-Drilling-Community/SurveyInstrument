@@ -73,6 +73,17 @@ app.UseCors(cors => cors
                         .AllowCredentials()
            );
 
+
+app.Use(async (context, next) => {
+    var path = context.Request.Path.Value;
+    if (path.StartsWith($"/SurveyInstrument/api", StringComparison.OrdinalIgnoreCase))
+    {
+        var normalizedPath = $"/SurveyInstrument" + path.Substring(path.IndexOf("/api", StringComparison.OrdinalIgnoreCase));
+        context.Request.Path = normalizedPath;
+    }
+    await next();
+});
+
 app.MapControllers();
 app.MapFallbackToFile("index.html");
 
