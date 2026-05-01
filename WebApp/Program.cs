@@ -31,6 +31,17 @@ builder.Services.AddSingleton<ISurveyInstrumentAPIUtils, SurveyInstrumentAPIUtil
 var app = builder.Build();
 
 app.UseForwardedHeaders();
+
+app.Use(async (context, next) => {
+    var path = context.Request.Path.Value;
+    if (path.StartsWith($"/SurveyInstrument/webapp", StringComparison.OrdinalIgnoreCase))
+    {
+        var normalizedPath = $"/SurveyInstrument" + path.Substring(path.IndexOf("/webapp", StringComparison.OrdinalIgnoreCase));
+        context.Request.Path = normalizedPath;
+    }
+    await next();
+});
+
 // This needs to match with what is defined in "charts/<helm-chart-name>/templates/values.yaml ingress.Path
 app.UsePathBase("/SurveyInstrument/webapp");
 
@@ -50,16 +61,6 @@ if (!app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 
 app.UseStaticFiles();
-
-app.Use(async (context, next) => {
-    var path = context.Request.Path.Value;
-    if (path.StartsWith($"/SurveyInstrument/webapp", StringComparison.OrdinalIgnoreCase))
-    {
-        var normalizedPath = $"/SurveyInstrument" + path.Substring(path.IndexOf("/webapp", StringComparison.OrdinalIgnoreCase));
-        context.Request.Path = normalizedPath;
-    }
-    await next();
-});
 
 app.UseRouting();
 

@@ -33,6 +33,16 @@ var app = builder.Build();
 var basePath = "/SurveyInstrument/api";
 var scheme = "http";
 
+app.Use(async (context, next) => {
+    var path = context.Request.Path.Value;
+    if (path.StartsWith($"/SurveyInstrument/api", System.StringComparison.OrdinalIgnoreCase))
+    {
+        var normalizedPath = $"/SurveyInstrument" + path.Substring(path.IndexOf("/api", System.StringComparison.OrdinalIgnoreCase));
+        context.Request.Path = normalizedPath;
+    }
+    await next();
+});
+
 app.UsePathBase(basePath);
 
 app.UseForwardedHeaders(new ForwardedHeadersOptions
@@ -52,16 +62,6 @@ else
 
 //app.UseHttpsRedirection();
 app.UseStaticFiles();
-
-app.Use(async (context, next) => {
-    var path = context.Request.Path.Value;
-    if (path.StartsWith($"/SurveyInstrument/api", System.StringComparison.OrdinalIgnoreCase))
-    {
-        var normalizedPath = $"/SurveyInstrument" + path.Substring(path.IndexOf("/api", System.StringComparison.OrdinalIgnoreCase));
-        context.Request.Path = normalizedPath;
-    }
-    await next();
-});
 
 app.UseRouting();
 
