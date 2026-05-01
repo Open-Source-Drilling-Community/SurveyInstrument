@@ -35,13 +35,14 @@ app.UseForwardedHeaders();
 
 var basePath = "/surveyinstrument/webapp";
 
+
 app.Use(async (context, next) => {
     var path = context.Request.Path.Value;
     var pathLower = path.ToLower();
+    // Normalize entire path to lowercase for case-insensitive endpoint matching
     if (pathLower.StartsWith("/surveyinstrument/webapp", System.StringComparison.Ordinal))
     {
-        var normalizedPath = "/surveyinstrument" + path.Substring(path.IndexOf("/webapp", System.StringComparison.OrdinalIgnoreCase));
-        context.Request.Path = normalizedPath;
+        context.Request.Path = pathLower;
     }
     await next();
 });
@@ -70,6 +71,8 @@ app.MapBlazorHub();
 app.MapFallbackToPage("/_Host");
 
 app.Run();
+
+
 
 
 

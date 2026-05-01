@@ -34,15 +34,13 @@ var basePath = "/surveyinstrument/api";
 var scheme = "http";
 
 
-
-
 app.Use(async (context, next) => {
     var path = context.Request.Path.Value;
     var pathLower = path.ToLower();
+    // Normalize entire path to lowercase for case-insensitive endpoint matching
     if (pathLower.StartsWith("/surveyinstrument/api", System.StringComparison.Ordinal))
     {
-        var normalizedPath = "/surveyinstrument" + path.Substring(path.IndexOf("/api", System.StringComparison.OrdinalIgnoreCase));
-        context.Request.Path = normalizedPath;
+        context.Request.Path = pathLower;
     }
     await next();
 });
@@ -92,6 +90,8 @@ app.MapControllers();
 app.MapFallbackToFile("index.html");
 
 app.Run();
+
+
 
 
 
