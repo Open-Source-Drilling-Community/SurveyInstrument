@@ -35,16 +35,6 @@ app.UseForwardedHeaders();
 
 var basePath = "/surveyinstrument/webapp";
 
-app.Use(async (context, next) => {
-    var path = context.Request.Path.Value;
-    var pathLower = path.ToLower();
-    // Normalize entire path to lowercase for case-insensitive endpoint matching
-    if (pathLower.StartsWith("/surveyinstrument/webapp", System.StringComparison.Ordinal))
-    {
-        context.Request.Path = pathLower;
-    }
-    await next();
-});
 app.UsePathBase(basePath);
 
 if (!String.IsNullOrEmpty(builder.Configuration["SurveyInstrumentHostURL"]))
@@ -70,17 +60,3 @@ app.MapBlazorHub();
 app.MapFallbackToPage("/_Host");
 
 app.Run();
-
-
-
-
-
-
-
-
-
-
-
-
-
-

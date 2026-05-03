@@ -31,6 +31,8 @@ securityContext: {}
 service:
   type: ClusterIP
   port: 80
+  annotations:
+    description: "A webapp client for handling surveyinstrument"
 ingress:
   enabled: true
   className: public
