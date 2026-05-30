@@ -1,7 +1,7 @@
+using OSDC.DotnetLibraries.Drilling.WebAppUtils;
 namespace NORCE.Drilling.SurveyInstrument.WebPages;
 
-public interface ISurveyInstrumentWebPagesConfiguration
+public interface ISurveyInstrumentWebPagesConfiguration : ISurveyInstrumentHostURL, IUnitConversionHostURL
 {
-    string? SurveyInstrumentHostURL { get; }
-    string? UnitConversionHostURL { get; }
+
 }

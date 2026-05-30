@@ -22,16 +22,15 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="MudBlazor" Version="8.7.0" />
-    <PackageReference Include="OSDC.UnitConversion.DrillingRazorMudComponents" Version="3.3.21" />
-  </ItemGroup>
-
-  <ItemGroup>
     <None Include="README.md" Pack="true" PackagePath="\" />
   </ItemGroup>
 
   <ItemGroup>
     <Compile Include="..\ModelSharedOut\SurveyInstrumentMergedModel.cs" Link="GeneratedDtos\%(RecursiveDir)%(Filename)%(Extension)" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="OSDC.DotnetLibraries.Drilling.WebAppUtils" Version="1.1.2" />
   </ItemGroup>
 
 </Project>
