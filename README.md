@@ -194,3 +194,11 @@ This root README explains the solution at repository level. Each project now als
 - maintenance notes
 
 For project-specific details, start with the README inside the corresponding project directory.
+
+## MCP implementation
+
+The checked-in service publishes all 15 non-statistics REST operations—covering Survey Instrument and Error Source resources—as MCP tools, together with `ping`. Usage-statistics endpoints are intentionally excluded.
+
+MCP is available over streamable HTTP at `/surveyinstrument/api/mcp` and WebSocket at `/surveyinstrument/api/mcp/ws`. Registration with an external MCP hub is optional and disabled by default.
+
+The tools provide detailed descriptions and explicit schemas for full Survey Instrument and Error Source payloads. They explain discovery versus full retrieval, caller-generated UUIDs, update ID matching, the supported Wolff-DeWardt and ISCWSA model families, and embedded error sources. Physical inputs and outputs use SI: angles are radians, distances are metres, gravity is m/s², magnetic flux density is tesla, and error-source `Magnitude` is expressed in the SI unit identified by `MagnitudeQuantity`.

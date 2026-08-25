@@ -179,3 +179,16 @@ Regenerate service-side Swagger input for `ModelSharedOut`:
 ```powershell
 dotnet build .\Service\Service.csproj -c Debug
 ```
+
+## MCP server
+
+The service publishes eight Survey Instrument operations and seven Error Source operations as MCP tools. Usage-statistics operations are not exposed.
+
+Tool descriptions distinguish compact discovery (`get_all_ids`, `get_all_meta_info`, and Survey Instrument `get_all_light`) from complete-model retrieval. Create and update tools expose explicit nested JSON Schemas rather than generic object bodies. The schemas document the caller-owned `MetaInfo.ID`, the requirement that an update path ID match the body's ID, all four survey model families, embedded `ErrorSourceList` objects, classification flags, and inclination intervals.
+
+MCP physical values follow the service's SI convention: angular quantities are radians, gravity is m/s², magnetic flux density is tesla, distance is metres, and relative errors/factors are dimensionless. An error source's `Magnitude` uses the SI unit of the UnitConversion quantity named by `MagnitudeQuantity`; it is not a display-unit value. `Use...` flags determine whether their corresponding optional Wolff-DeWardt parameters participate in that model.
+
+- Streamable HTTP: `/surveyinstrument/api/mcp`
+- WebSocket: `/surveyinstrument/api/mcp/ws`
+- Utility tool: `ping`
+- Optional external MCP-hub registration: configured in `appsettings.json`, disabled by default

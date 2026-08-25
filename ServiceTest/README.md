@@ -101,3 +101,10 @@ If the service runs on another port, update `host` in `Tests.cs` before running.
 - Regenerate `ModelSharedOut` if the service contract changes.
 - Add assertions for new endpoints as the service grows.
 - Consider a dedicated ephemeral database strategy if test concurrency becomes important.
+
+## MCP coverage
+
+- `McpToolRegistrationTests.cs` verifies all 15 REST-backed tools and `ping`, and confirms that usage-statistics operations are absent.
+- `McpServerHttpTests.cs` exercises initialization, tool discovery, and representative MCP calls against a running service.
+
+The live HTTP tests require the SurveyInstrument service at the configured test base URL.
