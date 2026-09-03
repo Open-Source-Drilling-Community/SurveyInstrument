@@ -95,6 +95,8 @@ public sealed class McpToolRegistrationTests
         Assert.That(domainTools.All(tool => tool.Description.Length >= 150), Is.True);
         Assert.That(domainTools.All(tool => tool.InputSchema is JsonObject), Is.True);
         Assert.That(domainTools.All(tool => tool.InputSchema?["type"]?.GetValue<string>() == "object"), Is.True);
+        Assert.That(domainTools.All(tool => tool.OutputSchema is JsonObject), Is.True);
+        Assert.That(domainTools.All(tool => tool.OutputSchema["type"]?.GetValue<string>() == "object"), Is.True);
     }
 
     [Test]
@@ -154,6 +156,56 @@ public sealed class McpToolRegistrationTests
         Assert.That(names, Has.Length.EqualTo(_tools.Count));
         Assert.That(names, Is.Unique);
         Assert.That(names.All(name => !name.Contains('.')), Is.True);
+    }
+
+    [Test]
+    public void Protocol_contract_publishes_output_schemas_titles_and_safety_annotations()
+    {
+        McpServerTool[] protocolTools = _provider.GetServices<McpServerTool>().ToArray();
+        IMcpTool read = _tools["survey_instrument_get_by_id"];
+        IMcpTool update = _tools["survey_instrument_update_by_id"];
+        IMcpTool delete = _tools["survey_instrument_delete_by_id"];
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(protocolTools.All(tool => tool.ProtocolTool.OutputSchema.HasValue), Is.True);
+            Assert.That(protocolTools.All(tool => !string.IsNullOrWhiteSpace(tool.ProtocolTool.Title)), Is.True);
+            Assert.That(protocolTools.All(tool => tool.ProtocolTool.Annotations != null), Is.True);
+            Assert.That(read.Behavior.ReadOnlyHint, Is.True);
+            Assert.That(read.Behavior.DestructiveHint, Is.False);
+            Assert.That(update.Behavior.ReadOnlyHint, Is.False);
+            Assert.That(update.Behavior.IdempotentHint, Is.True);
+            Assert.That(delete.Behavior.DestructiveHint, Is.True);
+            Assert.That(delete.Behavior.IdempotentHint, Is.True);
+        });
+    }
+
+    [Test]
+    public void Resource_output_schemas_describe_success_envelopes_and_complete_data()
+    {
+        string instrument = _tools["survey_instrument_get_by_id"].OutputSchema.ToJsonString();
+        string errorSources = _tools["error_source_get_all"].OutputSchema.ToJsonString();
+        string features = _tools["survey_instrument_feature_category_get_all"].OutputSchema.ToJsonString();
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(instrument, Does.Contain("\"status\""));
+            Assert.That(instrument, Does.Contain("SurveyInstrumentFeatureAssignments"));
+            Assert.That(instrument, Does.Contain("ErrorSourceList"));
+            Assert.That(errorSources, Does.Contain("MagnitudeQuantity"));
+            Assert.That(features, Does.Contain("HasValidityPeriod"));
+            Assert.That(features, Does.Contain("Options"));
+        });
+    }
+
+    [Test]
+    public async Task Unexpected_top_level_arguments_are_rejected_before_invocation()
+    {
+        JsonObject? response = await _tools["survey_instrument_get_all_ids"]
+            .InvokeAsync(new JsonObject { ["typo"] = true }, CancellationToken.None) as JsonObject;
+
+        Assert.That(response?["status"]?.GetValue<int>(), Is.EqualTo(400));
+        Assert.That(response?["error"]?.GetValue<string>(), Does.Contain("Unexpected argument"));
     }
 
     [TestCase("survey_instrument_get_by_id")]

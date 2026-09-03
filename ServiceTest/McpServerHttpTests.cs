@@ -84,5 +84,25 @@ public sealed class McpServerHttpTests
         Assert.That(result.StructuredContent, Is.InstanceOf<JsonObject>());
         var payload = (JsonObject)result.StructuredContent!;
         Assert.That(payload["message"]?.GetValue<string>(), Is.EqualTo("pong"));
+        Assert.That(result.Content.OfType<TextContentBlock>().Single().Text, Does.Contain("pong"));
+    }
+
+    [Test]
+    public async Task Missing_resource_is_returned_as_a_stable_mcp_error()
+    {
+        CallToolResult result = await _client.CallToolAsync(
+            "survey_instrument_get_by_id",
+            new Dictionary<string, object?> { ["id"] = Guid.NewGuid().ToString() },
+            cancellationToken: CancellationToken.None);
+
+        Assert.That(result.IsError, Is.True);
+        JsonObject error = JsonNode.Parse(result.Content.OfType<TextContentBlock>().Single().Text)!.AsObject();
+        Assert.Multiple(() =>
+        {
+            Assert.That(error["error"]?.GetValue<string>(), Is.EqualTo("not_found"));
+            Assert.That(error["message"]?.GetValue<string>(), Is.Not.Empty);
+            Assert.That(error["errors"], Is.InstanceOf<JsonArray>());
+            Assert.That(error.ToJsonString(), Does.Not.Contain("Exception"));
+        });
     }
 }

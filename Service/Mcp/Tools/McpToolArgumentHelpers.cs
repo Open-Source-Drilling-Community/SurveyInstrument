@@ -63,6 +63,81 @@ internal static class McpToolArgumentHelpers
         ["additionalProperties"] = false
     };
 
+    public static JsonObject CreateIdsOutputSchema() => SuccessEnvelope(new JsonObject
+    {
+        ["type"] = "array",
+        ["items"] = StringSchema("Resource UUID.", "uuid")
+    });
+
+    public static JsonObject CreateMetaInfoListOutputSchema() => SuccessEnvelope(new JsonObject
+    {
+        ["type"] = "array",
+        ["items"] = MetaInfoSchema("Resource metadata.")
+    });
+
+    public static JsonObject CreateSurveyInstrumentOutputSchema() => SuccessEnvelope(SurveyInstrumentSchema());
+
+    public static JsonObject CreateSurveyInstrumentListOutputSchema() => SuccessEnvelope(new JsonObject
+    {
+        ["type"] = "array", ["items"] = SurveyInstrumentSchema()
+    });
+
+    public static JsonObject CreateSurveyInstrumentLightListOutputSchema() => SuccessEnvelope(new JsonObject
+    {
+        ["type"] = "array",
+        ["items"] = new JsonObject
+        {
+            ["type"] = "object",
+            ["description"] = "Lightweight survey-instrument discovery record.",
+            ["properties"] = new JsonObject
+            {
+                ["MetaInfo"] = MetaInfoSchema("Resource metadata."),
+                ["Name"] = NullableString("Survey-instrument name."),
+                ["Description"] = NullableString("Survey-instrument description."),
+                ["CreationDate"] = NullableDateTime("Creation timestamp."),
+                ["LastModificationDate"] = NullableDateTime("Last-modification timestamp.")
+            },
+            ["required"] = new JsonArray("MetaInfo"),
+            ["additionalProperties"] = false
+        }
+    });
+
+    public static JsonObject CreateErrorSourceOutputSchema() => SuccessEnvelope(ErrorSourceSchema());
+
+    public static JsonObject CreateErrorSourceListOutputSchema() => SuccessEnvelope(new JsonObject
+    {
+        ["type"] = "array", ["items"] = ErrorSourceSchema()
+    });
+
+    public static JsonObject CreateIdentityOutputSchema() => SuccessEnvelope(IdentitySchema());
+
+    public static JsonObject CreateIdentityListOutputSchema() => SuccessEnvelope(new JsonObject
+    {
+        ["type"] = "array", ["items"] = IdentitySchema()
+    });
+
+    public static JsonObject CreateFeatureCategoryOutputSchema() => SuccessEnvelope(FeatureCategorySchema());
+
+    public static JsonObject CreateFeatureCategoryListOutputSchema() => SuccessEnvelope(new JsonObject
+    {
+        ["type"] = "array", ["items"] = FeatureCategorySchema()
+    });
+
+    public static JsonObject CreateGenericOutputSchema() => SuccessEnvelope(new JsonObject());
+
+    private static JsonObject SuccessEnvelope(JsonObject data) => new()
+    {
+        ["type"] = "object",
+        ["description"] = "Successful MCP tool response envelope.",
+        ["properties"] = new JsonObject
+        {
+            ["status"] = new JsonObject { ["type"] = "integer", ["minimum"] = 200, ["maximum"] = 299 },
+            ["data"] = data
+        },
+        ["required"] = new JsonArray("status"),
+        ["additionalProperties"] = false
+    };
+
     private static JsonObject CreateBodySchema(string key, JsonObject body, string description, bool includeId, string idDescription)
     {
         body["description"] = description;

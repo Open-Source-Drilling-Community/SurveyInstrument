@@ -106,7 +106,7 @@ If the service runs on another port, update `host` in `Tests.cs` before running.
 
 ## MCP coverage
 
-- `McpToolRegistrationTests.cs` verifies all 15 REST-backed tools and `ping`, and confirms that usage-statistics operations are absent.
-- `McpServerHttpTests.cs` exercises initialization, tool discovery, and representative MCP calls against a running service.
+- `McpToolRegistrationTests.cs` verifies all 25 REST-backed tools and `ping`, strict input/output schemas, titles, safety annotations, and pre-invocation rejection of unknown arguments.
+- `McpServerHttpTests.cs` exercises initialization, tool discovery, structured and fallback success content, and stable MCP error envelopes against a running service.
 
 The live HTTP tests require the SurveyInstrument service at the configured test base URL.
