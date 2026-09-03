@@ -193,6 +193,10 @@ public sealed class McpToolRegistrationTests
         Assert.That(schema, Does.Contain("\"enum\""));
         Assert.That(schema, Does.Contain("DRFR"));
         Assert.That(schema, Does.Contain("XCLA"));
+        Assert.That(schema, Does.Contain("expectedVersionToken"));
+        Assert.That(schema, Does.Contain("^[0-9a-f]{64}$"));
+        Assert.That(_tools["error_source_get_by_id"].OutputSchema.ToJsonString(), Does.Contain("versionToken"));
+        Assert.That(_tools["error_source_delete_by_id"].InputSchema.ToJsonString(), Does.Contain("expectedVersionToken"));
     }
 
     [Test]
@@ -363,5 +367,16 @@ public sealed class McpToolRegistrationTests
 
         Assert.That(response?["status"]?.GetValue<int>(), Is.EqualTo(400));
         Assert.That(response?["error"]?.GetValue<string>(), Does.Contain("expectedModifiedUtc"));
+    }
+
+    [TestCase("error_source_update_by_id")]
+    [TestCase("error_source_delete_by_id")]
+    public async Task Error_source_writes_reject_a_missing_version_token(string toolName)
+    {
+        JsonObject? response = await _tools[toolName].InvokeAsync(
+            new JsonObject { ["id"] = Guid.NewGuid().ToString() }, CancellationToken.None) as JsonObject;
+
+        Assert.That(response?["status"]?.GetValue<int>(), Is.EqualTo(400));
+        Assert.That(response?["error"]?.GetValue<string>(), Does.Contain("expectedVersionToken"));
     }
 }

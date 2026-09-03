@@ -323,9 +323,15 @@ public sealed class McpServerHttpTests
 
         try
         {
+            CallToolResult versionedRead = await _client.CallToolAsync("error_source_get_by_id",
+                new Dictionary<string, object?> { ["id"] = sourceId.ToString() }, cancellationToken: CancellationToken.None);
+            string firstVersion = ((JsonObject)versionedRead.StructuredContent!)["versionToken"]!.GetValue<string>();
             source["Description"] = "updated template";
             CallToolResult updated = await _client.CallToolAsync("error_source_update_by_id",
-                new Dictionary<string, object?> { ["id"] = sourceId.ToString(), ["errorSource"] = source },
+                new Dictionary<string, object?>
+                {
+                    ["id"] = sourceId.ToString(), ["expectedVersionToken"] = firstVersion, ["errorSource"] = source
+                },
                 cancellationToken: CancellationToken.None);
             Assert.That(updated.IsError, Is.Not.True);
             JsonObject impact = ((JsonObject)updated.StructuredContent!)["data"]!.AsObject();
@@ -335,6 +341,15 @@ public sealed class McpServerHttpTests
                 Assert.That(impact["AffectedSurveyInstrumentIDs"]!.AsArray().Single()!.GetValue<string>(), Is.EqualTo(instrumentId.ToString()));
                 Assert.That(impact["Warning"]?.GetValue<string>(), Does.Contain("not modified"));
             });
+
+            CallToolResult stale = await _client.CallToolAsync("error_source_update_by_id",
+                new Dictionary<string, object?>
+                {
+                    ["id"] = sourceId.ToString(), ["expectedVersionToken"] = firstVersion, ["errorSource"] = source
+                }, cancellationToken: CancellationToken.None);
+            Assert.That(stale.IsError, Is.True);
+            Assert.That(JsonNode.Parse(stale.Content.OfType<TextContentBlock>().Single().Text)!["error"]?.GetValue<string>(),
+                Is.EqualTo("stale_write"));
 
             JsonObject stored = await GetInstrument(instrumentId);
             Assert.That(stored["ErrorSourceList"]![0]!["Description"]?.GetValue<string>(), Is.EqualTo("original template"));
@@ -362,8 +377,14 @@ public sealed class McpServerHttpTests
                     ["id"] = instrumentId.ToString(),
                     ["expectedModifiedUtc"] = latest["LastModificationDate"]!.GetValue<string>()
                 }, cancellationToken: CancellationToken.None);
-            await _client.CallToolAsync("error_source_delete_by_id",
+            CallToolResult latestSource = await _client.CallToolAsync("error_source_get_by_id",
                 new Dictionary<string, object?> { ["id"] = sourceId.ToString() }, cancellationToken: CancellationToken.None);
+            string latestVersion = ((JsonObject)latestSource.StructuredContent!)["versionToken"]!.GetValue<string>();
+            await _client.CallToolAsync("error_source_delete_by_id",
+                new Dictionary<string, object?>
+                {
+                    ["id"] = sourceId.ToString(), ["expectedVersionToken"] = latestVersion
+                }, cancellationToken: CancellationToken.None);
         }
     }
 

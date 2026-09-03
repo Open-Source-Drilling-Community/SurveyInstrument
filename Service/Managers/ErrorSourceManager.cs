@@ -386,7 +386,7 @@ namespace OSDC.Drilling.SurveyInstrument.Service.Managers
         /// </summary>
         /// <param name="errorSource"></param>
         /// <returns>true if the given ErrorSource has been updated successfully</returns>
-        public bool UpdateErrorSourceById(Guid guid, ErrorSource? errorSource)
+        public bool UpdateErrorSourceById(Guid guid, ErrorSource? errorSource, string? expectedCurrentJson = null)
         {
             bool success = true;
             if (guid != Guid.Empty && errorSource != null && errorSource.MetaInfo != null && errorSource.MetaInfo.ID == guid)
@@ -401,10 +401,12 @@ namespace OSDC.Drilling.SurveyInstrument.Service.Managers
                         string metaInfo = JsonSerializer.Serialize(errorSource.MetaInfo, JsonSettings.Options);
                         string data = JsonSerializer.Serialize(errorSource, JsonSettings.Options);
                         var command = connection.CreateCommand();
-                        command.CommandText = $"UPDATE ErrorSourceTable SET " +
-                            $"MetaInfo = '{metaInfo}', " +
-                            $"ErrorSource = '{data}' " +
-                            $"WHERE ID = '{guid}'";
+                        command.CommandText = "UPDATE ErrorSourceTable SET MetaInfo = $metaInfo, ErrorSource = $data " +
+                            "WHERE ID = $id" + (expectedCurrentJson == null ? string.Empty : " AND ErrorSource = $expected");
+                        command.Parameters.AddWithValue("$metaInfo", metaInfo);
+                        command.Parameters.AddWithValue("$data", data);
+                        command.Parameters.AddWithValue("$id", guid.ToString());
+                        if (expectedCurrentJson != null) command.Parameters.AddWithValue("$expected", expectedCurrentJson);
                         int count = command.ExecuteNonQuery();
                         if (count != 1)
                         {
@@ -447,7 +449,7 @@ namespace OSDC.Drilling.SurveyInstrument.Service.Managers
         /// </summary>
         /// <param name="guid"></param>
         /// <returns>true if the ErrorSource was deleted from the microservice database</returns>
-        public bool DeleteErrorSourceById(Guid guid)
+        public bool DeleteErrorSourceById(Guid guid, string? expectedCurrentJson = null)
         {
             if (!guid.Equals(Guid.Empty))
             {
@@ -460,9 +462,12 @@ namespace OSDC.Drilling.SurveyInstrument.Service.Managers
                     try
                     {
                         var command = connection.CreateCommand();
-                        command.CommandText = $"DELETE FROM ErrorSourceTable WHERE ID = '{guid}'";
+                        command.CommandText = "DELETE FROM ErrorSourceTable WHERE ID = $id" +
+                            (expectedCurrentJson == null ? string.Empty : " AND ErrorSource = $expected");
+                        command.Parameters.AddWithValue("$id", guid.ToString());
+                        if (expectedCurrentJson != null) command.Parameters.AddWithValue("$expected", expectedCurrentJson);
                         int count = command.ExecuteNonQuery();
-                        if (count < 0)
+                        if (count != 1)
                         {
                             _logger.LogWarning("Impossible to delete the ErrorSource of given ID from the ErrorSourceTable");
                             success = false;

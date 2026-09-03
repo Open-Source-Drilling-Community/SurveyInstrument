@@ -1,8 +1,10 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
@@ -102,15 +104,15 @@ public static class SurveyInstrumentRestMcpToolRegistrations
         services.AddLegacyMcpTool("error_source_get_all_meta_info", "List MetaInfo for every independently stored error source without loading its model attributes. Each result supplies the UUID and may include host/base-path/endpoint metadata; use the UUID with error_source_get_by_id.", McpToolArgumentHelpers.CreateEmptySchema(),
             (sp, _, ct) => Invoke(ct, () => ErrorSourceController(sp).GetAllErrorSourceMetaInfo()));
         services.AddLegacyMcpTool("error_source_get_by_id", "Retrieve one complete error-source template by UUID, including ErrorCode, classification and correlation flags, magnitude, quantity, and optional inclination interval. Copying it into an instrument creates an authoritative snapshot with UUID provenance; later template updates do not propagate. SI units are used.", McpToolArgumentHelpers.CreateGuidSchema("id", "UUID of the independently stored error-source template to retrieve."),
-            (sp, args, ct) => InvokeById(args, ct, id => ErrorSourceController(sp).GetErrorSourceById(id)));
+            InvokeErrorSourceGetById);
         services.AddLegacyMcpTool("error_source_get_all", "Retrieve every independently stored error-source definition with full classification, magnitude, quantity, and inclination-interval data. This can be a large response; prefer IDs or metadata for discovery. Magnitudes use their named quantity's SI unit.", McpToolArgumentHelpers.CreateEmptySchema(),
             (sp, _, ct) => Invoke(ct, () => ErrorSourceController(sp).GetAllErrorSource()));
         services.AddLegacyMcpTool("error_source_create", "Persist a new reusable survey error-source template. Generate a non-empty errorSource.MetaInfo.ID first; an existing UUID produces a conflict. Instruments embed authoritative snapshots rather than live references, so later template updates do not propagate. Use the named quantity's SI unit.", McpToolArgumentHelpers.CreateErrorSourceSchema(),
             (sp, args, ct) => InvokeWithBody<ErrorSourceModel>(args, "errorSource", ct, data => ErrorSourceController(sp).PostErrorSource(data)));
-        services.AddLegacyMcpTool("error_source_update_by_id", "Replace an existing independently stored error-source definition. The path id must exactly match errorSource.MetaInfo.ID or the request is rejected. The success result warns when stored instruments contain same-UUID frozen snapshots and lists their IDs; those snapshots remain unchanged until explicitly refreshed. Magnitude uses the named quantity's SI unit and inclination fields use radians.", McpToolArgumentHelpers.CreateErrorSourceSchema(includeId: true),
+        services.AddLegacyMcpTool("error_source_update_by_id", "Replace an existing independently stored error-source definition with optimistic concurrency. The path id must match errorSource.MetaInfo.ID and expectedVersionToken must equal the token from the latest error_source_get_by_id read. The success result returns a new token and warns when stored instruments contain same-UUID frozen snapshots; those snapshots remain unchanged. Magnitude uses the named quantity's SI unit and inclination fields use radians.", McpToolArgumentHelpers.CreateErrorSourceSchema(includeId: true, includeExpected: true),
             InvokeErrorSourceUpdate);
-        services.AddLegacyMcpTool("error_source_delete_by_id", "Permanently delete the independently stored error source identified by UUID. Use a read operation first when the target is uncertain. This does not accept an ErrorCode in place of the resource UUID and returns not found for an unknown ID.", McpToolArgumentHelpers.CreateGuidSchema("id", "UUID of the independently stored error source to delete."),
-            (sp, args, ct) => InvokeDelete(args, ct, id => ErrorSourceController(sp).DeleteErrorSourceById(id)));
+        services.AddLegacyMcpTool("error_source_delete_by_id", "Permanently delete an independently stored error-source template with optimistic concurrency. expectedVersionToken must equal the token from the latest error_source_get_by_id read; an unknown UUID returns not_found and a changed template returns stale_write without deletion. Embedded snapshots are independent and are not deleted.", McpToolArgumentHelpers.CreateErrorSourceDeleteSchema(),
+            InvokeErrorSourceDelete);
     }
 
     private static Task<JsonNode?> InvokeSurveyInstrumentUpdate(
@@ -216,8 +218,18 @@ public static class SurveyInstrumentRestMcpToolRegistrations
         cancellationToken.ThrowIfCancellationRequested();
         if (!McpToolArgumentHelpers.TryParseGuid(arguments, "id", out Guid id, out JsonNode? error))
             return Task.FromResult(error);
+        if (!TryGetExpectedVersionToken(arguments, out string expectedToken, out error))
+            return Task.FromResult(error);
         if (!TryDeserialize(arguments, "errorSource", out ErrorSourceModel? data, out error))
             return Task.FromResult(error);
+
+        ErrorSourceController errorSources = ErrorSourceController(serviceProvider);
+        ActionResult<ErrorSourceModel?> currentAction = errorSources.GetErrorSourceById(id);
+        ErrorSourceModel? current = currentAction.Value ?? (currentAction.Result as ObjectResult)?.Value as ErrorSourceModel;
+        if (current == null) return Task.FromResult<JsonNode?>(McpActionResultConverter.FromActionResult(currentAction));
+        string expectedCurrentJson = SerializeErrorSource(current);
+        if (!string.Equals(ComputeVersionToken(expectedCurrentJson), expectedToken, StringComparison.Ordinal))
+            return Task.FromResult<JsonNode?>(McpToolResponses.CreateConflict("stale_write", "The error-source template changed after it was read. Read it again and retry with the latest versionToken."));
 
         ActionResult<IEnumerable<SurveyInstrumentModel?>> allAction = SurveyInstrumentController(serviceProvider).GetAllSurveyInstrument();
         IEnumerable<SurveyInstrumentModel?> values = allAction.Value ??
@@ -230,18 +242,69 @@ public static class SurveyInstrumentRestMcpToolRegistrations
         int affectedSnapshotCount = affectedInstruments.Sum(value =>
             value.ErrorSourceList?.Count(source => source.MetaInfo?.ID == id) ?? 0);
 
-        ActionResult update = ErrorSourceController(serviceProvider).PutErrorSourceById(id, data);
+        ActionResult update = errorSources.PutErrorSourceById(id, data, expectedCurrentJson);
         JsonNode? converted = McpActionResultConverter.FromActionResult(update);
         if (converted?["status"]?.GetValue<int>() != 200) return Task.FromResult(converted);
         return Task.FromResult<JsonNode?>(Success(new JsonObject
         {
             ["ErrorSourceID"] = id.ToString(),
+            ["VersionToken"] = ComputeVersionToken(SerializeErrorSource(data!)),
             ["AffectedSnapshotCount"] = affectedSnapshotCount,
             ["AffectedSurveyInstrumentIDs"] = new JsonArray(affected.Select(value => (JsonNode?)value.ToString()).ToArray()),
             ["Warning"] = affected.Length == 0 ? null :
                 $"{affectedSnapshotCount} frozen snapshot(s) across {affected.Length} survey instrument(s) were not modified."
         }));
     }
+
+    private static Task<JsonNode?> InvokeErrorSourceGetById(
+        IServiceProvider serviceProvider, JsonObject? arguments, CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        if (!McpToolArgumentHelpers.TryParseGuid(arguments, "id", out Guid id, out JsonNode? error))
+            return Task.FromResult(error);
+        ActionResult<ErrorSourceModel?> action = ErrorSourceController(serviceProvider).GetErrorSourceById(id);
+        ErrorSourceModel? source = action.Value ?? (action.Result as ObjectResult)?.Value as ErrorSourceModel;
+        JsonObject response = McpActionResultConverter.FromActionResult(action);
+        if (source != null) response["versionToken"] = ComputeVersionToken(SerializeErrorSource(source));
+        return Task.FromResult<JsonNode?>(response);
+    }
+
+    private static Task<JsonNode?> InvokeErrorSourceDelete(
+        IServiceProvider serviceProvider, JsonObject? arguments, CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        if (!McpToolArgumentHelpers.TryParseGuid(arguments, "id", out Guid id, out JsonNode? error))
+            return Task.FromResult(error);
+        if (!TryGetExpectedVersionToken(arguments, out string expectedToken, out error))
+            return Task.FromResult(error);
+        ErrorSourceController controller = ErrorSourceController(serviceProvider);
+        ActionResult<ErrorSourceModel?> currentAction = controller.GetErrorSourceById(id);
+        ErrorSourceModel? current = currentAction.Value ?? (currentAction.Result as ObjectResult)?.Value as ErrorSourceModel;
+        if (current == null) return Task.FromResult<JsonNode?>(McpActionResultConverter.FromActionResult(currentAction));
+        string expectedCurrentJson = SerializeErrorSource(current);
+        if (!string.Equals(ComputeVersionToken(expectedCurrentJson), expectedToken, StringComparison.Ordinal))
+            return Task.FromResult<JsonNode?>(McpToolResponses.CreateConflict("stale_write", "The error-source template changed after it was read. Read it again and retry with the latest versionToken."));
+        return Task.FromResult<JsonNode?>(McpActionResultConverter.FromActionResult(
+            controller.DeleteErrorSourceById(id, expectedCurrentJson)));
+    }
+
+    private static bool TryGetExpectedVersionToken(JsonObject? arguments, out string token, out JsonNode? error)
+    {
+        token = arguments?["expectedVersionToken"]?.ToString() ?? string.Empty;
+        if (token.Length == 64 && token.All(character => character is >= '0' and <= '9' or >= 'a' and <= 'f'))
+        {
+            error = null;
+            return true;
+        }
+        error = McpToolResponses.CreateValidationError("Argument 'expectedVersionToken' must be the 64-character lowercase SHA-256 token returned by error_source_get_by_id.");
+        return false;
+    }
+
+    private static string SerializeErrorSource(ErrorSourceModel source) =>
+        JsonSerializer.Serialize(source, JsonSettings.Options);
+
+    private static string ComputeVersionToken(string serialized) =>
+        Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(serialized))).ToLowerInvariant();
 
     private static CatalogReferenceSets GetCatalogReferenceSets(IServiceProvider serviceProvider)
     {

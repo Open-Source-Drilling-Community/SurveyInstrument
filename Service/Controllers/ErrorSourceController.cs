@@ -152,7 +152,14 @@ namespace OSDC.Drilling.SurveyInstrument.Service.Controllers
         /// <param name="errorSource"></param>
         /// <returns>true if the given ErrorSource has been updated successfully to the microservice database, at the endpoint SurveyInstrument/api/ErrorSource/id</returns>
         [HttpPut("{id}", Name = "PutErrorSourceById")]
-        public ActionResult PutErrorSourceById(Guid id, [FromBody] ErrorSource? data)
+        public ActionResult PutErrorSourceById(Guid id, [FromBody] ErrorSource? data) =>
+            PutErrorSourceByIdCore(id, data, null);
+
+        [NonAction]
+        internal ActionResult PutErrorSourceById(Guid id, ErrorSource? data, string expectedCurrentJson) =>
+            PutErrorSourceByIdCore(id, data, expectedCurrentJson);
+
+        private ActionResult PutErrorSourceByIdCore(Guid id, ErrorSource? data, string? expectedCurrentJson)
         {
             UsageStatisticsSurveyInstrument.Instance.IncrementPutErrorSourceByIdPerDay();
             // Check if ErrorSource is in the data base
@@ -161,9 +168,13 @@ namespace OSDC.Drilling.SurveyInstrument.Service.Controllers
                 var existingData = _errorSourceManager.GetErrorSourceById(id);
                 if (existingData != null)
                 {
-                    if (_errorSourceManager.UpdateErrorSourceById(id, data))
+                    if (_errorSourceManager.UpdateErrorSourceById(id, data, expectedCurrentJson))
                     {
                         return Ok();
+                    }
+                    else if (expectedCurrentJson != null)
+                    {
+                        return Conflict(new { error = "stale_write", message = "The error-source template changed after it was read." });
                     }
                     else
                     {
@@ -189,14 +200,24 @@ namespace OSDC.Drilling.SurveyInstrument.Service.Controllers
         /// <param name="guid"></param>
         /// <returns>true if the ErrorSource was deleted from the microservice database, at the endpoint SurveyInstrument/api/ErrorSource/id</returns>
         [HttpDelete("{id}", Name = "DeleteErrorSourceById")]
-        public ActionResult DeleteErrorSourceById(Guid id)
+        public ActionResult DeleteErrorSourceById(Guid id) => DeleteErrorSourceByIdCore(id, null);
+
+        [NonAction]
+        internal ActionResult DeleteErrorSourceById(Guid id, string expectedCurrentJson) =>
+            DeleteErrorSourceByIdCore(id, expectedCurrentJson);
+
+        private ActionResult DeleteErrorSourceByIdCore(Guid id, string? expectedCurrentJson)
         {
             UsageStatisticsSurveyInstrument.Instance.IncrementDeleteErrorSourceByIdPerDay();
             if (_errorSourceManager.GetErrorSourceById(id) != null)
             {
-                if (_errorSourceManager.DeleteErrorSourceById(id))
+                if (_errorSourceManager.DeleteErrorSourceById(id, expectedCurrentJson))
                 {
                     return Ok();
+                }
+                else if (expectedCurrentJson != null)
+                {
+                    return Conflict(new { error = "stale_write", message = "The error-source template changed after it was read." });
                 }
                 else
                 {

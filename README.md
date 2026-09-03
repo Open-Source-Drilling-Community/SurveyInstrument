@@ -215,7 +215,7 @@ For project-specific details, start with the README inside the corresponding pro
 
 ## MCP implementation
 
-The checked-in service publishes 32 domain MCP tools covering Survey Instrument, Error Source, identity-catalog, feature-category, versioned backup/restore, granular snapshot mutation, snapshot-drift inspection, and local catalog-reference diagnostics, together with `ping`. Usage-statistics endpoints are intentionally excluded. The MCP-only patch, single-snapshot mutation, drift-check, and catalog-reference operations provide guarded partial updates and read-only integrity inspection without expanding the REST update surface. Successful error-source template updates also report every stored instrument carrying a same-UUID frozen snapshot, making the deliberate lack of propagation visible at write time.
+The checked-in service publishes 32 domain MCP tools covering Survey Instrument, Error Source, identity-catalog, feature-category, versioned backup/restore, granular snapshot mutation, snapshot-drift inspection, and local catalog-reference diagnostics, together with `ping`. Usage-statistics endpoints are intentionally excluded. The MCP-only patch, single-snapshot mutation, drift-check, and catalog-reference operations provide guarded partial updates and read-only integrity inspection without expanding the REST update surface. Standalone error-source reads return a SHA-256 `versionToken`; MCP update/delete operations atomically require that token, and successful updates also report every stored instrument carrying a same-UUID frozen snapshot.
 
 MCP is available over streamable HTTP at `/surveyinstrument/api/mcp` and WebSocket at `/surveyinstrument/api/mcp/ws`. Registration with an external MCP hub is optional and disabled by default.
 

@@ -214,6 +214,8 @@ Survey Instrument update, patch, and delete require `expectedModifiedUtc` from t
 
 Successful `error_source_update_by_id` calls return the IDs and count of survey instruments carrying same-UUID frozen snapshots, together with a non-fatal warning when any exist. The update never propagates into those snapshots.
 
+Standalone error-source templates do not carry a modification timestamp in the shared surveying model. `error_source_get_by_id` therefore returns a lowercase SHA-256 `versionToken` derived from the complete stored representation. MCP update and delete calls require that exact token and include the stored JSON in the SQLite write predicate, so a concurrent change is rejected atomically as `stale_write`; successful updates return the new token. The existing REST signatures remain compatible.
+
 `survey_instrument_error_source_mutate` performs a concurrency-protected `add`, `replace`, or `remove` of one embedded snapshot. This avoids whole-array replacement while retaining model-family validation; in particular, removing the final snapshot from an ISCWSA instrument is rejected.
 
 The schemas document the caller-owned `MetaInfo.ID`, the requirement that an update path ID match the body's ID, all four survey model families, embedded `ErrorSourceList` objects, identity and feature assignments, catalog concurrency tokens, classification flags, and inclination intervals.

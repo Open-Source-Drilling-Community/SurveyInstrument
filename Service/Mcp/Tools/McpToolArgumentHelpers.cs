@@ -96,10 +96,30 @@ internal static class McpToolArgumentHelpers
         return schema;
     }
 
-    public static JsonObject CreateErrorSourceSchema(bool includeId = false) => CreateBodySchema(
-        "errorSource", ErrorSourceSchema(),
-        "Complete error-source representation. JSON property names are case-sensitive and use PascalCase.",
-        includeId, "Identifier of the persisted error source. It must equal errorSource.MetaInfo.ID.");
+    public static JsonObject CreateErrorSourceSchema(bool includeId = false, bool includeExpected = false)
+    {
+        JsonObject schema = CreateBodySchema(
+            "errorSource", ErrorSourceSchema(),
+            "Complete error-source representation. JSON property names are case-sensitive and use PascalCase.",
+            includeId, "Identifier of the persisted error source. It must equal errorSource.MetaInfo.ID.");
+        if (includeExpected)
+        {
+            ((JsonObject)schema["properties"]!)["expectedVersionToken"] = VersionTokenSchema();
+            ((JsonArray)schema["required"]!).Add("expectedVersionToken");
+        }
+        return schema;
+    }
+
+    public static JsonObject CreateErrorSourceDeleteSchema() => new()
+    {
+        ["type"] = "object",
+        ["properties"] = new JsonObject
+        {
+            ["id"] = StringSchema("UUID of the independently stored error-source template to delete.", "uuid"),
+            ["expectedVersionToken"] = VersionTokenSchema()
+        },
+        ["required"] = new JsonArray("id", "expectedVersionToken"), ["additionalProperties"] = false
+    };
 
     public static JsonObject CreateCatalogSchema(string bodyName, bool feature, bool includeId = false,
         bool includeExpected = false)
@@ -232,7 +252,13 @@ internal static class McpToolArgumentHelpers
         }
     });
 
-    public static JsonObject CreateErrorSourceOutputSchema() => SuccessEnvelope(ErrorSourceSchema());
+    public static JsonObject CreateErrorSourceOutputSchema()
+    {
+        JsonObject envelope = SuccessEnvelope(ErrorSourceSchema());
+        ((JsonObject)envelope["properties"]!)["versionToken"] = VersionTokenSchema();
+        ((JsonArray)envelope["required"]!).Add("versionToken");
+        return envelope;
+    }
 
     public static JsonObject CreateErrorSourceListOutputSchema() => SuccessEnvelope(new JsonObject
     {
@@ -323,6 +349,7 @@ internal static class McpToolArgumentHelpers
         ["properties"] = new JsonObject
         {
             ["ErrorSourceID"] = StringSchema("Updated error-source template UUID.", "uuid"),
+            ["VersionToken"] = VersionTokenSchema(),
             ["AffectedSnapshotCount"] = new JsonObject { ["type"] = "integer", ["minimum"] = 0 },
             ["AffectedSurveyInstrumentIDs"] = new JsonObject
             {
@@ -330,7 +357,7 @@ internal static class McpToolArgumentHelpers
             },
             ["Warning"] = NullableString("Non-fatal warning that embedded snapshots were deliberately not propagated.")
         },
-        ["required"] = new JsonArray("ErrorSourceID", "AffectedSnapshotCount", "AffectedSurveyInstrumentIDs", "Warning"),
+        ["required"] = new JsonArray("ErrorSourceID", "VersionToken", "AffectedSnapshotCount", "AffectedSurveyInstrumentIDs", "Warning"),
         ["additionalProperties"] = false
     });
 
@@ -640,6 +667,12 @@ internal static class McpToolArgumentHelpers
         if (format is not null) schema["format"] = format;
         return schema;
     }
+
+    private static JsonObject VersionTokenSchema() => new()
+    {
+        ["type"] = "string", ["pattern"] = "^[0-9a-f]{64}$",
+        ["description"] = "Exact lowercase SHA-256 content token returned by error_source_get_by_id. A stale token is rejected with stale_write."
+    };
     private static JsonObject NullableString(string description) => Typed(new JsonArray("string", "null"), description);
     private static JsonObject NullableDateTime(string description) { var value = Typed(new JsonArray("string", "null"), description); value["format"] = "date-time"; return value; }
     private static JsonObject Number(string description) => Typed("number", description);

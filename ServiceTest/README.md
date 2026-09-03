@@ -106,7 +106,7 @@ If the service runs on another port, update `host` in `Tests.cs` before running.
 
 ## MCP coverage
 
-- `McpToolRegistrationTests.cs` verifies all 27 REST-backed tools, the five MCP-only guarded mutation and read-only integrity tools, and `ping`, including strict input/output schemas, enforcing model discrimination, the complete error-code enum, versioned backup contracts, granular snapshot mutation, snapshot drift, catalog-reference diagnostics, template-update impact warnings, core-write concurrency, titles, safety annotations, and pre-invocation rejection of unknown arguments.
+- `McpToolRegistrationTests.cs` verifies all 27 REST-backed tools, the five MCP-only guarded mutation and read-only integrity tools, and `ping`, including strict input/output schemas, enforcing model discrimination, the complete error-code enum, versioned backup contracts, granular snapshot mutation, snapshot drift, catalog-reference diagnostics, template-update impact warnings, timestamp- and content-token concurrency, titles, safety annotations, and pre-invocation rejection of unknown arguments.
 - `McpServerHttpTests.cs` exercises initialization, tool discovery, structured and fallback success content, and stable MCP error envelopes against a running service.
 
 The live HTTP tests require the SurveyInstrument service at the configured test base URL.
