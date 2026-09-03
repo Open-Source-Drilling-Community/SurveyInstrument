@@ -105,4 +105,78 @@ public sealed class McpServerHttpTests
             Assert.That(error.ToJsonString(), Does.Not.Contain("Exception"));
         });
     }
+
+    [Test]
+    public async Task Patch_updates_selected_fields_and_rejects_a_stale_retry()
+    {
+        Guid id = Guid.NewGuid();
+        string initialTimestamp = DateTimeOffset.UtcNow.ToString("O");
+        var instrument = new JsonObject
+        {
+            ["MetaInfo"] = new JsonObject { ["ID"] = id.ToString() },
+            ["Name"] = "MCP concurrency test",
+            ["Description"] = "original",
+            ["CreationDate"] = initialTimestamp,
+            ["LastModificationDate"] = initialTimestamp,
+            ["ModelType"] = "MWD_WolffDeWardt"
+        };
+
+        CallToolResult created = await _client.CallToolAsync(
+            "survey_instrument_create",
+            new Dictionary<string, object?> { ["surveyInstrument"] = instrument },
+            cancellationToken: CancellationToken.None);
+        Assert.That(created.IsError, Is.Not.True);
+
+        try
+        {
+            JsonObject first = await GetInstrument(id);
+            string firstToken = first["LastModificationDate"]!.GetValue<string>();
+
+            CallToolResult patched = await _client.CallToolAsync(
+                "survey_instrument_patch_by_id",
+                new Dictionary<string, object?>
+                {
+                    ["id"] = id.ToString(),
+                    ["expectedModifiedUtc"] = firstToken,
+                    ["patch"] = new JsonObject { ["Description"] = "patched" }
+                }, cancellationToken: CancellationToken.None);
+            Assert.That(patched.IsError, Is.Not.True);
+
+            CallToolResult stale = await _client.CallToolAsync(
+                "survey_instrument_patch_by_id",
+                new Dictionary<string, object?>
+                {
+                    ["id"] = id.ToString(),
+                    ["expectedModifiedUtc"] = firstToken,
+                    ["patch"] = new JsonObject { ["Description"] = "stale overwrite" }
+                }, cancellationToken: CancellationToken.None);
+            Assert.That(stale.IsError, Is.True);
+            JsonObject problem = JsonNode.Parse(stale.Content.OfType<TextContentBlock>().Single().Text)!.AsObject();
+            Assert.That(problem["error"]?.GetValue<string>(), Is.EqualTo("stale_write"));
+
+            JsonObject latest = await GetInstrument(id);
+            Assert.That(latest["Description"]?.GetValue<string>(), Is.EqualTo("patched"));
+        }
+        finally
+        {
+            JsonObject latest = await GetInstrument(id);
+            await _client.CallToolAsync(
+                "survey_instrument_delete_by_id",
+                new Dictionary<string, object?>
+                {
+                    ["id"] = id.ToString(),
+                    ["expectedModifiedUtc"] = latest["LastModificationDate"]!.GetValue<string>()
+                }, cancellationToken: CancellationToken.None);
+        }
+    }
+
+    private async Task<JsonObject> GetInstrument(Guid id)
+    {
+        CallToolResult result = await _client.CallToolAsync(
+            "survey_instrument_get_by_id",
+            new Dictionary<string, object?> { ["id"] = id.ToString() },
+            cancellationToken: CancellationToken.None);
+        Assert.That(result.IsError, Is.Not.True);
+        return ((JsonObject)result.StructuredContent!)["data"]!.AsObject();
+    }
 }

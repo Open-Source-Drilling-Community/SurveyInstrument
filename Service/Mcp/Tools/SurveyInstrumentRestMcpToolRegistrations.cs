@@ -66,12 +66,14 @@ public static class SurveyInstrumentRestMcpToolRegistrations
             (sp, _, ct) => Invoke(ct, () => SurveyInstrumentController(sp).GetAllSurveyInstrumentLight()));
         services.AddLegacyMcpTool("survey_instrument_get_all", "Retrieve every survey instrument with its complete error-model data, including embedded error sources and physical parameters. This can be a large response; prefer IDs, metadata, or light records for discovery. SI values are used and angles are radians.", McpToolArgumentHelpers.CreateEmptySchema(),
             (sp, _, ct) => Invoke(ct, () => SurveyInstrumentController(sp).GetAllSurveyInstrument()));
-        services.AddLegacyMcpTool("survey_instrument_create", "Persist a new complete survey-instrument error model. Generate a non-empty surveyInstrument.MetaInfo.ID first; an existing UUID produces a conflict. Select one of the four ModelType values, embed full ErrorSource objects when required, and supply physical values in SI with angles in radians.", McpToolArgumentHelpers.CreateSurveyInstrumentSchema(),
+        services.AddLegacyMcpTool("survey_instrument_create", "Persist a new complete survey-instrument error model. Generate a non-empty surveyInstrument.MetaInfo.ID first; an existing UUID produces a conflict. Select one of the four discriminated ModelType families, embed authoritative ErrorSource snapshots when required, and supply physical values in SI with angles in radians.", McpToolArgumentHelpers.CreateSurveyInstrumentSchema(),
             (sp, args, ct) => InvokeWithBody<SurveyInstrumentModel>(args, "surveyInstrument", ct, data => SurveyInstrumentController(sp).PostSurveyInstrument(data)));
-        services.AddLegacyMcpTool("survey_instrument_update_by_id", "Replace an existing survey-instrument definition. The path id must exactly match surveyInstrument.MetaInfo.ID or the request is rejected. Send the complete desired representation, retain fields that must not be lost, update LastModificationDate, and use SI values with angles in radians.", McpToolArgumentHelpers.CreateSurveyInstrumentSchema(includeId: true),
-            (sp, args, ct) => InvokeWithIdAndBody<SurveyInstrumentModel>(args, "surveyInstrument", ct, (id, data) => SurveyInstrumentController(sp).PutSurveyInstrumentById(id, data)));
-        services.AddLegacyMcpTool("survey_instrument_delete_by_id", "Permanently delete the stored survey instrument identified by UUID. Use a read operation first when the target is uncertain. The operation returns not found when the UUID does not identify an existing survey instrument.", McpToolArgumentHelpers.CreateGuidSchema("id", "UUID of the survey instrument to delete."),
-            (sp, args, ct) => InvokeDelete(args, ct, id => SurveyInstrumentController(sp).DeleteSurveyInstrumentById(id)));
+        services.AddLegacyMcpTool("survey_instrument_update_by_id", "Replace an existing survey-instrument definition with optimistic concurrency protection. The path id must match surveyInstrument.MetaInfo.ID and expectedModifiedUtc must equal the latest LastModificationDate. Send the complete desired representation; a stale request returns stale_write without changing data.", McpToolArgumentHelpers.CreateSurveyInstrumentSchema(includeId: true),
+            InvokeSurveyInstrumentUpdate);
+        services.AddLegacyMcpTool("survey_instrument_patch_by_id", "Partially update one survey instrument with optimistic concurrency protection. Supply only changed top-level fields in patch; omitted fields are retained, arrays are replaced as a whole, and null clears nullable fields. MetaInfo and server timestamps cannot be patched. A stale expectedModifiedUtc returns stale_write.", McpToolArgumentHelpers.CreateSurveyInstrumentPatchSchema(),
+            InvokeSurveyInstrumentPatch);
+        services.AddLegacyMcpTool("survey_instrument_delete_by_id", "Permanently delete a stored survey instrument with optimistic concurrency protection. expectedModifiedUtc must equal the LastModificationDate from the latest read; an unknown UUID returns not_found and a stale request returns stale_write without deleting data.", McpToolArgumentHelpers.CreateSurveyInstrumentDeleteSchema(),
+            InvokeSurveyInstrumentDelete);
     }
 
     private static void AddErrorSourceTools(IServiceCollection services)
@@ -80,16 +82,132 @@ public static class SurveyInstrumentRestMcpToolRegistrations
             (sp, _, ct) => Invoke(ct, () => ErrorSourceController(sp).GetAllErrorSourceId()));
         services.AddLegacyMcpTool("error_source_get_all_meta_info", "List MetaInfo for every independently stored error source without loading its model attributes. Each result supplies the UUID and may include host/base-path/endpoint metadata; use the UUID with error_source_get_by_id.", McpToolArgumentHelpers.CreateEmptySchema(),
             (sp, _, ct) => Invoke(ct, () => ErrorSourceController(sp).GetAllErrorSourceMetaInfo()));
-        services.AddLegacyMcpTool("error_source_get_by_id", "Retrieve one complete survey error-source definition by UUID, including ErrorCode, classification and correlation flags, magnitude, magnitude quantity, and optional inclination interval. Magnitude is expressed in the SI unit identified by MagnitudeQuantity; inclinations are radians.", McpToolArgumentHelpers.CreateGuidSchema("id", "UUID of the independently stored error source to retrieve."),
+        services.AddLegacyMcpTool("error_source_get_by_id", "Retrieve one complete error-source template by UUID, including ErrorCode, classification and correlation flags, magnitude, quantity, and optional inclination interval. Copying it into an instrument creates an authoritative snapshot with UUID provenance; later template updates do not propagate. SI units are used.", McpToolArgumentHelpers.CreateGuidSchema("id", "UUID of the independently stored error-source template to retrieve."),
             (sp, args, ct) => InvokeById(args, ct, id => ErrorSourceController(sp).GetErrorSourceById(id)));
         services.AddLegacyMcpTool("error_source_get_all", "Retrieve every independently stored error-source definition with full classification, magnitude, quantity, and inclination-interval data. This can be a large response; prefer IDs or metadata for discovery. Magnitudes use their named quantity's SI unit.", McpToolArgumentHelpers.CreateEmptySchema(),
             (sp, _, ct) => Invoke(ct, () => ErrorSourceController(sp).GetAllErrorSource()));
-        services.AddLegacyMcpTool("error_source_create", "Persist a new reusable survey error-source definition. Generate a non-empty errorSource.MetaInfo.ID first; an existing UUID produces a conflict. Use an exact ErrorCode enum identifier and express Magnitude in the SI unit named by MagnitudeQuantity; inclination fields are radians.", McpToolArgumentHelpers.CreateErrorSourceSchema(),
+        services.AddLegacyMcpTool("error_source_create", "Persist a new reusable survey error-source template. Generate a non-empty errorSource.MetaInfo.ID first; an existing UUID produces a conflict. Instruments embed authoritative snapshots rather than live references, so later template updates do not propagate. Use the named quantity's SI unit.", McpToolArgumentHelpers.CreateErrorSourceSchema(),
             (sp, args, ct) => InvokeWithBody<ErrorSourceModel>(args, "errorSource", ct, data => ErrorSourceController(sp).PostErrorSource(data)));
         services.AddLegacyMcpTool("error_source_update_by_id", "Replace an existing independently stored error-source definition. The path id must exactly match errorSource.MetaInfo.ID or the request is rejected. Send the complete desired record, with Magnitude in the SI unit named by MagnitudeQuantity and inclination fields in radians.", McpToolArgumentHelpers.CreateErrorSourceSchema(includeId: true),
             (sp, args, ct) => InvokeWithIdAndBody<ErrorSourceModel>(args, "errorSource", ct, (id, data) => ErrorSourceController(sp).PutErrorSourceById(id, data)));
         services.AddLegacyMcpTool("error_source_delete_by_id", "Permanently delete the independently stored error source identified by UUID. Use a read operation first when the target is uncertain. This does not accept an ErrorCode in place of the resource UUID and returns not found for an unknown ID.", McpToolArgumentHelpers.CreateGuidSchema("id", "UUID of the independently stored error source to delete."),
             (sp, args, ct) => InvokeDelete(args, ct, id => ErrorSourceController(sp).DeleteErrorSourceById(id)));
+    }
+
+    private static Task<JsonNode?> InvokeSurveyInstrumentUpdate(
+        IServiceProvider serviceProvider, JsonObject? arguments, CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        if (!TryGetSurveyInstrumentWriteContext(serviceProvider, arguments, out Guid id,
+                out DateTimeOffset expected, out SurveyInstrumentController? controller,
+                out SurveyInstrumentModel? current, out JsonNode? error))
+        {
+            return Task.FromResult(error);
+        }
+        if (!TryDeserialize(arguments, "surveyInstrument", out SurveyInstrumentModel? data, out error))
+        {
+            return Task.FromResult(error);
+        }
+
+        return Task.FromResult<JsonNode?>(McpActionResultConverter.FromActionResult(
+            controller!.PutSurveyInstrumentById(id, data, expected)));
+    }
+
+    private static Task<JsonNode?> InvokeSurveyInstrumentPatch(
+        IServiceProvider serviceProvider, JsonObject? arguments, CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        if (!TryGetSurveyInstrumentWriteContext(serviceProvider, arguments, out Guid id,
+                out DateTimeOffset expected, out SurveyInstrumentController? controller,
+                out SurveyInstrumentModel? current, out JsonNode? error))
+        {
+            return Task.FromResult(error);
+        }
+        if (arguments?["patch"] is not JsonObject patch || patch.Count == 0)
+        {
+            return Task.FromResult<JsonNode?>(McpToolResponses.CreateValidationError(
+                "Argument 'patch' must be a non-empty object."));
+        }
+
+        JsonObject merged = JsonSerializer.SerializeToNode(current, JsonSettings.Options)!.AsObject();
+        IReadOnlySet<string> allowed = McpToolArgumentHelpers.SurveyInstrumentPatchFields;
+        foreach ((string name, JsonNode? value) in patch)
+        {
+            if (!allowed.Contains(name))
+            {
+                return Task.FromResult<JsonNode?>(McpToolResponses.CreateValidationError(
+                    $"Field '{name}' cannot be patched."));
+            }
+            merged[name] = value?.DeepClone();
+        }
+
+        try
+        {
+            SurveyInstrumentModel? updated = merged.Deserialize<SurveyInstrumentModel>(JsonSettings.Options);
+            if (updated is null)
+            {
+                throw new JsonException();
+            }
+            return Task.FromResult<JsonNode?>(McpActionResultConverter.FromActionResult(
+                controller!.PutSurveyInstrumentById(id, updated, expected)));
+        }
+        catch (Exception ex) when (ex is JsonException or InvalidOperationException)
+        {
+            return Task.FromResult<JsonNode?>(McpToolResponses.CreateValidationError(
+                "Argument 'patch' contains a value incompatible with the survey-instrument model."));
+        }
+    }
+
+    private static Task<JsonNode?> InvokeSurveyInstrumentDelete(
+        IServiceProvider serviceProvider, JsonObject? arguments, CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        if (!TryGetSurveyInstrumentWriteContext(serviceProvider, arguments, out Guid id,
+                out DateTimeOffset expected, out SurveyInstrumentController? controller,
+                out _, out JsonNode? error))
+        {
+            return Task.FromResult(error);
+        }
+        return Task.FromResult<JsonNode?>(McpActionResultConverter.FromActionResult(
+            controller!.DeleteSurveyInstrumentById(id, expected)));
+    }
+
+    private static bool TryGetSurveyInstrumentWriteContext(
+        IServiceProvider serviceProvider, JsonObject? arguments, out Guid id,
+        out DateTimeOffset expected, out SurveyInstrumentController? controller,
+        out SurveyInstrumentModel? current, out JsonNode? error)
+    {
+        expected = default;
+        controller = null;
+        current = null;
+        if (!McpToolArgumentHelpers.TryParseGuid(arguments, "id", out id, out error))
+        {
+            return false;
+        }
+        if (!DateTimeOffset.TryParse(arguments?["expectedModifiedUtc"]?.ToString(), out expected))
+        {
+            error = McpToolResponses.CreateValidationError(
+                "Argument 'expectedModifiedUtc' must be an ISO 8601 date-time.");
+            return false;
+        }
+
+        controller = SurveyInstrumentController(serviceProvider);
+        ActionResult<SurveyInstrumentModel?> lookup = controller.GetSurveyInstrumentById(id);
+        current = lookup.Value ?? (lookup.Result as ObjectResult)?.Value as SurveyInstrumentModel;
+        if (current is null)
+        {
+            error = McpActionResultConverter.FromActionResult(lookup);
+            return false;
+        }
+        if (current.LastModificationDate != expected)
+        {
+            error = McpToolResponses.CreateConflict("stale_write",
+                "The survey instrument changed after it was read. Read it again and retry with its latest LastModificationDate.");
+            return false;
+        }
+
+        error = null;
+        return true;
     }
 
     private static Task<JsonNode?> Invoke<T>(CancellationToken cancellationToken, Func<ActionResult<T>> action)

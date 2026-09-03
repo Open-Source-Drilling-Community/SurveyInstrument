@@ -91,7 +91,8 @@ public static class McpServiceCollectionExtensions
         bool readOnly = name.Contains("_get_", StringComparison.Ordinal) ||
                         name.EndsWith("_get_all", StringComparison.Ordinal);
         bool destructive = name.Contains("_delete_", StringComparison.Ordinal);
-        bool idempotent = readOnly || name.Contains("_update", StringComparison.Ordinal) || destructive;
+        bool idempotent = readOnly || name.Contains("_update", StringComparison.Ordinal) ||
+                          name.Contains("_patch_", StringComparison.Ordinal) || destructive;
         string title = string.Join(' ', name.Split('_')
             .Select(word => char.ToUpperInvariant(word[0]) + word[1..]));
         return new McpToolBehavior(title, readOnly, destructive, idempotent);

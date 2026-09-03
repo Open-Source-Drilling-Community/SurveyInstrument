@@ -399,7 +399,7 @@ namespace OSDC.Drilling.SurveyInstrument.Service.Managers
                             cDate = ((DateTimeOffset)surveyInstrument.CreationDate).ToString(SqlConnectionManager.DATE_TIME_FORMAT);
                         string? lDate = null;
                         if (surveyInstrument.LastModificationDate != null)
-                            lDate = ((DateTimeOffset)surveyInstrument.LastModificationDate).ToString(SqlConnectionManager.DATE_TIME_FORMAT);
+                            lDate = ((DateTimeOffset)surveyInstrument.LastModificationDate).ToString("O");
                         string data = JsonSerializer.Serialize(surveyInstrument, JsonSettings.Options);
                         var command = connection.CreateCommand();
                         command.CommandText = "INSERT INTO SurveyInstrumentTable (" +
@@ -460,7 +460,9 @@ namespace OSDC.Drilling.SurveyInstrument.Service.Managers
         /// </summary>
         /// <param name="surveyInstrument"></param>
         /// <returns>true if the given SurveyInstrument has been updated successfully</returns>
-        public bool UpdateSurveyInstrumentById(Guid guid, OSDC.Drilling.SurveyInstrument.Model.SurveyInstrument? surveyInstrument)
+        public bool UpdateSurveyInstrumentById(Guid guid,
+            OSDC.Drilling.SurveyInstrument.Model.SurveyInstrument? surveyInstrument,
+            DateTimeOffset? expectedModifiedUtc = null)
         {
             if (surveyInstrument != null && !ValidateAssignments(surveyInstrument))
             {
@@ -478,11 +480,13 @@ namespace OSDC.Drilling.SurveyInstrument.Service.Managers
                     try
                     {
                         string metaInfo = JsonSerializer.Serialize(surveyInstrument.MetaInfo, JsonSettings.Options);
+                        string? expectedDate = expectedModifiedUtc?.ToString("O");
+                        string? expectedLegacyDate = expectedModifiedUtc?.ToString(SqlConnectionManager.DATE_TIME_FORMAT);
                         string? cDate = null;
                         if (surveyInstrument.CreationDate != null)
                             cDate = ((DateTimeOffset)surveyInstrument.CreationDate).ToString(SqlConnectionManager.DATE_TIME_FORMAT);
                         surveyInstrument.LastModificationDate = DateTimeOffset.UtcNow;
-                        string? lDate = ((DateTimeOffset)surveyInstrument.LastModificationDate).ToString(SqlConnectionManager.DATE_TIME_FORMAT);
+                        string? lDate = ((DateTimeOffset)surveyInstrument.LastModificationDate).ToString("O");
                         string data = JsonSerializer.Serialize(surveyInstrument, JsonSettings.Options);
                         var command = connection.CreateCommand();
                         command.CommandText = $"UPDATE SurveyInstrumentTable SET " +
@@ -492,7 +496,10 @@ namespace OSDC.Drilling.SurveyInstrument.Service.Managers
                             $"CreationDate = '{cDate}', " +
                             $"LastModificationDate = '{lDate}', " +
                             $"SurveyInstrument = '{data}' " +
-                            $"WHERE ID = '{guid}'";
+                            $"WHERE ID = '{guid}'" +
+                            (expectedDate == null ? string.Empty :
+                                $" AND (LastModificationDate = '{expectedDate}' OR " +
+                                $"(length(LastModificationDate) = 19 AND LastModificationDate = '{expectedLegacyDate}'))");
                         int count = command.ExecuteNonQuery();
                         if (count != 1)
                         {
@@ -600,7 +607,7 @@ namespace OSDC.Drilling.SurveyInstrument.Service.Managers
         /// </summary>
         /// <param name="guid"></param>
         /// <returns>true if the SurveyInstrument was deleted from the microservice database</returns>
-        public bool DeleteSurveyInstrumentById(Guid guid)
+        public bool DeleteSurveyInstrumentById(Guid guid, DateTimeOffset? expectedModifiedUtc = null)
         {
             if (!guid.Equals(Guid.Empty))
             {
@@ -613,9 +620,14 @@ namespace OSDC.Drilling.SurveyInstrument.Service.Managers
                     try
                     {
                         var command = connection.CreateCommand();
-                        command.CommandText = $"DELETE FROM SurveyInstrumentTable WHERE ID = '{guid}'";
+                        string? expectedDate = expectedModifiedUtc?.ToString("O");
+                        string? expectedLegacyDate = expectedModifiedUtc?.ToString(SqlConnectionManager.DATE_TIME_FORMAT);
+                        command.CommandText = $"DELETE FROM SurveyInstrumentTable WHERE ID = '{guid}'" +
+                            (expectedDate == null ? string.Empty :
+                                $" AND (LastModificationDate = '{expectedDate}' OR " +
+                                $"(length(LastModificationDate) = 19 AND LastModificationDate = '{expectedLegacyDate}'))");
                         int count = command.ExecuteNonQuery();
-                        if (count < 0)
+                        if (count != 1)
                         {
                             _logger.LogWarning("Impossible to delete the SurveyInstrument of given ID from the SurveyInstrumentTable");
                             success = false;

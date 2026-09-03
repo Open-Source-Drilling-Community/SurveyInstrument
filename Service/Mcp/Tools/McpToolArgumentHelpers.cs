@@ -1,10 +1,25 @@
 using System;
+using System.Collections.Generic;
 using System.Text.Json.Nodes;
 
 namespace OSDC.Drilling.SurveyInstrument.Service.Mcp.Tools;
 
 internal static class McpToolArgumentHelpers
 {
+    private static readonly HashSet<string> ProtectedSurveyInstrumentFields =
+        new(StringComparer.Ordinal) { "MetaInfo", "CreationDate", "LastModificationDate" };
+
+    public static IReadOnlySet<string> SurveyInstrumentPatchFields { get; } = new HashSet<string>(
+        new[]
+        {
+            "Name", "Description", "SurveyInstrumentIdentityAssignments", "SurveyInstrumentFeatureAssignments",
+            "ModelType", "ErrorSourceList", "Dip", "Declination", "Gravity", "BField", "Convergence", "Latitude",
+            "EarthRotRate", "CantAngle", "GyroRunningSpeed", "ExtRefInitInc", "GyroSwitching", "GyroMinDist",
+            "GyroNoiseRed", "UseRelDepthError", "RelDepthError", "UseMisalignment", "Misalignment",
+            "UseTrueInclination", "TrueInclination", "UseReferenceError", "ReferenceError", "UseDrillStringMag",
+            "DrillStringMag", "UseGyroCompassError", "GyroCompassError"
+        }, StringComparer.Ordinal);
+
     public static JsonObject CreateEmptySchema() => new()
     {
         ["type"] = "object", ["properties"] = new JsonObject(), ["additionalProperties"] = false
@@ -21,7 +36,36 @@ internal static class McpToolArgumentHelpers
     public static JsonObject CreateSurveyInstrumentSchema(bool includeId = false) => CreateBodySchema(
         "surveyInstrument", SurveyInstrumentSchema(),
         "Complete survey-instrument representation. JSON property names are case-sensitive and use PascalCase.",
-        includeId, "Identifier of the persisted survey instrument. It must equal surveyInstrument.MetaInfo.ID.");
+        includeId, "Identifier of the persisted survey instrument. It must equal surveyInstrument.MetaInfo.ID.",
+        includeId);
+
+    public static JsonObject CreateSurveyInstrumentDeleteSchema() => CreateConcurrencySchema(
+        "Identifier of the persisted survey instrument to delete.");
+
+    public static JsonObject CreateSurveyInstrumentPatchSchema()
+    {
+        JsonObject fullProperties = (JsonObject)SurveyInstrumentSchema()["properties"]!;
+        JsonObject patchProperties = new();
+        foreach ((string name, JsonNode? propertySchema) in fullProperties)
+        {
+            if (!ProtectedSurveyInstrumentFields.Contains(name))
+            {
+                patchProperties[name] = propertySchema?.DeepClone();
+            }
+        }
+
+        JsonObject schema = CreateConcurrencySchema("Identifier of the persisted survey instrument to patch.");
+        ((JsonObject)schema["properties"]!)["patch"] = new JsonObject
+        {
+            ["type"] = "object",
+            ["description"] = "Top-level JSON Merge Patch fields. Omitted fields are retained; arrays are replaced as a whole; null clears only nullable fields. MetaInfo, CreationDate, and LastModificationDate are server-managed and cannot be patched.",
+            ["properties"] = patchProperties,
+            ["minProperties"] = 1,
+            ["additionalProperties"] = false
+        };
+        ((JsonArray)schema["required"]!).Add("patch");
+        return schema;
+    }
 
     public static JsonObject CreateErrorSourceSchema(bool includeId = false) => CreateBodySchema(
         "errorSource", ErrorSourceSchema(),
@@ -138,7 +182,8 @@ internal static class McpToolArgumentHelpers
         ["additionalProperties"] = false
     };
 
-    private static JsonObject CreateBodySchema(string key, JsonObject body, string description, bool includeId, string idDescription)
+    private static JsonObject CreateBodySchema(string key, JsonObject body, string description, bool includeId,
+        string idDescription, bool includeExpected = false)
     {
         body["description"] = description;
         var properties = new JsonObject { [key] = body };
@@ -147,6 +192,13 @@ internal static class McpToolArgumentHelpers
         {
             properties["id"] = StringSchema(idDescription, "uuid");
             required.Add("id");
+        }
+        if (includeExpected)
+        {
+            properties["expectedModifiedUtc"] = StringSchema(
+                "Exact LastModificationDate returned by the latest read. A stale value is rejected with stale_write.",
+                "date-time");
+            required.Add("expectedModifiedUtc");
         }
         return new JsonObject
         {
@@ -166,8 +218,8 @@ internal static class McpToolArgumentHelpers
             ["LastModificationDate"] = NullableDateTime("Last-modification timestamp in ISO 8601 format. Update it when changing the record."),
             ["SurveyInstrumentIdentityAssignments"] = NullableArray(IdentityAssignmentSchema(), "Identity values assigned to this instrument."),
             ["SurveyInstrumentFeatureAssignments"] = NullableArray(FeatureAssignmentSchema(), "Feature options assigned to this instrument."),
-            ["ModelType"] = EnumSchema("Survey error-model family. MWD values model measurement-while-drilling instruments; Gyro values model gyroscopic instruments.", "MWD_WolffDeWardt", "Gyro_WolffDeWardt", "MWD_ISCWSA", "Gyro_ISCWSA"),
-            ["ErrorSourceList"] = NullableArray(ErrorSourceSchema(), "Full error-source definitions used by this instrument, primarily for ISCWSA models. These are embedded objects, not UUID references."),
+            ["ModelType"] = EnumSchema("Discriminator for the survey error-model family. Consult the oneOf branches on this object for family-specific field guidance.", "MWD_WolffDeWardt", "Gyro_WolffDeWardt", "MWD_ISCWSA", "Gyro_ISCWSA"),
+            ["ErrorSourceList"] = NullableArray(ErrorSourceSchema(), "Authoritative error-source snapshots embedded in this instrument, primarily for ISCWSA models. The standalone error_source catalog is a template library: copying a catalog item preserves its MetaInfo.ID as provenance, but later catalog updates do not propagate into this array. Replace a snapshot explicitly to refresh it."),
             ["Dip"] = Number("Geomagnetic dip (inclination) in radians."),
             ["Declination"] = Number("Geomagnetic declination in radians."),
             ["Gravity"] = Number("Local gravitational acceleration in metres per second squared (m/s²)."),
@@ -194,7 +246,40 @@ internal static class McpToolArgumentHelpers
             ["UseGyroCompassError"] = Boolean("Whether GyroCompassError participates in the gyro Wolff-DeWardt model."),
             ["GyroCompassError"] = NullableNumber("Gyro-compass error angle in radians.")
         },
-        ["required"] = new JsonArray("MetaInfo"), ["additionalProperties"] = false
+        ["required"] = new JsonArray("MetaInfo", "ModelType"),
+        ["oneOf"] = ModelTypeBranches(),
+        ["additionalProperties"] = false
+    };
+
+    private static JsonArray ModelTypeBranches() => new(
+        ModelTypeBranch("MWD_WolffDeWardt", "MWD Wolff-DeWardt model. The Use*/value pairs are the active error parameters; DrillStringMag is MWD-specific. GyroCompassError and ISCWSA ErrorSourceList are not used by this family."),
+        ModelTypeBranch("Gyro_WolffDeWardt", "Gyro Wolff-DeWardt model. The Use*/value pairs are the active error parameters; GyroCompassError is gyro-specific. DrillStringMag and ISCWSA ErrorSourceList are not used by this family."),
+        ModelTypeBranch("MWD_ISCWSA", "MWD ISCWSA model. ErrorSourceList plus geomagnetic/gravity context (Dip, Declination, Gravity, BField and Convergence) define the model. Wolff-DeWardt Use*/value pairs and gyro-only parameters are not used."),
+        ModelTypeBranch("Gyro_ISCWSA", "Gyro ISCWSA model. ErrorSourceList plus Latitude, EarthRotRate, CantAngle and optional gyro parameters define the model. Wolff-DeWardt Use*/value pairs and DrillStringMag are not used."));
+
+    private static JsonObject ModelTypeBranch(string modelType, string description) => new()
+    {
+        ["title"] = modelType,
+        ["description"] = description,
+        ["properties"] = new JsonObject
+        {
+            ["ModelType"] = new JsonObject { ["const"] = modelType }
+        },
+        ["required"] = new JsonArray("ModelType")
+    };
+
+    private static JsonObject CreateConcurrencySchema(string idDescription) => new()
+    {
+        ["type"] = "object",
+        ["properties"] = new JsonObject
+        {
+            ["id"] = StringSchema(idDescription, "uuid"),
+            ["expectedModifiedUtc"] = StringSchema(
+                "Exact LastModificationDate returned by the latest read. A stale value is rejected with stale_write.",
+                "date-time")
+        },
+        ["required"] = new JsonArray("id", "expectedModifiedUtc"),
+        ["additionalProperties"] = false
     };
 
     private static JsonObject IdentitySchema() => new()

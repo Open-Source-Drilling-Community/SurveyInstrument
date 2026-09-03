@@ -76,13 +76,15 @@ public sealed class McpToolRegistrationTests
             .ToArray();
 
         Assert.That(endpointMethods, Is.EquivalentTo(EndpointToolMap.Keys.Take(15)));
-        Assert.That(_tools.Keys, Is.EquivalentTo(EndpointToolMap.Values.Append("ping")));
+        Assert.That(_tools.Keys, Is.EquivalentTo(EndpointToolMap.Values
+            .Append("survey_instrument_patch_by_id")
+            .Append("ping")));
     }
 
     [Test]
     public void Registered_tools_have_unique_names_and_descriptions()
     {
-        Assert.That(_tools.Count, Is.EqualTo(EndpointToolMap.Count + 1));
+        Assert.That(_tools.Count, Is.EqualTo(EndpointToolMap.Count + 2));
         Assert.That(_tools.Values.Select(tool => tool.Name), Is.Unique);
         Assert.That(_tools.Values.All(tool => !string.IsNullOrWhiteSpace(tool.Description)), Is.True);
     }
@@ -113,6 +115,31 @@ public sealed class McpToolRegistrationTests
         Assert.That(schema, Does.Contain("tesla"));
         Assert.That(schema, Does.Contain("SurveyInstrumentIdentityAssignments"));
         Assert.That(schema, Does.Contain("SurveyInstrumentFeatureAssignments"));
+        Assert.That(schema, Does.Contain("\"oneOf\""));
+        Assert.That(schema, Does.Contain("Authoritative error-source snapshots"));
+        Assert.That(schema, Does.Contain("later catalog updates do not propagate").IgnoreCase);
+    }
+
+    [Test]
+    public void Core_writes_require_optimistic_concurrency_and_patch_is_narrow()
+    {
+        string update = _tools["survey_instrument_update_by_id"].InputSchema.ToJsonString();
+        JsonNode patchSchema = _tools["survey_instrument_patch_by_id"].InputSchema;
+        string patch = patchSchema.ToJsonString();
+        string delete = _tools["survey_instrument_delete_by_id"].InputSchema.ToJsonString();
+        JsonObject patchFields = (JsonObject)patchSchema["properties"]!["patch"]!["properties"]!;
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(update, Does.Contain("expectedModifiedUtc"));
+            Assert.That(delete, Does.Contain("expectedModifiedUtc"));
+            Assert.That(patch, Does.Contain("expectedModifiedUtc"));
+            Assert.That(patch, Does.Contain("arrays are replaced as a whole"));
+            Assert.That(patchFields.ContainsKey("MetaInfo"), Is.False);
+            Assert.That(patchFields.ContainsKey("CreationDate"), Is.False);
+            Assert.That(patchFields.ContainsKey("LastModificationDate"), Is.False);
+            Assert.That(_tools["survey_instrument_patch_by_id"].Behavior.IdempotentHint, Is.True);
+        });
     }
 
     [Test]
@@ -227,5 +254,17 @@ public sealed class McpToolRegistrationTests
 
         Assert.That(response, Is.Not.Null);
         Assert.That(response!["status"]?.GetValue<int>(), Is.EqualTo(400));
+    }
+
+    [TestCase("survey_instrument_update_by_id")]
+    [TestCase("survey_instrument_patch_by_id")]
+    [TestCase("survey_instrument_delete_by_id")]
+    public async Task Core_writes_reject_a_missing_concurrency_token(string toolName)
+    {
+        JsonObject? response = await _tools[toolName].InvokeAsync(
+            new JsonObject { ["id"] = Guid.NewGuid().ToString() }, CancellationToken.None) as JsonObject;
+
+        Assert.That(response?["status"]?.GetValue<int>(), Is.EqualTo(400));
+        Assert.That(response?["error"]?.GetValue<string>(), Does.Contain("expectedModifiedUtc"));
     }
 }

@@ -171,7 +171,19 @@ namespace OSDC.Drilling.SurveyInstrument.Service.Controllers
         /// <param name="surveyInstrument"></param>
         /// <returns>true if the given SurveyInstrument has been updated successfully to the microservice database, at the endpoint SurveyInstrument/api/SurveyInstrument/id</returns>
         [HttpPut("{id}", Name = "PutSurveyInstrumentById")]
-        public ActionResult PutSurveyInstrumentById(Guid id, [FromBody] OSDC.Drilling.SurveyInstrument.Model.SurveyInstrument? data)
+        public ActionResult PutSurveyInstrumentById(Guid id,
+            [FromBody] OSDC.Drilling.SurveyInstrument.Model.SurveyInstrument? data) =>
+            PutSurveyInstrumentByIdCore(id, data, null);
+
+        [NonAction]
+        internal ActionResult PutSurveyInstrumentById(Guid id,
+            OSDC.Drilling.SurveyInstrument.Model.SurveyInstrument? data,
+            DateTimeOffset expectedModifiedUtc) =>
+            PutSurveyInstrumentByIdCore(id, data, expectedModifiedUtc);
+
+        private ActionResult PutSurveyInstrumentByIdCore(Guid id,
+            OSDC.Drilling.SurveyInstrument.Model.SurveyInstrument? data,
+            DateTimeOffset? expectedModifiedUtc)
         {
             UsageStatisticsSurveyInstrument.Instance.IncrementPutSurveyInstrumentByIdPerDay();
             // Check if SurveyInstrument is in the data base
@@ -180,9 +192,18 @@ namespace OSDC.Drilling.SurveyInstrument.Service.Controllers
                 var existingData = _surveyInstrumentManager.GetSurveyInstrumentById(id);
                 if (existingData != null)
                 {
-                    if (_surveyInstrumentManager.UpdateSurveyInstrumentById(id, data))
+                    if (expectedModifiedUtc != null && existingData.LastModificationDate != expectedModifiedUtc)
+                    {
+                        return Conflict(new { error = "stale_write", message = "The survey instrument changed after it was read." });
+                    }
+                    if (_surveyInstrumentManager.UpdateSurveyInstrumentById(id, data, expectedModifiedUtc))
                     {
                         return Ok();
+                    }
+                    if (expectedModifiedUtc != null &&
+                        _surveyInstrumentManager.GetSurveyInstrumentById(id)?.LastModificationDate != expectedModifiedUtc)
+                    {
+                        return Conflict(new { error = "stale_write", message = "The survey instrument changed while it was being updated." });
                     }
                     else
                     {
@@ -208,14 +229,36 @@ namespace OSDC.Drilling.SurveyInstrument.Service.Controllers
         /// <param name="guid"></param>
         /// <returns>true if the SurveyInstrument was deleted from the microservice database, at the endpoint SurveyInstrument/api/SurveyInstrument/id</returns>
         [HttpDelete("{id}", Name = "DeleteSurveyInstrumentById")]
-        public ActionResult DeleteSurveyInstrumentById(Guid id)
+        public ActionResult DeleteSurveyInstrumentById(Guid id) =>
+            DeleteSurveyInstrumentByIdCore(id, null);
+
+        [NonAction]
+        internal ActionResult DeleteSurveyInstrumentById(Guid id, DateTimeOffset expectedModifiedUtc) =>
+            DeleteSurveyInstrumentByIdCore(id, expectedModifiedUtc);
+
+        private ActionResult DeleteSurveyInstrumentByIdCore(Guid id, DateTimeOffset? expectedModifiedUtc)
         {
             UsageStatisticsSurveyInstrument.Instance.IncrementDeleteSurveyInstrumentByIdPerDay();
-            if (_surveyInstrumentManager.GetSurveyInstrumentById(id) != null)
+            OSDC.Drilling.SurveyInstrument.Model.SurveyInstrument? existingData =
+                _surveyInstrumentManager.GetSurveyInstrumentById(id);
+            if (existingData != null)
             {
-                if (_surveyInstrumentManager.DeleteSurveyInstrumentById(id))
+                if (expectedModifiedUtc != null && existingData.LastModificationDate != expectedModifiedUtc)
+                {
+                    return Conflict(new { error = "stale_write", message = "The survey instrument changed after it was read." });
+                }
+                if (_surveyInstrumentManager.DeleteSurveyInstrumentById(id, expectedModifiedUtc))
                 {
                     return Ok();
+                }
+                if (_surveyInstrumentManager.GetSurveyInstrumentById(id) == null)
+                {
+                    return NotFound();
+                }
+                if (expectedModifiedUtc != null &&
+                    _surveyInstrumentManager.GetSurveyInstrumentById(id)?.LastModificationDate != expectedModifiedUtc)
+                {
+                    return Conflict(new { error = "stale_write", message = "The survey instrument changed while it was being deleted." });
                 }
                 else
                 {

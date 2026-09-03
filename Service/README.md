@@ -198,9 +198,11 @@ dotnet build .\Service\Service.csproj -c Debug
 
 ## MCP server
 
-The service publishes all 25 non-statistics Survey Instrument, Error Source, identity, and feature-category operations as MCP tools. Usage-statistics operations are not exposed.
+The service publishes all 25 non-statistics REST operations plus the MCP-only `survey_instrument_patch_by_id` operation as 26 domain MCP tools. Usage-statistics operations are not exposed.
 
-Tool descriptions distinguish compact discovery (`get_all_ids`, `get_all_meta_info`, and Survey Instrument `get_all_light`) from complete-model retrieval. Create and update tools expose explicit nested JSON Schemas rather than generic object bodies. Every tool also publishes an explicit success-output schema, title, and MCP read-only/destructive/idempotent/open-world annotations. Unknown top-level arguments are rejected before controller invocation. Successful calls return structured JSON and a text fallback; failed HTTP-style results and unexpected exceptions are converted to stable sanitized MCP error envelopes.
+Tool descriptions distinguish compact discovery (`get_all_ids`, `get_all_meta_info`, and Survey Instrument `get_all_light`) from complete-model retrieval. Create and update tools expose explicit nested JSON Schemas rather than generic object bodies; `ModelType` is a four-branch discriminator with family-specific field guidance. Every tool also publishes an explicit success-output schema, title, and MCP read-only/destructive/idempotent/open-world annotations. Unknown top-level arguments are rejected before controller invocation. Successful calls return structured JSON and a text fallback; failed HTTP-style results and unexpected exceptions are converted to stable sanitized MCP error envelopes.
+
+Survey Instrument update, patch, and delete require `expectedModifiedUtc` from the latest read and return `stale_write` on a mismatch. Patch uses top-level JSON Merge Patch semantics: omitted fields are retained, arrays are replaced as a whole, and resource identity/server timestamps are protected. Error Source CRUD manages a template library. `ErrorSourceList` entries embedded in an instrument are authoritative snapshots; a copied template UUID records provenance, but later template edits do not propagate into stored instruments.
 
 The schemas document the caller-owned `MetaInfo.ID`, the requirement that an update path ID match the body's ID, all four survey model families, embedded `ErrorSourceList` objects, identity and feature assignments, catalog concurrency tokens, classification flags, and inclination intervals.
 
