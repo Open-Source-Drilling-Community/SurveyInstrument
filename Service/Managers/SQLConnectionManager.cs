@@ -32,7 +32,7 @@ namespace OSDC.Drilling.SurveyInstrument.Service.Managers
         public static readonly string HOME_DIRECTORY = ".." + Path.DirectorySeparatorChar + "home" + Path.DirectorySeparatorChar;
         public static readonly string DATABASE_FILENAME = "SurveyInstrument.db";
         public static readonly string DATE_TIME_FORMAT = "yyyy-MM-dd HH:mm:ss";
-        public const int CURRENT_SCHEMA_VERSION = 1;
+        public const int CURRENT_SCHEMA_VERSION = 2;
 
         // dictionary describing tables format
         // Light weight data fields are enumerated explicitly in the data table implementing the light weight data concept
@@ -58,6 +58,24 @@ namespace OSDC.Drilling.SurveyInstrument.Service.Managers
                     "CreationDate text",
                     "LastModificationDate text",
                     "SurveyInstrument text" }
+                },
+                { "SurveyInstrumentIdentityTable", new string[] {
+                    "ID text primary key",
+                    "MetaInfo text",
+                    "Name text",
+                    "CreationDate text",
+                    "LastModificationDate text",
+                    "SurveyInstrumentIdentity text" }
+                },
+                { "SurveyInstrumentFeatureCategoryTable", new string[] {
+                    "ID text primary key",
+                    "MetaInfo text",
+                    "Name text",
+                    "IsExclusive integer",
+                    "HasValidityPeriod integer",
+                    "CreationDate text",
+                    "LastModificationDate text",
+                    "SurveyInstrumentFeatureCategory text" }
                 }
             };
 
@@ -178,6 +196,7 @@ namespace OSDC.Drilling.SurveyInstrument.Service.Managers
                     }
                     SetSchemaVersion(connection, transaction);
                     transaction.Commit();
+                    tableNames = _tableStructureDict.Keys.ToList();
                 }
                 catch
                 {
@@ -188,15 +207,23 @@ namespace OSDC.Drilling.SurveyInstrument.Service.Managers
             }
 
             List<string> unexpected = tableNames.Except(_tableStructureDict.Keys, StringComparer.Ordinal).ToList();
-            List<string> missing = _tableStructureDict.Keys.Except(tableNames, StringComparer.Ordinal).ToList();
-            List<string> malformed = _tableStructureDict
-                .Where(table => tableNames.Contains(table.Key, StringComparer.Ordinal) && !CheckDatabaseStructure(connection, table))
-                .Select(table => table.Key)
-                .ToList();
-            if (unexpected.Count > 0 || missing.Count > 0 || malformed.Count > 0)
+            if (unexpected.Count > 0)
             {
                 throw new InvalidOperationException(
-                    $"Unexpected SurveyInstrument database structure. No data was changed. Missing=[{string.Join(',', missing)}], unexpected=[{string.Join(',', unexpected)}], malformed=[{string.Join(',', malformed)}].");
+                    $"Unexpected SurveyInstrument database tables. No data was changed: [{string.Join(',', unexpected)}].");
+            }
+
+            string[] legacyTables = ["ErrorSourceTable", "SurveyInstrumentTable"];
+            List<string> missingLegacy = legacyTables.Except(tableNames, StringComparer.Ordinal).ToList();
+            List<string> malformed = _tableStructureDict
+                .Where(table => tableNames.Contains(table.Key, StringComparer.Ordinal) &&
+                    !CheckDatabaseStructure(connection, table))
+                .Select(table => table.Key)
+                .ToList();
+            if (missingLegacy.Count > 0 || malformed.Count > 0)
+            {
+                throw new InvalidOperationException(
+                    $"Unexpected SurveyInstrument database structure. No data was changed. Missing=[{string.Join(',', missingLegacy)}], malformed=[{string.Join(',', malformed)}].");
             }
 
             if (schemaVersion < CURRENT_SCHEMA_VERSION)
@@ -206,16 +233,36 @@ namespace OSDC.Drilling.SurveyInstrument.Service.Managers
                 {
                     foreach (KeyValuePair<string, string[]> table in _tableStructureDict)
                     {
-                        CreateIndex(connection, transaction, table.Key);
+                        if (!tableNames.Contains(table.Key, StringComparer.Ordinal))
+                        {
+                            CreateTable(connection, transaction, table);
+                        }
+                        else
+                        {
+                            CreateIndex(connection, transaction, table.Key);
+                        }
                     }
                     SetSchemaVersion(connection, transaction);
                     transaction.Commit();
+                    tableNames = _tableStructureDict.Keys.ToList();
                 }
                 catch
                 {
                     transaction.Rollback();
                     throw;
                 }
+            }
+
+            List<string> finalMissing = _tableStructureDict.Keys.Except(tableNames, StringComparer.Ordinal).ToList();
+            List<string> finalMalformed = _tableStructureDict
+                .Where(table => tableNames.Contains(table.Key, StringComparer.Ordinal) &&
+                    !CheckDatabaseStructure(connection, table))
+                .Select(table => table.Key)
+                .ToList();
+            if (finalMissing.Count > 0 || finalMalformed.Count > 0)
+            {
+                throw new InvalidOperationException(
+                    $"SurveyInstrument database schema is incomplete. Missing=[{string.Join(',', finalMissing)}], malformed=[{string.Join(',', finalMalformed)}].");
             }
         }
 

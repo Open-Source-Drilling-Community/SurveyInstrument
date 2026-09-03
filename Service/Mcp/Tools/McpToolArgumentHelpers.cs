@@ -28,6 +28,41 @@ internal static class McpToolArgumentHelpers
         "Complete error-source representation. JSON property names are case-sensitive and use PascalCase.",
         includeId, "Identifier of the persisted error source. It must equal errorSource.MetaInfo.ID.");
 
+    public static JsonObject CreateCatalogSchema(string bodyName, bool feature, bool includeId = false,
+        bool includeExpected = false)
+    {
+        JsonObject body = feature ? FeatureCategorySchema() : IdentitySchema();
+        JsonObject properties = new() { [bodyName] = body };
+        JsonArray required = new(bodyName);
+        if (includeId)
+        {
+            properties["id"] = StringSchema("Catalog definition UUID.", "uuid");
+            required.Add("id");
+        }
+        if (includeExpected)
+        {
+            properties["expectedModifiedUtc"] = StringSchema("Exact LastModificationDate returned by the latest read.", "date-time");
+            required.Add("expectedModifiedUtc");
+        }
+        return new JsonObject
+        {
+            ["type"] = "object", ["properties"] = properties, ["required"] = required,
+            ["additionalProperties"] = false
+        };
+    }
+
+    public static JsonObject CreateCatalogDeleteSchema() => new()
+    {
+        ["type"] = "object",
+        ["properties"] = new JsonObject
+        {
+            ["id"] = StringSchema("Catalog definition UUID.", "uuid"),
+            ["expectedModifiedUtc"] = StringSchema("Exact LastModificationDate returned by the latest read.", "date-time")
+        },
+        ["required"] = new JsonArray("id", "expectedModifiedUtc"),
+        ["additionalProperties"] = false
+    };
+
     private static JsonObject CreateBodySchema(string key, JsonObject body, string description, bool includeId, string idDescription)
     {
         body["description"] = description;
@@ -54,6 +89,8 @@ internal static class McpToolArgumentHelpers
             ["Description"] = NullableString("Human-readable explanation of the instrument, model revision, or intended use."),
             ["CreationDate"] = NullableDateTime("Creation timestamp in ISO 8601 format. Use a UTC offset where possible."),
             ["LastModificationDate"] = NullableDateTime("Last-modification timestamp in ISO 8601 format. Update it when changing the record."),
+            ["SurveyInstrumentIdentityAssignments"] = NullableArray(IdentityAssignmentSchema(), "Identity values assigned to this instrument."),
+            ["SurveyInstrumentFeatureAssignments"] = NullableArray(FeatureAssignmentSchema(), "Feature options assigned to this instrument."),
             ["ModelType"] = EnumSchema("Survey error-model family. MWD values model measurement-while-drilling instruments; Gyro values model gyroscopic instruments.", "MWD_WolffDeWardt", "Gyro_WolffDeWardt", "MWD_ISCWSA", "Gyro_ISCWSA"),
             ["ErrorSourceList"] = NullableArray(ErrorSourceSchema(), "Full error-source definitions used by this instrument, primarily for ISCWSA models. These are embedded objects, not UUID references."),
             ["Dip"] = Number("Geomagnetic dip (inclination) in radians."),
@@ -83,6 +120,76 @@ internal static class McpToolArgumentHelpers
             ["GyroCompassError"] = NullableNumber("Gyro-compass error angle in radians.")
         },
         ["required"] = new JsonArray("MetaInfo"), ["additionalProperties"] = false
+    };
+
+    private static JsonObject IdentitySchema() => new()
+    {
+        ["type"] = "object",
+        ["description"] = "User-managed survey-instrument identity definition.",
+        ["properties"] = new JsonObject
+        {
+            ["MetaInfo"] = MetaInfoSchema("Catalog metadata containing the caller-generated definition UUID."),
+            ["Name"] = NullableString("Identity category name."),
+            ["CreationDate"] = NullableDateTime("Server-owned creation time."),
+            ["LastModificationDate"] = NullableDateTime("Server-owned optimistic-concurrency token.")
+        },
+        ["required"] = new JsonArray("MetaInfo"), ["additionalProperties"] = false
+    };
+
+    private static JsonObject FeatureCategorySchema() => new()
+    {
+        ["type"] = "object",
+        ["description"] = "User-managed survey-instrument feature category and options.",
+        ["properties"] = new JsonObject
+        {
+            ["MetaInfo"] = MetaInfoSchema("Catalog metadata containing the caller-generated category UUID."),
+            ["Name"] = NullableString("Feature category name."),
+            ["IsExclusive"] = Boolean("Whether overlapping assignments in this category are forbidden."),
+            ["HasValidityPeriod"] = Boolean("Whether assignments may carry FromDate and ToDate."),
+            ["Options"] = new JsonObject { ["type"] = "array", ["items"] = FeatureOptionSchema() },
+            ["CreationDate"] = NullableDateTime("Server-owned creation time."),
+            ["LastModificationDate"] = NullableDateTime("Server-owned optimistic-concurrency token.")
+        },
+        ["required"] = new JsonArray("MetaInfo", "IsExclusive", "HasValidityPeriod", "Options"),
+        ["additionalProperties"] = false
+    };
+
+    private static JsonObject FeatureOptionSchema() => new()
+    {
+        ["type"] = "object",
+        ["properties"] = new JsonObject
+        {
+            ["ID"] = StringSchema("Stable feature-option UUID.", "uuid"),
+            ["Name"] = NullableString("Feature option name.")
+        },
+        ["required"] = new JsonArray("ID"), ["additionalProperties"] = false
+    };
+
+    private static JsonObject IdentityAssignmentSchema() => new()
+    {
+        ["type"] = "object",
+        ["properties"] = new JsonObject
+        {
+            ["ID"] = StringSchema("Caller-generated assignment UUID.", "uuid"),
+            ["IdentityID"] = StringSchema("UUID of an existing identity definition.", "uuid"),
+            ["Value"] = NullableString("Instrument-specific identity value.")
+        },
+        ["required"] = new JsonArray("ID", "IdentityID"), ["additionalProperties"] = false
+    };
+
+    private static JsonObject FeatureAssignmentSchema() => new()
+    {
+        ["type"] = "object",
+        ["properties"] = new JsonObject
+        {
+            ["ID"] = StringSchema("Caller-generated assignment UUID.", "uuid"),
+            ["FeatureCategoryID"] = StringSchema("UUID of an existing feature category.", "uuid"),
+            ["FeatureOptionID"] = StringSchema("UUID of an option belonging to that category.", "uuid"),
+            ["FromDate"] = NullableDateTime("Optional validity start, allowed only for validity-aware categories."),
+            ["ToDate"] = NullableDateTime("Optional validity end; it must not precede FromDate.")
+        },
+        ["required"] = new JsonArray("ID", "FeatureCategoryID", "FeatureOptionID"),
+        ["additionalProperties"] = false
     };
 
     private static JsonObject ErrorSourceSchema() => new()

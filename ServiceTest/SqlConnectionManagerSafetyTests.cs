@@ -28,6 +28,8 @@ public sealed class SqlConnectionManagerSafetyTests
             {
                 Assert.That(TableCount(connection, "ErrorSourceTable"), Is.EqualTo(1));
                 Assert.That(TableCount(connection, "SurveyInstrumentTable"), Is.EqualTo(1));
+                Assert.That(TableCount(connection, "SurveyInstrumentIdentityTable"), Is.EqualTo(1));
+                Assert.That(TableCount(connection, "SurveyInstrumentFeatureCategoryTable"), Is.EqualTo(1));
                 Assert.That(ScalarLong(connection, "PRAGMA user_version"), Is.EqualTo(SqlConnectionManager.CURRENT_SCHEMA_VERSION));
             });
         });
@@ -58,7 +60,63 @@ public sealed class SqlConnectionManagerSafetyTests
                     Is.EqualTo("{\"payload\":\"instrument-preserve-me\"}"));
                 Assert.That(ScalarString(verification, "SELECT Name FROM SurveyInstrumentTable WHERE ID='instrument-marker'"), Is.EqualTo("preserve-name"));
                 Assert.That(ScalarLong(verification, "SELECT COUNT(*) FROM SurveyInstrumentTable"), Is.EqualTo(1));
+                Assert.That(TableCount(verification, "SurveyInstrumentIdentityTable"), Is.EqualTo(1));
+                Assert.That(TableCount(verification, "SurveyInstrumentFeatureCategoryTable"), Is.EqualTo(1));
                 Assert.That(ScalarLong(verification, "PRAGMA user_version"), Is.EqualTo(SqlConnectionManager.CURRENT_SCHEMA_VERSION));
+            });
+        });
+    }
+
+    [Test]
+    public void Version_one_database_is_upgraded_additively_without_rewriting_existing_rows()
+    {
+        WithDatabase(path =>
+        {
+            using (SqliteConnection connection = Open(path))
+            {
+                CreateExpectedTables(connection);
+                Execute(connection, "INSERT INTO ErrorSourceTable (ID,ErrorSource) VALUES ('error-marker','error-preserve-me')");
+                Execute(connection, "INSERT INTO SurveyInstrumentTable (ID,Name,SurveyInstrument) VALUES ('instrument-marker','preserve-me','instrument-preserve-me')");
+                Execute(connection, "PRAGMA user_version = 1");
+            }
+
+            _ = Manager(path);
+
+            using SqliteConnection verification = Open(path);
+            Assert.Multiple(() =>
+            {
+                Assert.That(ScalarString(verification, "SELECT ErrorSource FROM ErrorSourceTable WHERE ID='error-marker'"), Is.EqualTo("error-preserve-me"));
+                Assert.That(ScalarString(verification, "SELECT SurveyInstrument FROM SurveyInstrumentTable WHERE ID='instrument-marker'"), Is.EqualTo("instrument-preserve-me"));
+                Assert.That(TableCount(verification, "SurveyInstrumentIdentityTable"), Is.EqualTo(1));
+                Assert.That(TableCount(verification, "SurveyInstrumentFeatureCategoryTable"), Is.EqualTo(1));
+                Assert.That(ScalarLong(verification, "PRAGMA user_version"), Is.EqualTo(2));
+            });
+        });
+    }
+
+    [Test]
+    public void Default_identity_and_feature_catalogs_match_the_domain_taxonomy()
+    {
+        WithDatabase(path =>
+        {
+            SqlConnectionManager connections = Manager(path);
+            var identities = new SurveyInstrumentIdentityManager(connections).GetAll();
+            var features = new SurveyInstrumentFeatureCategoryManager(connections).GetAll();
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(identities.Select(value => value.Name), Is.EquivalentTo(new[]
+                {
+                    "OfficialName", "ManufacturerName", "ModelName", "ProductFamilyName",
+                    "ToolName", "ToolShortName", "CommonName", "NickName"
+                }));
+                Assert.That(features, Has.Count.EqualTo(16));
+                Assert.That(features.Single(value => value.Name == "AzimuthReference").IsExclusive, Is.True);
+                Assert.That(features.Single(value => value.Name == "CertificationStatus").HasValidityPeriod, Is.True);
+                Assert.That(features.Single(value => value.Name == "CalibrationMode").HasValidityPeriod, Is.True);
+                Assert.That(features.Single(value => value.Name == "CorrectionCapability").Options!.Select(value => value.Name),
+                    Does.Contain("DrillstringMagneticInterferenceCorrection"));
+                Assert.That(features.All(value => value.Options!.Any(option => option.Name == "Unknown")), Is.True);
             });
         });
     }

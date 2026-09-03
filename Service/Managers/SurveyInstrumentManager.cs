@@ -6,6 +6,7 @@ using Microsoft.Data.Sqlite;
 using System.Text.Json;
 using OSDC.Drilling.SurveyInstrument.Model;
 using OSDC.DotnetLibraries.Drilling.Surveying;
+using System.Linq;
 
 namespace OSDC.Drilling.SurveyInstrument.Service.Managers
 {
@@ -42,7 +43,7 @@ namespace OSDC.Drilling.SurveyInstrument.Service.Managers
                 {
                     foreach (Guid id in ids)
                     {
-                        OSDC.DotnetLibraries.Drilling.Surveying.SurveyInstrument? si = GetSurveyInstrumentById(id);
+                        OSDC.Drilling.SurveyInstrument.Model.SurveyInstrument? si = GetSurveyInstrumentById(id);
                         if (si == null || si.MetaInfo == null || si.MetaInfo.ID != id)
                         {
                             isCorrupted = true;
@@ -236,14 +237,14 @@ namespace OSDC.Drilling.SurveyInstrument.Service.Managers
         /// </summary>
         /// <param name="guid"></param>
         /// <returns>the SurveyInstrument identified by its Guid from the microservice database</returns>
-        public OSDC.DotnetLibraries.Drilling.Surveying.SurveyInstrument? GetSurveyInstrumentById(Guid guid)
+        public OSDC.Drilling.SurveyInstrument.Model.SurveyInstrument? GetSurveyInstrumentById(Guid guid)
         {
             if (!guid.Equals(Guid.Empty))
             {
                 var connection = _connectionManager.GetConnection();
                 if (connection != null)
                 {
-                    OSDC.DotnetLibraries.Drilling.Surveying.SurveyInstrument? surveyInstrument;
+                    OSDC.Drilling.SurveyInstrument.Model.SurveyInstrument? surveyInstrument;
                     var command = connection.CreateCommand();
                     command.CommandText = $"SELECT SurveyInstrument FROM SurveyInstrumentTable WHERE ID = '{guid}'";
                     try
@@ -252,7 +253,7 @@ namespace OSDC.Drilling.SurveyInstrument.Service.Managers
                         if (reader.Read() && !reader.IsDBNull(0))
                         {
                             string data = reader.GetString(0);
-                            surveyInstrument = JsonSerializer.Deserialize<OSDC.DotnetLibraries.Drilling.Surveying.SurveyInstrument>(data, JsonSettings.Options);
+                            surveyInstrument = JsonSerializer.Deserialize<OSDC.Drilling.SurveyInstrument.Model.SurveyInstrument>(data, JsonSettings.Options);
                             if (surveyInstrument != null && surveyInstrument.MetaInfo != null && !surveyInstrument.MetaInfo.ID.Equals(guid))
                                 throw new SqliteException("SQLite database corrupted: returned SurveyInstrument is null or has been jsonified with the wrong ID.", 1);
                         }
@@ -286,9 +287,9 @@ namespace OSDC.Drilling.SurveyInstrument.Service.Managers
         /// Returns the list of all SurveyInstrument present in the microservice database 
         /// </summary>
         /// <returns>the list of all SurveyInstrument present in the microservice database</returns>
-        public List<OSDC.DotnetLibraries.Drilling.Surveying.SurveyInstrument?>? GetAllSurveyInstrument()
+        public List<OSDC.Drilling.SurveyInstrument.Model.SurveyInstrument?>? GetAllSurveyInstrument()
         {
-            List<OSDC.DotnetLibraries.Drilling.Surveying.SurveyInstrument?> vals = [];
+            List<OSDC.Drilling.SurveyInstrument.Model.SurveyInstrument?> vals = [];
             var connection = _connectionManager.GetConnection();
             if (connection != null)
             {
@@ -300,7 +301,7 @@ namespace OSDC.Drilling.SurveyInstrument.Service.Managers
                     while (reader.Read() && !reader.IsDBNull(0))
                     {
                         string data = reader.GetString(0);
-                        OSDC.DotnetLibraries.Drilling.Surveying.SurveyInstrument? surveyInstrument = JsonSerializer.Deserialize<OSDC.DotnetLibraries.Drilling.Surveying.SurveyInstrument>(data, JsonSettings.Options);
+                        OSDC.Drilling.SurveyInstrument.Model.SurveyInstrument? surveyInstrument = JsonSerializer.Deserialize<OSDC.Drilling.SurveyInstrument.Model.SurveyInstrument>(data, JsonSettings.Options);
                         vals.Add(surveyInstrument);
                     }
                     _logger.LogInformation("Returning the list of existing SurveyInstrument from SurveyInstrumentTable");
@@ -374,8 +375,13 @@ namespace OSDC.Drilling.SurveyInstrument.Service.Managers
         /// </summary>
         /// <param name="surveyInstrument"></param>
         /// <returns>true if the given SurveyInstrument has been added successfully to the microservice database</returns>
-        public bool AddSurveyInstrument(OSDC.DotnetLibraries.Drilling.Surveying.SurveyInstrument? surveyInstrument)
+        public bool AddSurveyInstrument(OSDC.Drilling.SurveyInstrument.Model.SurveyInstrument? surveyInstrument)
         {
+            if (surveyInstrument != null && !ValidateAssignments(surveyInstrument))
+            {
+                _logger.LogWarning("SurveyInstrument contains invalid identity or feature assignments");
+                return false;
+            }
             if (surveyInstrument != null && surveyInstrument.MetaInfo != null && surveyInstrument.MetaInfo.ID != Guid.Empty)
             {
                 //update SurveyInstrumentTable
@@ -454,8 +460,13 @@ namespace OSDC.Drilling.SurveyInstrument.Service.Managers
         /// </summary>
         /// <param name="surveyInstrument"></param>
         /// <returns>true if the given SurveyInstrument has been updated successfully</returns>
-        public bool UpdateSurveyInstrumentById(Guid guid, OSDC.DotnetLibraries.Drilling.Surveying.SurveyInstrument? surveyInstrument)
+        public bool UpdateSurveyInstrumentById(Guid guid, OSDC.Drilling.SurveyInstrument.Model.SurveyInstrument? surveyInstrument)
         {
+            if (surveyInstrument != null && !ValidateAssignments(surveyInstrument))
+            {
+                _logger.LogWarning("SurveyInstrument contains invalid identity or feature assignments");
+                return false;
+            }
             bool success = true;
             if (guid != Guid.Empty && surveyInstrument != null && surveyInstrument.MetaInfo != null && surveyInstrument.MetaInfo.ID == guid)
             {
@@ -519,6 +530,71 @@ namespace OSDC.Drilling.SurveyInstrument.Service.Managers
             return false;
         }
 
+        private bool ValidateAssignments(OSDC.Drilling.SurveyInstrument.Model.SurveyInstrument surveyInstrument)
+        {
+            surveyInstrument.SurveyInstrumentIdentityAssignments ??= [];
+            surveyInstrument.SurveyInstrumentFeatureAssignments ??= [];
+            if (surveyInstrument.SurveyInstrumentIdentityAssignments.Any(value => value.ID == Guid.Empty) ||
+                surveyInstrument.SurveyInstrumentIdentityAssignments.GroupBy(value => value.ID).Any(group => group.Count() > 1) ||
+                surveyInstrument.SurveyInstrumentFeatureAssignments.Any(value => value.ID == Guid.Empty) ||
+                surveyInstrument.SurveyInstrumentFeatureAssignments.GroupBy(value => value.ID).Any(group => group.Count() > 1))
+            {
+                return false;
+            }
+
+            HashSet<Guid> identities = new SurveyInstrumentIdentityManager(_connectionManager).GetAll()
+                .Select(value => value.MetaInfo!.ID).ToHashSet();
+            if (surveyInstrument.SurveyInstrumentIdentityAssignments.Any(value =>
+                value.IdentityID is not Guid identityId || !identities.Contains(identityId)))
+            {
+                return false;
+            }
+
+            Dictionary<Guid, Model.SurveyInstrumentFeatureCategory> categories =
+                new SurveyInstrumentFeatureCategoryManager(_connectionManager).GetAll()
+                    .ToDictionary(value => value.MetaInfo!.ID);
+            foreach (Model.SurveyInstrumentFeatureAssignment assignment in surveyInstrument.SurveyInstrumentFeatureAssignments)
+            {
+                if (assignment.FeatureCategoryID is not Guid categoryId ||
+                    !categories.TryGetValue(categoryId, out Model.SurveyInstrumentFeatureCategory? category) ||
+                    assignment.FeatureOptionID is not Guid optionId ||
+                    category.Options?.Any(option => option.ID == optionId) != true)
+                {
+                    return false;
+                }
+                if (!category.HasValidityPeriod && (assignment.FromDate != null || assignment.ToDate != null))
+                {
+                    return false;
+                }
+                if (assignment.FromDate > assignment.ToDate)
+                {
+                    return false;
+                }
+            }
+
+            foreach (Model.SurveyInstrumentFeatureCategory category in categories.Values.Where(value => value.IsExclusive))
+            {
+                List<Model.SurveyInstrumentFeatureAssignment> assignments = surveyInstrument.SurveyInstrumentFeatureAssignments
+                    .Where(value => value.FeatureCategoryID == category.MetaInfo!.ID).ToList();
+                for (int i = 0; i < assignments.Count; i++)
+                {
+                    for (int j = i + 1; j < assignments.Count; j++)
+                    {
+                        if (PeriodsOverlap(assignments[i], assignments[j]))
+                        {
+                            return false;
+                        }
+                    }
+                }
+            }
+            return true;
+        }
+
+        private static bool PeriodsOverlap(Model.SurveyInstrumentFeatureAssignment left,
+            Model.SurveyInstrumentFeatureAssignment right) =>
+            (left.ToDate == null || right.FromDate == null || left.ToDate >= right.FromDate) &&
+            (right.ToDate == null || left.FromDate == null || right.ToDate >= left.FromDate);
+
         /// <summary>
         /// Deletes the SurveyInstrument of given ID from the microservice database
         /// </summary>
@@ -578,7 +654,7 @@ namespace OSDC.Drilling.SurveyInstrument.Service.Managers
         /// </summary>
         private void FillDefault()
         {
-            List<OSDC.DotnetLibraries.Drilling.Surveying.SurveyInstrument?> surveyInstrumentList = [
+            List<OSDC.Drilling.SurveyInstrument.Model.SurveyInstrument?> surveyInstrumentList = [
                 WdWPoorMag,
                 WdWGoodMag,
                 WdWPoorGyro,
@@ -594,7 +670,7 @@ namespace OSDC.Drilling.SurveyInstrument.Service.Managers
                 Gyro_ISCWSA_Ex6,
                 SurveyInstrumentAll
                 ];
-            foreach (OSDC.DotnetLibraries.Drilling.Surveying.SurveyInstrument? si in surveyInstrumentList)
+            foreach (OSDC.Drilling.SurveyInstrument.Model.SurveyInstrument? si in surveyInstrumentList)
             {
                 AddSurveyInstrument(si);
             }
@@ -603,7 +679,7 @@ namespace OSDC.Drilling.SurveyInstrument.Service.Managers
         #region Default survey instruments
 
         #region SurveyInstrument WdWPoorMag
-        public static OSDC.DotnetLibraries.Drilling.Surveying.SurveyInstrument WdWPoorMag
+        public static OSDC.Drilling.SurveyInstrument.Model.SurveyInstrument WdWPoorMag
         {
             get
             {
@@ -633,7 +709,7 @@ namespace OSDC.Drilling.SurveyInstrument.Service.Managers
         #endregion
 
         #region SurveyInstrument WdWGoodMag
-        public static OSDC.DotnetLibraries.Drilling.Surveying.SurveyInstrument WdWGoodMag
+        public static OSDC.Drilling.SurveyInstrument.Model.SurveyInstrument WdWGoodMag
         {
             get
             {
@@ -663,7 +739,7 @@ namespace OSDC.Drilling.SurveyInstrument.Service.Managers
         #endregion
 
         #region SurveyInstrument WdWPoorGyro
-        public static OSDC.DotnetLibraries.Drilling.Surveying.SurveyInstrument WdWPoorGyro
+        public static OSDC.Drilling.SurveyInstrument.Model.SurveyInstrument WdWPoorGyro
         {
             get
             {
@@ -693,7 +769,7 @@ namespace OSDC.Drilling.SurveyInstrument.Service.Managers
         #endregion
 
         #region SurveyInstrument WdWGoodGyro
-        public static OSDC.DotnetLibraries.Drilling.Surveying.SurveyInstrument WdWGoodGyro
+        public static OSDC.Drilling.SurveyInstrument.Model.SurveyInstrument WdWGoodGyro
         {
             get
             {
@@ -723,7 +799,7 @@ namespace OSDC.Drilling.SurveyInstrument.Service.Managers
         #endregion
 
         #region SurveyInstrument MWD_ISCWSA
-        public static OSDC.DotnetLibraries.Drilling.Surveying.SurveyInstrument MWD_ISCWSA
+        public static OSDC.Drilling.SurveyInstrument.Model.SurveyInstrument MWD_ISCWSA
         {
             get
             {
@@ -784,7 +860,7 @@ namespace OSDC.Drilling.SurveyInstrument.Service.Managers
         #endregion
 
         #region SurveyInstrument MWD_ISCWSA_Rev5_OWSG
-        public static OSDC.DotnetLibraries.Drilling.Surveying.SurveyInstrument MWD_ISCWSA_Rev5_OWSG
+        public static OSDC.Drilling.SurveyInstrument.Model.SurveyInstrument MWD_ISCWSA_Rev5_OWSG
         {
             get
             {
@@ -845,8 +921,8 @@ namespace OSDC.Drilling.SurveyInstrument.Service.Managers
         #endregion
 
         #region SurveyInstrument Gyro_ISCWSA
-        private static OSDC.DotnetLibraries.Drilling.Surveying.SurveyInstrument? _gyro_ISCWSA = null;
-        public static OSDC.DotnetLibraries.Drilling.Surveying.SurveyInstrument Gyro_ISCWSA
+        private static OSDC.Drilling.SurveyInstrument.Model.SurveyInstrument? _gyro_ISCWSA = null;
+        public static OSDC.Drilling.SurveyInstrument.Model.SurveyInstrument Gyro_ISCWSA
         {
             get
             {
@@ -898,7 +974,7 @@ namespace OSDC.Drilling.SurveyInstrument.Service.Managers
         #endregion
 
         #region SurveyInstrument Gyro_ISCWSA_Ex1
-        public static OSDC.DotnetLibraries.Drilling.Surveying.SurveyInstrument Gyro_ISCWSA_Ex1
+        public static OSDC.Drilling.SurveyInstrument.Model.SurveyInstrument Gyro_ISCWSA_Ex1
         {
             get
             {
@@ -950,7 +1026,7 @@ namespace OSDC.Drilling.SurveyInstrument.Service.Managers
         #endregion
 
         #region SurveyInstrument Gyro_ISCWSA_Ex2
-        public static OSDC.DotnetLibraries.Drilling.Surveying.SurveyInstrument Gyro_ISCWSA_Ex2
+        public static OSDC.Drilling.SurveyInstrument.Model.SurveyInstrument Gyro_ISCWSA_Ex2
         {
             get
             {
@@ -997,7 +1073,7 @@ namespace OSDC.Drilling.SurveyInstrument.Service.Managers
         #endregion
 
         #region SurveyInstrument Gyro_ISCWSA_Ex3
-        public static OSDC.DotnetLibraries.Drilling.Surveying.SurveyInstrument Gyro_ISCWSA_Ex3
+        public static OSDC.Drilling.SurveyInstrument.Model.SurveyInstrument Gyro_ISCWSA_Ex3
         {
             get
             {
@@ -1050,7 +1126,7 @@ namespace OSDC.Drilling.SurveyInstrument.Service.Managers
         #endregion
 
         #region SurveyInstrument Gyro_ISCWSA_Ex4
-        public static OSDC.DotnetLibraries.Drilling.Surveying.SurveyInstrument Gyro_ISCWSA_Ex4
+        public static OSDC.Drilling.SurveyInstrument.Model.SurveyInstrument Gyro_ISCWSA_Ex4
         {
             get
             {
@@ -1107,7 +1183,7 @@ namespace OSDC.Drilling.SurveyInstrument.Service.Managers
         #endregion
 
         #region SurveyInstrument Gyro_ISCWSA_Ex5
-        public static OSDC.DotnetLibraries.Drilling.Surveying.SurveyInstrument Gyro_ISCWSA_Ex5
+        public static OSDC.Drilling.SurveyInstrument.Model.SurveyInstrument Gyro_ISCWSA_Ex5
         {
             get
             {
@@ -1163,7 +1239,7 @@ namespace OSDC.Drilling.SurveyInstrument.Service.Managers
         #endregion
 
         #region SurveyInstrument Gyro_ISCWSA_Ex6
-        public static OSDC.DotnetLibraries.Drilling.Surveying.SurveyInstrument Gyro_ISCWSA_Ex6
+        public static OSDC.Drilling.SurveyInstrument.Model.SurveyInstrument Gyro_ISCWSA_Ex6
         {
             get
             {
@@ -1217,7 +1293,7 @@ namespace OSDC.Drilling.SurveyInstrument.Service.Managers
         #endregion
 
         #region SurveyInstrument SurveyInstrumentAll
-        public static OSDC.DotnetLibraries.Drilling.Surveying.SurveyInstrument SurveyInstrumentAll
+        public static OSDC.Drilling.SurveyInstrument.Model.SurveyInstrument SurveyInstrumentAll
         {
             get
             {

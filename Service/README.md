@@ -1,12 +1,13 @@
 # Service
 
-`Service` is the ASP.NET Core Web API project for the SurveyInstrument microservice. It exposes CRUD endpoints for survey instruments and error sources, stores data in SQLite, publishes a merged OpenAPI document, and serves the usage-statistics endpoint consumed by the UI.
+`Service` is the ASP.NET Core Web API project for the SurveyInstrument microservice. It exposes survey instruments, error sources, identity definitions, and feature-category catalogs, stores data in SQLite, publishes a merged OpenAPI document, and serves the usage-statistics endpoint consumed by the UI.
 
 ## Responsibilities
 
 - Host the HTTP API under `/SurveyInstrument/api`.
 - Persist `SurveyInstrument` and `ErrorSource` records in SQLite.
 - Seed default error sources and default survey instruments when the database is empty.
+- Seed the standard identity and survey-feature taxonomies.
 - Publish a merged OpenAPI/Swagger document generated from `ModelSharedOut`.
 - Serve static assets and the generated schema bundle from `wwwroot`.
 - Track API usage counts through `UsageStatisticsSurveyInstrument`.
@@ -42,6 +43,10 @@ This needs to stay aligned with ingress rules and any client base URLs.
   - CRUD endpoints for full survey instrument resources plus metadata/light-list endpoints.
 - `Controllers/ErrorSourceController.cs`
   - CRUD endpoints for error source resources plus metadata endpoints.
+- `Controllers/SurveyInstrumentIdentityController.cs`
+  - CRUD endpoints for identity definitions with optimistic concurrency and reference protection.
+- `Controllers/SurveyInstrumentFeatureCategoryController.cs`
+  - CRUD endpoints for feature categories/options with optimistic concurrency and reference protection.
 - `Controllers/SurveyInstrumentUsageStatisticsController.cs`
   - Returns the usage statistics singleton.
 - `Managers/SqlConnectionManager.cs`
@@ -49,7 +54,7 @@ This needs to stay aligned with ingress rules and any client base URLs.
 - `Managers/ErrorSourceManager.cs`
   - Handles persistence and default seeding for `ErrorSource`.
 - `Managers/SurveyInstrumentManager.cs`
-  - Handles persistence and default seeding for `SurveyInstrument`.
+  - Handles persistence, default seeding, and identity/feature assignment validation for `SurveyInstrument`.
 - `SwaggerMiddlewareExtensions.cs`
   - Custom Swagger middleware support for the merged schema file.
 - `wwwroot/json-schema/SurveyInstrumentMergedModel.json`
@@ -94,6 +99,10 @@ The `ErrorSourceController` exposes the same shape for `ErrorSource` resources:
 
 Returns the file-backed statistics object maintained in the `Model` project.
 
+### Identities and features
+
+`SurveyInstrumentIdentityController` and `SurveyInstrumentFeatureCategoryController` expose IDs, metadata, individual/full-list retrieval, and create/update/delete operations. Survey instruments embed assignments by catalog UUID. The service rejects missing references, mismatched category/option pairs, invalid validity periods, duplicate assignment UUIDs, and overlapping selections in exclusive categories.
+
 ## Storage
 
 The service uses SQLite via `Microsoft.Data.Sqlite`.
@@ -104,7 +113,8 @@ Important storage characteristics:
 - JSON payloads for full objects are stored in SQLite tables
 - lightweight list endpoints project selected columns instead of always deserializing full documents
 - a fresh database is created in one transaction and then seeded by the resource managers
-- the exact legacy schema is adopted without rewriting rows; unknown, malformed, and newer schemas fail closed without mutation
+- schema version 2 transactionally adds identity and feature-category tables to the valid legacy schema without rewriting rows
+- unknown, malformed, incomplete-current, and newer schemas fail closed without mutation
 - the filename remains `SurveyInstrument.db`
 
 This design favors simple deployment and debugging over advanced database normalization.

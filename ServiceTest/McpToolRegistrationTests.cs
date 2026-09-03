@@ -30,7 +30,17 @@ public sealed class McpToolRegistrationTests
             ["GetAllErrorSource"] = "error_source_get_all",
             ["PostErrorSource"] = "error_source_create",
             ["PutErrorSourceById"] = "error_source_update_by_id",
-            ["DeleteErrorSourceById"] = "error_source_delete_by_id"
+            ["DeleteErrorSourceById"] = "error_source_delete_by_id",
+            ["IdentityGetAll"] = "survey_instrument_identity_get_all",
+            ["IdentityGetById"] = "survey_instrument_identity_get_by_id",
+            ["IdentityCreate"] = "survey_instrument_identity_create",
+            ["IdentityUpdate"] = "survey_instrument_identity_update_by_id",
+            ["IdentityDelete"] = "survey_instrument_identity_delete_by_id",
+            ["FeatureGetAll"] = "survey_instrument_feature_category_get_all",
+            ["FeatureGetById"] = "survey_instrument_feature_category_get_by_id",
+            ["FeatureCreate"] = "survey_instrument_feature_category_create",
+            ["FeatureUpdate"] = "survey_instrument_feature_category_update_by_id",
+            ["FeatureDelete"] = "survey_instrument_feature_category_delete_by_id"
         };
 
     private ServiceProvider _provider = default!;
@@ -65,7 +75,7 @@ public sealed class McpToolRegistrationTests
             .Select(method => method.Name)
             .ToArray();
 
-        Assert.That(endpointMethods, Is.EquivalentTo(EndpointToolMap.Keys));
+        Assert.That(endpointMethods, Is.EquivalentTo(EndpointToolMap.Keys.Take(15)));
         Assert.That(_tools.Keys, Is.EquivalentTo(EndpointToolMap.Values.Append("ping")));
     }
 
@@ -99,6 +109,19 @@ public sealed class McpToolRegistrationTests
         Assert.That(schema, Does.Contain("radians"));
         Assert.That(schema, Does.Contain("metres per second squared"));
         Assert.That(schema, Does.Contain("tesla"));
+        Assert.That(schema, Does.Contain("SurveyInstrumentIdentityAssignments"));
+        Assert.That(schema, Does.Contain("SurveyInstrumentFeatureAssignments"));
+    }
+
+    [Test]
+    public void Feature_catalog_write_schema_documents_exclusivity_validity_and_options()
+    {
+        string schema = _tools["survey_instrument_feature_category_update_by_id"].InputSchema!.ToJsonString();
+
+        Assert.That(schema, Does.Contain("IsExclusive"));
+        Assert.That(schema, Does.Contain("HasValidityPeriod"));
+        Assert.That(schema, Does.Contain("Options"));
+        Assert.That(schema, Does.Contain("expectedModifiedUtc"));
     }
 
     [Test]

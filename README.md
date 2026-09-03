@@ -5,6 +5,8 @@ The SurveyInstrument repository contains a complete microservice-based solution 
 The solution revolves around two main domain families from the upstream OSDC drilling-surveying libraries:
 
 - `SurveyInstrument`
+- `SurveyInstrumentIdentity`
+- `SurveyInstrumentFeatureCategory`
 - `ErrorSource`
 
 The repository adds the infrastructure around those domain types:
@@ -95,6 +97,10 @@ Main routes:
   - Home page
 - `/SurveyInstrument`
   - survey instrument management
+- `/SurveyInstrumentIdentities`
+  - identity catalog management
+- `/SurveyInstrumentFeatures`
+  - feature-category and option management
 - `/StatisticsSurveyInstrument`
   - usage statistics
 
@@ -111,8 +117,10 @@ Default service behavior seeds the database with:
 
 - default `ErrorSource` records
 - default `SurveyInstrument` records
+- eight default identity definitions
+- sixteen feature categories and their options
 
-only after a fresh, empty database has been created. Startup never deletes, renames, replaces, or rebuilds an existing database. The exact legacy two-table schema is adopted transactionally by setting SQLite `user_version`; unknown, malformed, or newer schemas stop startup without changing tables or rows.
+Catalog defaults are seeded when their new tables are empty. Schema version 2 adds those catalog tables transactionally to a valid legacy database without rewriting existing error-source or survey-instrument rows. Startup never deletes, renames, replaces, or rebuilds existing tables; unknown, malformed, or newer schemas stop startup without changing data.
 
 The service image mounts `/home/` from the historical `surveyinstrument-claim` PVC. The chart uses a `Recreate` deployment strategy to prevent overlapping SQLite writers, retains Helm-managed PVCs, and accepts `persistence.existingClaim` for an explicit identity cutover. The filename remains `SurveyInstrument.db`.
 
@@ -207,8 +215,8 @@ For project-specific details, start with the README inside the corresponding pro
 
 ## MCP implementation
 
-The checked-in service publishes all 15 non-statistics REST operations—covering Survey Instrument and Error Source resources—as MCP tools, together with `ping`. Usage-statistics endpoints are intentionally excluded.
+The checked-in service publishes 25 MCP tools covering Survey Instrument, Error Source, identity-catalog, and feature-category operations, together with `ping`. Usage-statistics endpoints are intentionally excluded.
 
 MCP is available over streamable HTTP at `/surveyinstrument/api/mcp` and WebSocket at `/surveyinstrument/api/mcp/ws`. Registration with an external MCP hub is optional and disabled by default.
 
-The tools provide detailed descriptions and explicit schemas for full Survey Instrument and Error Source payloads. They explain discovery versus full retrieval, caller-generated UUIDs, update ID matching, the supported Wolff-DeWardt and ISCWSA model families, and embedded error sources. Physical inputs and outputs use SI: angles are radians, distances are metres, gravity is m/s², magnetic flux density is tesla, and error-source `Magnitude` is expressed in the SI unit identified by `MagnitudeQuantity`.
+The tools provide explicit schemas for full Survey Instrument and Error Source payloads, identity and feature catalogs, and embedded assignments. Catalog updates and deletes use optimistic-concurrency timestamps, and referenced catalog definitions/options cannot be removed. Physical inputs and outputs use SI: angles are radians, distances are metres, gravity is m/s², magnetic flux density is tesla, and error-source `Magnitude` is expressed in the SI unit identified by `MagnitudeQuantity`.

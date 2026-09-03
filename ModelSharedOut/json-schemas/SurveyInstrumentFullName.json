@@ -231,17 +231,17 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/OSDC.DotnetLibraries.Drilling.Surveying.SurveyInstrument"
+                "$ref": "#/components/schemas/OSDC.Drilling.SurveyInstrument.Model.SurveyInstrument"
               }
             },
             "text/json": {
               "schema": {
-                "$ref": "#/components/schemas/OSDC.DotnetLibraries.Drilling.Surveying.SurveyInstrument"
+                "$ref": "#/components/schemas/OSDC.Drilling.SurveyInstrument.Model.SurveyInstrument"
               }
             },
             "application/*+json": {
               "schema": {
-                "$ref": "#/components/schemas/OSDC.DotnetLibraries.Drilling.Surveying.SurveyInstrument"
+                "$ref": "#/components/schemas/OSDC.Drilling.SurveyInstrument.Model.SurveyInstrument"
               }
             }
           }
@@ -299,7 +299,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/OSDC.DotnetLibraries.Drilling.Surveying.SurveyInstrument"
+                  "$ref": "#/components/schemas/OSDC.Drilling.SurveyInstrument.Model.SurveyInstrument"
                 }
               }
             }
@@ -326,17 +326,17 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/OSDC.DotnetLibraries.Drilling.Surveying.SurveyInstrument"
+                "$ref": "#/components/schemas/OSDC.Drilling.SurveyInstrument.Model.SurveyInstrument"
               }
             },
             "text/json": {
               "schema": {
-                "$ref": "#/components/schemas/OSDC.DotnetLibraries.Drilling.Surveying.SurveyInstrument"
+                "$ref": "#/components/schemas/OSDC.Drilling.SurveyInstrument.Model.SurveyInstrument"
               }
             },
             "application/*+json": {
               "schema": {
-                "$ref": "#/components/schemas/OSDC.DotnetLibraries.Drilling.Surveying.SurveyInstrument"
+                "$ref": "#/components/schemas/OSDC.Drilling.SurveyInstrument.Model.SurveyInstrument"
               }
             }
           }
@@ -407,11 +407,431 @@
                 "schema": {
                   "type": "array",
                   "items": {
-                    "$ref": "#/components/schemas/OSDC.DotnetLibraries.Drilling.Surveying.SurveyInstrument"
+                    "$ref": "#/components/schemas/OSDC.Drilling.SurveyInstrument.Model.SurveyInstrument"
                   }
                 }
               }
             }
+          }
+        }
+      }
+    },
+    "/SurveyInstrumentFeatureCategory": {
+      "get": {
+        "tags": [
+          "SurveyInstrumentFeatureCategory"
+        ],
+        "operationId": "GetAllSurveyInstrumentFeatureCategoryId",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "format": "uuid"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "SurveyInstrumentFeatureCategory"
+        ],
+        "operationId": "PostSurveyInstrumentFeatureCategory",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OSDC.Drilling.SurveyInstrument.Model.SurveyInstrumentFeatureCategory"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OSDC.Drilling.SurveyInstrument.Model.SurveyInstrumentFeatureCategory"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/OSDC.Drilling.SurveyInstrument.Model.SurveyInstrumentFeatureCategory"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/SurveyInstrumentFeatureCategory/MetaInfo": {
+      "get": {
+        "tags": [
+          "SurveyInstrumentFeatureCategory"
+        ],
+        "operationId": "GetAllSurveyInstrumentFeatureCategoryMetaInfo",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/OSDC.DotnetLibraries.General.DataManagement.MetaInfo"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/SurveyInstrumentFeatureCategory/HeavyData": {
+      "get": {
+        "tags": [
+          "SurveyInstrumentFeatureCategory"
+        ],
+        "operationId": "GetAllSurveyInstrumentFeatureCategory",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/OSDC.Drilling.SurveyInstrument.Model.SurveyInstrumentFeatureCategory"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/SurveyInstrumentFeatureCategory/{id}": {
+      "get": {
+        "tags": [
+          "SurveyInstrumentFeatureCategory"
+        ],
+        "operationId": "GetSurveyInstrumentFeatureCategoryById",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OSDC.Drilling.SurveyInstrument.Model.SurveyInstrumentFeatureCategory"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "SurveyInstrumentFeatureCategory"
+        ],
+        "operationId": "PutSurveyInstrumentFeatureCategoryById",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "expectedModifiedUtc",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OSDC.Drilling.SurveyInstrument.Model.SurveyInstrumentFeatureCategory"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OSDC.Drilling.SurveyInstrument.Model.SurveyInstrumentFeatureCategory"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/OSDC.Drilling.SurveyInstrument.Model.SurveyInstrumentFeatureCategory"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "SurveyInstrumentFeatureCategory"
+        ],
+        "operationId": "DeleteSurveyInstrumentFeatureCategoryById",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "expectedModifiedUtc",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/SurveyInstrumentIdentity": {
+      "get": {
+        "tags": [
+          "SurveyInstrumentIdentity"
+        ],
+        "operationId": "GetAllSurveyInstrumentIdentityId",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "format": "uuid"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "SurveyInstrumentIdentity"
+        ],
+        "operationId": "PostSurveyInstrumentIdentity",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OSDC.Drilling.SurveyInstrument.Model.SurveyInstrumentIdentity"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OSDC.Drilling.SurveyInstrument.Model.SurveyInstrumentIdentity"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/OSDC.Drilling.SurveyInstrument.Model.SurveyInstrumentIdentity"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/SurveyInstrumentIdentity/MetaInfo": {
+      "get": {
+        "tags": [
+          "SurveyInstrumentIdentity"
+        ],
+        "operationId": "GetAllSurveyInstrumentIdentityMetaInfo",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/OSDC.DotnetLibraries.General.DataManagement.MetaInfo"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/SurveyInstrumentIdentity/HeavyData": {
+      "get": {
+        "tags": [
+          "SurveyInstrumentIdentity"
+        ],
+        "operationId": "GetAllSurveyInstrumentIdentity",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/OSDC.Drilling.SurveyInstrument.Model.SurveyInstrumentIdentity"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/SurveyInstrumentIdentity/{id}": {
+      "get": {
+        "tags": [
+          "SurveyInstrumentIdentity"
+        ],
+        "operationId": "GetSurveyInstrumentIdentityById",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OSDC.Drilling.SurveyInstrument.Model.SurveyInstrumentIdentity"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "SurveyInstrumentIdentity"
+        ],
+        "operationId": "PutSurveyInstrumentIdentityById",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "expectedModifiedUtc",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OSDC.Drilling.SurveyInstrument.Model.SurveyInstrumentIdentity"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OSDC.Drilling.SurveyInstrument.Model.SurveyInstrumentIdentity"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/OSDC.Drilling.SurveyInstrument.Model.SurveyInstrumentIdentity"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "SurveyInstrumentIdentity"
+        ],
+        "operationId": "DeleteSurveyInstrumentIdentityById",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "expectedModifiedUtc",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
           }
         }
       }
@@ -593,7 +1013,65 @@
         },
         "additionalProperties": false
       },
-      "OSDC.DotnetLibraries.Drilling.Surveying.SurveyInstrument": {
+      "OSDC.DotnetLibraries.Drilling.Surveying.SurveyInstrumentModelType": {
+        "enum": [
+          "MWD_WolffDeWardt",
+          "Gyro_WolffDeWardt",
+          "MWD_ISCWSA",
+          "Gyro_ISCWSA"
+        ],
+        "type": "string"
+      },
+      "OSDC.DotnetLibraries.General.DataManagement.MetaInfo": {
+        "type": "object",
+        "properties": {
+          "ID": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "HttpHostName": {
+            "type": "string",
+            "nullable": true
+          },
+          "HttpHostBasePath": {
+            "type": "string",
+            "nullable": true
+          },
+          "HttpEndPoint": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "OSDC.Drilling.SurveyInstrument.Model.CountPerDay": {
+        "type": "object",
+        "properties": {
+          "Date": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "Count": {
+            "type": "integer",
+            "format": "int64"
+          }
+        },
+        "additionalProperties": false
+      },
+      "OSDC.Drilling.SurveyInstrument.Model.History": {
+        "type": "object",
+        "properties": {
+          "Data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OSDC.Drilling.SurveyInstrument.Model.CountPerDay"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "OSDC.Drilling.SurveyInstrument.Model.SurveyInstrument": {
         "type": "object",
         "properties": {
           "MetaInfo": {
@@ -731,63 +1209,141 @@
             "type": "number",
             "format": "double",
             "nullable": true
+          },
+          "SurveyInstrumentIdentityAssignments": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OSDC.Drilling.SurveyInstrument.Model.SurveyInstrumentIdentityAssignment"
+            },
+            "nullable": true
+          },
+          "SurveyInstrumentFeatureAssignments": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OSDC.Drilling.SurveyInstrument.Model.SurveyInstrumentFeatureAssignment"
+            },
+            "nullable": true
           }
         },
         "additionalProperties": false
       },
-      "OSDC.DotnetLibraries.Drilling.Surveying.SurveyInstrumentModelType": {
-        "enum": [
-          "MWD_WolffDeWardt",
-          "Gyro_WolffDeWardt",
-          "MWD_ISCWSA",
-          "Gyro_ISCWSA"
-        ],
-        "type": "string"
-      },
-      "OSDC.DotnetLibraries.General.DataManagement.MetaInfo": {
+      "OSDC.Drilling.SurveyInstrument.Model.SurveyInstrumentFeatureAssignment": {
         "type": "object",
         "properties": {
           "ID": {
             "type": "string",
             "format": "uuid"
           },
-          "HttpHostName": {
+          "FeatureCategoryID": {
             "type": "string",
+            "format": "uuid",
             "nullable": true
           },
-          "HttpHostBasePath": {
+          "FeatureOptionID": {
             "type": "string",
+            "format": "uuid",
             "nullable": true
           },
-          "HttpEndPoint": {
+          "FromDate": {
             "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "ToDate": {
+            "type": "string",
+            "format": "date-time",
             "nullable": true
           }
         },
         "additionalProperties": false
       },
-      "OSDC.Drilling.SurveyInstrument.Model.CountPerDay": {
+      "OSDC.Drilling.SurveyInstrument.Model.SurveyInstrumentFeatureCategory": {
         "type": "object",
         "properties": {
-          "Date": {
-            "type": "string",
-            "format": "date-time"
+          "MetaInfo": {
+            "$ref": "#/components/schemas/OSDC.DotnetLibraries.General.DataManagement.MetaInfo"
           },
-          "Count": {
-            "type": "integer",
-            "format": "int64"
-          }
-        },
-        "additionalProperties": false
-      },
-      "OSDC.Drilling.SurveyInstrument.Model.History": {
-        "type": "object",
-        "properties": {
-          "Data": {
+          "Name": {
+            "type": "string",
+            "nullable": true
+          },
+          "IsExclusive": {
+            "type": "boolean"
+          },
+          "HasValidityPeriod": {
+            "type": "boolean"
+          },
+          "Options": {
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/OSDC.Drilling.SurveyInstrument.Model.CountPerDay"
+              "$ref": "#/components/schemas/OSDC.Drilling.SurveyInstrument.Model.SurveyInstrumentFeatureOption"
             },
+            "nullable": true
+          },
+          "CreationDate": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "LastModificationDate": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "OSDC.Drilling.SurveyInstrument.Model.SurveyInstrumentFeatureOption": {
+        "type": "object",
+        "properties": {
+          "ID": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "Name": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "OSDC.Drilling.SurveyInstrument.Model.SurveyInstrumentIdentity": {
+        "type": "object",
+        "properties": {
+          "MetaInfo": {
+            "$ref": "#/components/schemas/OSDC.DotnetLibraries.General.DataManagement.MetaInfo"
+          },
+          "Name": {
+            "type": "string",
+            "nullable": true
+          },
+          "CreationDate": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "LastModificationDate": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "OSDC.Drilling.SurveyInstrument.Model.SurveyInstrumentIdentityAssignment": {
+        "type": "object",
+        "properties": {
+          "ID": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "IdentityID": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "Value": {
+            "type": "string",
             "nullable": true
           }
         },

@@ -67,7 +67,7 @@ namespace OSDC.Drilling.SurveyInstrument.Service.Controllers
         /// <param name="guid"></param>
         /// <returns>the SurveyInstrument identified by its Guid from the microservice database, at endpoint SurveyInstrument/api/SurveyInstrument/MetaInfo/id</returns>
         [HttpGet("{id}", Name = "GetSurveyInstrumentById")]
-        public ActionResult<OSDC.DotnetLibraries.Drilling.Surveying.SurveyInstrument?> GetSurveyInstrumentById(Guid id)
+        public ActionResult<OSDC.Drilling.SurveyInstrument.Model.SurveyInstrument?> GetSurveyInstrumentById(Guid id)
         {
             UsageStatisticsSurveyInstrument.Instance.IncrementGetSurveyInstrumentByIdPerDay();
             if (!id.Equals(Guid.Empty))
@@ -112,7 +112,7 @@ namespace OSDC.Drilling.SurveyInstrument.Service.Controllers
         /// </summary>
         /// <returns>the list of all SurveyInstrument present in the microservice database, at endpoint SurveyInstrument/api/SurveyInstrument/HeavyData</returns>
         [HttpGet("HeavyData", Name = "GetAllSurveyInstrument")]
-        public ActionResult<IEnumerable<OSDC.DotnetLibraries.Drilling.Surveying.SurveyInstrument?>> GetAllSurveyInstrument()
+        public ActionResult<IEnumerable<OSDC.Drilling.SurveyInstrument.Model.SurveyInstrument?>> GetAllSurveyInstrument()
         {
             UsageStatisticsSurveyInstrument.Instance.IncrementGetAllSurveyInstrumentPerDay();
             var vals = _surveyInstrumentManager.GetAllSurveyInstrument();
@@ -132,7 +132,7 @@ namespace OSDC.Drilling.SurveyInstrument.Service.Controllers
         /// <param name="surveyInstrument"></param>
         /// <returns>true if the given SurveyInstrument has been added successfully to the microservice database, at the endpoint SurveyInstrument/api/SurveyInstrument</returns>
         [HttpPost(Name = "PostSurveyInstrument")]
-        public ActionResult PostSurveyInstrument([FromBody] OSDC.DotnetLibraries.Drilling.Surveying.SurveyInstrument? data)
+        public ActionResult PostSurveyInstrument([FromBody] OSDC.Drilling.SurveyInstrument.Model.SurveyInstrument? data)
         {
             UsageStatisticsSurveyInstrument.Instance.IncrementPostSurveyInstrumentPerDay();
             // Check if surveyInstrument exists in the database through ID
@@ -171,7 +171,7 @@ namespace OSDC.Drilling.SurveyInstrument.Service.Controllers
         /// <param name="surveyInstrument"></param>
         /// <returns>true if the given SurveyInstrument has been updated successfully to the microservice database, at the endpoint SurveyInstrument/api/SurveyInstrument/id</returns>
         [HttpPut("{id}", Name = "PutSurveyInstrumentById")]
-        public ActionResult PutSurveyInstrumentById(Guid id, [FromBody] OSDC.DotnetLibraries.Drilling.Surveying.SurveyInstrument? data)
+        public ActionResult PutSurveyInstrumentById(Guid id, [FromBody] OSDC.Drilling.SurveyInstrument.Model.SurveyInstrument? data)
         {
             UsageStatisticsSurveyInstrument.Instance.IncrementPutSurveyInstrumentByIdPerDay();
             // Check if SurveyInstrument is in the data base

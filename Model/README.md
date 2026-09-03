@@ -1,10 +1,11 @@
 # Model
 
-`Model` is the small domain-support project for the SurveyInstrument solution. It does not define the full `SurveyInstrument` and `ErrorSource` classes itself; those come from `OSDC.DotnetLibraries.Drilling.Surveying`. Instead, this project provides local types that the service and UI need around that upstream model.
+`Model` is the domain-support project for the SurveyInstrument solution. `ErrorSource` and the physical survey properties come from `OSDC.DotnetLibraries.Drilling.Surveying`; the local `SurveyInstrument` extends that upstream type with identity and feature assignments.
 
 ## Responsibilities
 
 - Provide a lightweight listing/view model for survey instruments through `SurveyInstrumentLight`.
+- Define identity/feature catalogs and their instrument assignments.
 - Persist and expose in-memory usage statistics through `UsageStatisticsSurveyInstrument`.
 - Carry the DocFX inputs used to document the project model surface.
 
@@ -23,6 +24,10 @@ Keeping those types here avoids coupling the service and UI projects to each oth
   - Lightweight representation of a survey instrument.
   - Stores `MetaInfo`, `Name`, `Description`, `CreationDate`, and `LastModificationDate`.
   - Used by the service `LightData` endpoint and by the web UI grid views.
+- `SurveyInstrument.cs`
+  - Extends the shared surveying model with identity and feature assignments.
+- `SurveyInstrumentIdentity*.cs`, `SurveyInstrumentFeature*.cs`
+  - Catalog definitions, options, and assignment contracts based on shared data-management interfaces.
 - `UsageStatisticsSurveyInstrument.cs`
   - Defines `CountPerDay`, `History`, and `UsageStatisticsSurveyInstrument`.
   - Tracks per-endpoint usage counts for both `SurveyInstrument` and `ErrorSource` operations.
@@ -78,4 +83,4 @@ Unit coverage for this project lives in `ModelTest`.
 
 - Add new statistics fields when service endpoints are added.
 - Keep `SurveyInstrumentLight` aligned with the columns projected by `SurveyInstrumentManager.GetAllSurveyInstrumentLight()`.
-- Avoid duplicating upstream OSDC model types here; this project is for solution-specific support types only.
+- Keep the local `SurveyInstrument` extension limited to microservice-owned metadata and assignments; physical survey behavior remains in the upstream model.
