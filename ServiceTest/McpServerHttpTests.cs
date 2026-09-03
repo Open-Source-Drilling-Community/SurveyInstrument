@@ -107,6 +107,41 @@ public sealed class McpServerHttpTests
     }
 
     [Test]
+    public async Task Invalid_model_family_fields_and_unknown_error_codes_are_rejected()
+    {
+        CallToolResult invalidFamily = await _client.CallToolAsync("survey_instrument_create",
+            new Dictionary<string, object?>
+            {
+                ["surveyInstrument"] = new JsonObject
+                {
+                    ["MetaInfo"] = new JsonObject { ["ID"] = Guid.NewGuid().ToString() },
+                    ["ModelType"] = "MWD_WolffDeWardt",
+                    ["ErrorSourceList"] = new JsonArray(new JsonObject
+                    {
+                        ["MetaInfo"] = new JsonObject { ["ID"] = Guid.NewGuid().ToString() },
+                        ["ErrorCode"] = "DRFR"
+                    })
+                }
+            }, cancellationToken: CancellationToken.None);
+        Assert.That(invalidFamily.IsError, Is.True);
+        Assert.That(JsonNode.Parse(invalidFamily.Content.OfType<TextContentBlock>().Single().Text)!["error"]?.GetValue<string>(),
+            Is.EqualTo("invalid_model_family"));
+
+        CallToolResult invalidCode = await _client.CallToolAsync("error_source_create",
+            new Dictionary<string, object?>
+            {
+                ["errorSource"] = new JsonObject
+                {
+                    ["MetaInfo"] = new JsonObject { ["ID"] = Guid.NewGuid().ToString() },
+                    ["ErrorCode"] = "NOT_A_REAL_ERROR_CODE"
+                }
+            }, cancellationToken: CancellationToken.None);
+        Assert.That(invalidCode.IsError, Is.True);
+        Assert.That(JsonNode.Parse(invalidCode.Content.OfType<TextContentBlock>().Single().Text)!["error"]?.GetValue<string>(),
+            Is.EqualTo("validation_failed"));
+    }
+
+    [Test]
     public async Task Patch_updates_selected_fields_and_rejects_a_stale_retry()
     {
         Guid id = Guid.NewGuid();
@@ -162,6 +197,82 @@ public sealed class McpServerHttpTests
             JsonObject latest = await GetInstrument(id);
             await _client.CallToolAsync(
                 "survey_instrument_delete_by_id",
+                new Dictionary<string, object?>
+                {
+                    ["id"] = id.ToString(),
+                    ["expectedModifiedUtc"] = latest["LastModificationDate"]!.GetValue<string>()
+                }, cancellationToken: CancellationToken.None);
+        }
+    }
+
+    [Test]
+    public async Task Batch_export_and_restore_round_trip_is_versioned_and_conflict_safe()
+    {
+        Guid id = Guid.NewGuid();
+        string timestamp = DateTimeOffset.UtcNow.ToString("O");
+        var instrument = new JsonObject
+        {
+            ["MetaInfo"] = new JsonObject { ["ID"] = id.ToString() },
+            ["Name"] = "MCP backup test",
+            ["CreationDate"] = timestamp,
+            ["LastModificationDate"] = timestamp,
+            ["ModelType"] = "MWD_WolffDeWardt"
+        };
+        CallToolResult created = await _client.CallToolAsync("survey_instrument_create",
+            new Dictionary<string, object?> { ["surveyInstrument"] = instrument }, cancellationToken: CancellationToken.None);
+        Assert.That(created.IsError, Is.Not.True);
+
+        try
+        {
+            CallToolResult exported = await _client.CallToolAsync("survey_instrument_batch_export",
+                new Dictionary<string, object?>
+                {
+                    ["request"] = new JsonObject
+                    {
+                        ["Scope"] = "Selected",
+                        ["SurveyInstrumentIDs"] = new JsonArray(id.ToString())
+                    }
+                }, cancellationToken: CancellationToken.None);
+            Assert.That(exported.IsError, Is.Not.True);
+            JsonObject document = ((JsonObject)exported.StructuredContent!)["data"]!.AsObject();
+            Assert.That(document["SchemaVersion"]?.GetValue<int>(), Is.EqualTo(1));
+
+            JsonObject stored = await GetInstrument(id);
+            CallToolResult deleted = await _client.CallToolAsync("survey_instrument_delete_by_id",
+                new Dictionary<string, object?>
+                {
+                    ["id"] = id.ToString(),
+                    ["expectedModifiedUtc"] = stored["LastModificationDate"]!.GetValue<string>()
+                }, cancellationToken: CancellationToken.None);
+            Assert.That(deleted.IsError, Is.Not.True);
+
+            CallToolResult restored = await _client.CallToolAsync("survey_instrument_batch_restore",
+                new Dictionary<string, object?>
+                {
+                    ["request"] = new JsonObject
+                    {
+                        ["ConflictPolicy"] = "FailIfExists",
+                        ["Document"] = document.DeepClone()
+                    }
+                }, cancellationToken: CancellationToken.None);
+            Assert.That(restored.IsError, Is.Not.True);
+            Assert.That((await GetInstrument(id))["Name"]?.GetValue<string>(), Is.EqualTo("MCP backup test"));
+
+            CallToolResult conflict = await _client.CallToolAsync("survey_instrument_batch_restore",
+                new Dictionary<string, object?>
+                {
+                    ["request"] = new JsonObject
+                    {
+                        ["ConflictPolicy"] = "FailIfExists",
+                        ["Document"] = document.DeepClone()
+                    }
+                }, cancellationToken: CancellationToken.None);
+            Assert.That(conflict.IsError, Is.True);
+        }
+        finally
+        {
+            JsonObject latest = await GetInstrument(id);
+            await _client.CallToolAsync("survey_instrument_delete_by_id",
                 new Dictionary<string, object?>
                 {
                     ["id"] = id.ToString(),

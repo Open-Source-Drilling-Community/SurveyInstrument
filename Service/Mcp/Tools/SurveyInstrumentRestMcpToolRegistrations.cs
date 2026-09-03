@@ -13,6 +13,10 @@ using ErrorSourceModel = OSDC.DotnetLibraries.Drilling.Surveying.ErrorSource;
 using SurveyInstrumentModel = OSDC.Drilling.SurveyInstrument.Model.SurveyInstrument;
 using IdentityModel = OSDC.Drilling.SurveyInstrument.Model.SurveyInstrumentIdentity;
 using FeatureCategoryModel = OSDC.Drilling.SurveyInstrument.Model.SurveyInstrumentFeatureCategory;
+using BatchExportRequestModel = OSDC.Drilling.SurveyInstrument.Model.SurveyInstrumentBatchExportRequest;
+using BatchExportDocumentModel = OSDC.Drilling.SurveyInstrument.Model.SurveyInstrumentBatchExportDocument;
+using BatchRestoreRequestModel = OSDC.Drilling.SurveyInstrument.Model.SurveyInstrumentBatchRestoreRequest;
+using BatchRestoreResponseModel = OSDC.Drilling.SurveyInstrument.Model.SurveyInstrumentBatchRestoreResponse;
 
 namespace OSDC.Drilling.SurveyInstrument.Service.Mcp.Tools;
 
@@ -62,10 +66,18 @@ public static class SurveyInstrumentRestMcpToolRegistrations
             (sp, _, ct) => Invoke(ct, () => SurveyInstrumentController(sp).GetAllSurveyInstrumentMetaInfo()));
         services.AddLegacyMcpTool("survey_instrument_get_by_id", "Retrieve one complete survey-instrument error model by UUID, including model family, embedded error sources, environmental parameters, gyro parameters, and Wolff-DeWardt settings. Physical quantities are returned in SI; angles are radians.", McpToolArgumentHelpers.CreateGuidSchema("id", "UUID of the survey instrument to retrieve."),
             (sp, args, ct) => InvokeById(args, ct, id => SurveyInstrumentController(sp).GetSurveyInstrumentById(id)));
+        services.AddLegacyMcpTool("survey_instrument_check_error_source_drift", "Compare every frozen ErrorSourceList snapshot in one survey instrument with the current standalone template carrying the same MetaInfo.ID. The read-only result reports in_sync, drifted, or catalog_missing per UUID and never modifies the instrument or template catalog.", McpToolArgumentHelpers.CreateGuidSchema("id", "UUID of the survey instrument whose embedded snapshots should be checked."),
+            InvokeErrorSourceDriftCheck);
         services.AddLegacyMcpTool("survey_instrument_get_all_light", "List lightweight survey-instrument records containing metadata, name, description, and timestamps. Use this for human-readable discovery; it omits model parameters and error-source details. Retrieve a selected full record by UUID afterward.", McpToolArgumentHelpers.CreateEmptySchema(),
             (sp, _, ct) => Invoke(ct, () => SurveyInstrumentController(sp).GetAllSurveyInstrumentLight()));
         services.AddLegacyMcpTool("survey_instrument_get_all", "Retrieve every survey instrument with its complete error-model data, including embedded error sources and physical parameters. This can be a large response; prefer IDs, metadata, or light records for discovery. SI values are used and angles are radians.", McpToolArgumentHelpers.CreateEmptySchema(),
             (sp, _, ct) => Invoke(ct, () => SurveyInstrumentController(sp).GetAllSurveyInstrument()));
+        services.AddLegacyMcpTool("survey_instrument_batch_export", "Create a read-only schema-version-1 logical backup of all survey instruments or an explicit ordered selection. The document contains complete frozen instrument records, referenced identity and feature definitions, and applicable error-source templates. A missing selected UUID rejects the entire export.", McpToolArgumentHelpers.CreateBatchExportSchema(),
+            (sp, args, ct) => InvokeWithBodyResult<BatchExportRequestModel, BatchExportDocumentModel>(args, "request", ct,
+                request => SurveyInstrumentController(sp).BatchExportSurveyInstruments(request)));
+        services.AddLegacyMcpTool("survey_instrument_batch_restore", "Validate and atomically restore a schema-version-1 Survey Instrument backup. FailIfExists preserves every existing instrument; ReplaceExisting replaces matching instrument UUIDs. Missing catalog dependencies are created by exact UUID, while differing content at an existing catalog UUID rejects the whole restore.", McpToolArgumentHelpers.CreateBatchRestoreSchema(),
+            (sp, args, ct) => InvokeWithBodyResult<BatchRestoreRequestModel, BatchRestoreResponseModel>(args, "request", ct,
+                request => SurveyInstrumentController(sp).BatchRestoreSurveyInstruments(request)));
         services.AddLegacyMcpTool("survey_instrument_create", "Persist a new complete survey-instrument error model. Generate a non-empty surveyInstrument.MetaInfo.ID first; an existing UUID produces a conflict. Select one of the four discriminated ModelType families, embed authoritative ErrorSource snapshots when required, and supply physical values in SI with angles in radians.", McpToolArgumentHelpers.CreateSurveyInstrumentSchema(),
             (sp, args, ct) => InvokeWithBody<SurveyInstrumentModel>(args, "surveyInstrument", ct, data => SurveyInstrumentController(sp).PostSurveyInstrument(data)));
         services.AddLegacyMcpTool("survey_instrument_update_by_id", "Replace an existing survey-instrument definition with optimistic concurrency protection. The path id must match surveyInstrument.MetaInfo.ID and expectedModifiedUtc must equal the latest LastModificationDate. Send the complete desired representation; a stale request returns stale_write without changing data.", McpToolArgumentHelpers.CreateSurveyInstrumentSchema(includeId: true),
@@ -111,6 +123,40 @@ public static class SurveyInstrumentRestMcpToolRegistrations
 
         return Task.FromResult<JsonNode?>(McpActionResultConverter.FromActionResult(
             controller!.PutSurveyInstrumentById(id, data, expected)));
+    }
+
+    private static Task<JsonNode?> InvokeErrorSourceDriftCheck(
+        IServiceProvider serviceProvider, JsonObject? arguments, CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        if (!McpToolArgumentHelpers.TryParseGuid(arguments, "id", out Guid id, out JsonNode? error))
+            return Task.FromResult(error);
+        ActionResult<SurveyInstrumentModel?> lookup = SurveyInstrumentController(serviceProvider).GetSurveyInstrumentById(id);
+        SurveyInstrumentModel? instrument = lookup.Value ?? (lookup.Result as ObjectResult)?.Value as SurveyInstrumentModel;
+        if (instrument == null) return Task.FromResult<JsonNode?>(McpActionResultConverter.FromActionResult(lookup));
+
+        ErrorSourceController catalog = ErrorSourceController(serviceProvider);
+        JsonArray results = [];
+        bool hasDrift = false;
+        foreach (ErrorSourceModel snapshot in instrument.ErrorSourceList ?? [])
+        {
+            Guid sourceId = snapshot.MetaInfo?.ID ?? Guid.Empty;
+            ActionResult<ErrorSourceModel?> templateLookup = catalog.GetErrorSourceById(sourceId);
+            ErrorSourceModel? template = templateLookup.Value ?? (templateLookup.Result as ObjectResult)?.Value as ErrorSourceModel;
+            string status = template == null ? "catalog_missing" :
+                JsonNode.DeepEquals(JsonSerializer.SerializeToNode(snapshot, JsonSettings.Options),
+                    JsonSerializer.SerializeToNode(template, JsonSettings.Options)) ? "in_sync" : "drifted";
+            hasDrift |= status != "in_sync";
+            results.Add(new JsonObject { ["ErrorSourceID"] = sourceId.ToString(), ["Status"] = status });
+        }
+        return Task.FromResult<JsonNode?>(new JsonObject
+        {
+            ["status"] = 200,
+            ["data"] = new JsonObject
+            {
+                ["SurveyInstrumentID"] = id.ToString(), ["HasDrift"] = hasDrift, ["Results"] = results
+            }
+        });
     }
 
     private static Task<JsonNode?> InvokeSurveyInstrumentPatch(
@@ -246,6 +292,15 @@ public static class SurveyInstrumentRestMcpToolRegistrations
             return Task.FromResult(error);
         }
 
+        return Task.FromResult<JsonNode?>(McpActionResultConverter.FromActionResult(action(data)));
+    }
+
+    private static Task<JsonNode?> InvokeWithBodyResult<TModel, TResult>(JsonObject? arguments, string bodyName,
+        CancellationToken cancellationToken, Func<TModel?, ActionResult<TResult>> action)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        if (!TryDeserialize(arguments, bodyName, out TModel? data, out JsonNode? error))
+            return Task.FromResult(error);
         return Task.FromResult<JsonNode?>(McpActionResultConverter.FromActionResult(action(data)));
     }
 

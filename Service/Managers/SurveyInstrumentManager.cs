@@ -377,9 +377,10 @@ namespace OSDC.Drilling.SurveyInstrument.Service.Managers
         /// <returns>true if the given SurveyInstrument has been added successfully to the microservice database</returns>
         public bool AddSurveyInstrument(OSDC.Drilling.SurveyInstrument.Model.SurveyInstrument? surveyInstrument)
         {
-            if (surveyInstrument != null && !ValidateAssignments(surveyInstrument))
+            if (surveyInstrument != null &&
+                (!ValidateAssignments(surveyInstrument) || !ValidateModelSemantics(surveyInstrument)))
             {
-                _logger.LogWarning("SurveyInstrument contains invalid identity or feature assignments");
+                _logger.LogWarning("SurveyInstrument contains invalid assignments or model-family fields");
                 return false;
             }
             if (surveyInstrument != null && surveyInstrument.MetaInfo != null && surveyInstrument.MetaInfo.ID != Guid.Empty)
@@ -464,9 +465,10 @@ namespace OSDC.Drilling.SurveyInstrument.Service.Managers
             OSDC.Drilling.SurveyInstrument.Model.SurveyInstrument? surveyInstrument,
             DateTimeOffset? expectedModifiedUtc = null)
         {
-            if (surveyInstrument != null && !ValidateAssignments(surveyInstrument))
+            if (surveyInstrument != null &&
+                (!ValidateAssignments(surveyInstrument) || !ValidateModelSemantics(surveyInstrument)))
             {
-                _logger.LogWarning("SurveyInstrument contains invalid identity or feature assignments");
+                _logger.LogWarning("SurveyInstrument contains invalid assignments or model-family fields");
                 return false;
             }
             bool success = true;
@@ -601,6 +603,33 @@ namespace OSDC.Drilling.SurveyInstrument.Service.Managers
             Model.SurveyInstrumentFeatureAssignment right) =>
             (left.ToDate == null || right.FromDate == null || left.ToDate >= right.FromDate) &&
             (right.ToDate == null || left.FromDate == null || right.ToDate >= left.FromDate);
+
+        internal static bool ValidateModelSemantics(
+            OSDC.Drilling.SurveyInstrument.Model.SurveyInstrument surveyInstrument)
+        {
+            bool hasErrorSources = surveyInstrument.ErrorSourceList is { Count: > 0 };
+            bool wolffParametersDisabled =
+                !surveyInstrument.UseRelDepthError && surveyInstrument.RelDepthError == null &&
+                !surveyInstrument.UseMisalignment && surveyInstrument.Misalignment == null &&
+                !surveyInstrument.UseTrueInclination && surveyInstrument.TrueInclination == null &&
+                !surveyInstrument.UseReferenceError && surveyInstrument.ReferenceError == null &&
+                !surveyInstrument.UseDrillStringMag && surveyInstrument.DrillStringMag == null &&
+                !surveyInstrument.UseGyroCompassError && surveyInstrument.GyroCompassError == null;
+
+            return surveyInstrument.ModelType switch
+            {
+                OSDC.DotnetLibraries.Drilling.Surveying.SurveyInstrumentModelType.MWD_WolffDeWardt =>
+                    !hasErrorSources && !surveyInstrument.UseGyroCompassError &&
+                    surveyInstrument.GyroCompassError == null,
+                OSDC.DotnetLibraries.Drilling.Surveying.SurveyInstrumentModelType.Gyro_WolffDeWardt =>
+                    !hasErrorSources && !surveyInstrument.UseDrillStringMag && surveyInstrument.DrillStringMag == null,
+                OSDC.DotnetLibraries.Drilling.Surveying.SurveyInstrumentModelType.MWD_ISCWSA =>
+                    hasErrorSources && wolffParametersDisabled,
+                OSDC.DotnetLibraries.Drilling.Surveying.SurveyInstrumentModelType.Gyro_ISCWSA =>
+                    hasErrorSources && wolffParametersDisabled,
+                _ => false
+            };
+        }
 
         /// <summary>
         /// Deletes the SurveyInstrument of given ID from the microservice database

@@ -24,6 +24,8 @@ public sealed class McpToolRegistrationTests
             ["PostSurveyInstrument"] = "survey_instrument_create",
             ["PutSurveyInstrumentById"] = "survey_instrument_update_by_id",
             ["DeleteSurveyInstrumentById"] = "survey_instrument_delete_by_id",
+            ["BatchExportSurveyInstruments"] = "survey_instrument_batch_export",
+            ["BatchRestoreSurveyInstruments"] = "survey_instrument_batch_restore",
             ["GetAllErrorSourceId"] = "error_source_get_all_ids",
             ["GetAllErrorSourceMetaInfo"] = "error_source_get_all_meta_info",
             ["GetErrorSourceById"] = "error_source_get_by_id",
@@ -75,16 +77,17 @@ public sealed class McpToolRegistrationTests
             .Select(method => method.Name)
             .ToArray();
 
-        Assert.That(endpointMethods, Is.EquivalentTo(EndpointToolMap.Keys.Take(15)));
+        Assert.That(endpointMethods, Is.EquivalentTo(EndpointToolMap.Keys.Take(17)));
         Assert.That(_tools.Keys, Is.EquivalentTo(EndpointToolMap.Values
             .Append("survey_instrument_patch_by_id")
+            .Append("survey_instrument_check_error_source_drift")
             .Append("ping")));
     }
 
     [Test]
     public void Registered_tools_have_unique_names_and_descriptions()
     {
-        Assert.That(_tools.Count, Is.EqualTo(EndpointToolMap.Count + 2));
+        Assert.That(_tools.Count, Is.EqualTo(EndpointToolMap.Count + 3));
         Assert.That(_tools.Values.Select(tool => tool.Name), Is.Unique);
         Assert.That(_tools.Values.All(tool => !string.IsNullOrWhiteSpace(tool.Description)), Is.True);
     }
@@ -116,6 +119,8 @@ public sealed class McpToolRegistrationTests
         Assert.That(schema, Does.Contain("SurveyInstrumentIdentityAssignments"));
         Assert.That(schema, Does.Contain("SurveyInstrumentFeatureAssignments"));
         Assert.That(schema, Does.Contain("\"oneOf\""));
+        Assert.That(schema, Does.Contain("\"not\""));
+        Assert.That(schema, Does.Contain("\"anyOf\""));
         Assert.That(schema, Does.Contain("Authoritative error-source snapshots"));
         Assert.That(schema, Does.Contain("later catalog updates do not propagate").IgnoreCase);
     }
@@ -164,6 +169,42 @@ public sealed class McpToolRegistrationTests
         Assert.That(schema, Does.Contain("StartInclination"));
         Assert.That(schema, Does.Contain("radians"));
         Assert.That(schema, Does.Contain("must equal errorSource.MetaInfo.ID"));
+        Assert.That(schema, Does.Contain("\"enum\""));
+        Assert.That(schema, Does.Contain("DRFR"));
+        Assert.That(schema, Does.Contain("XCLA"));
+    }
+
+    [Test]
+    public void Batch_tools_publish_versioned_atomic_backup_contracts()
+    {
+        string export = _tools["survey_instrument_batch_export"].OutputSchema.ToJsonString();
+        string restore = _tools["survey_instrument_batch_restore"].InputSchema.ToJsonString();
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(export, Does.Contain("OSDC.Drilling.SurveyInstrument.BatchExport"));
+            Assert.That(export, Does.Contain("ErrorSourceTemplates"));
+            Assert.That(export, Does.Contain("FeatureCategories"));
+            Assert.That(restore, Does.Contain("FailIfExists"));
+            Assert.That(restore, Does.Contain("ReplaceExisting"));
+            Assert.That(_tools["survey_instrument_batch_export"].Behavior.ReadOnlyHint, Is.True);
+            Assert.That(_tools["survey_instrument_batch_restore"].Behavior.DestructiveHint, Is.True);
+        });
+    }
+
+    [Test]
+    public void Drift_check_is_read_only_and_has_a_bounded_output_vocabulary()
+    {
+        IMcpTool tool = _tools["survey_instrument_check_error_source_drift"];
+        string output = tool.OutputSchema.ToJsonString();
+        Assert.Multiple(() =>
+        {
+            Assert.That(tool.Behavior.ReadOnlyHint, Is.True);
+            Assert.That(output, Does.Contain("in_sync"));
+            Assert.That(output, Does.Contain("drifted"));
+            Assert.That(output, Does.Contain("catalog_missing"));
+            Assert.That(output, Does.Contain("HasDrift"));
+        });
     }
 
     [Test]

@@ -417,6 +417,124 @@
         }
       }
     },
+    "/SurveyInstrument/BatchExport": {
+      "post": {
+        "tags": [
+          "SurveyInstrument"
+        ],
+        "operationId": "BatchExportSurveyInstruments",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SurveyInstrumentBatchExportRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SurveyInstrumentBatchExportRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/SurveyInstrumentBatchExportRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SurveyInstrumentBatchExportDocument"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SurveyInstrumentBatchErrorEnvelope"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SurveyInstrumentBatchErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/SurveyInstrument/BatchRestore": {
+      "post": {
+        "tags": [
+          "SurveyInstrument"
+        ],
+        "operationId": "BatchRestoreSurveyInstruments",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SurveyInstrumentBatchRestoreRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SurveyInstrumentBatchRestoreRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/SurveyInstrumentBatchRestoreRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SurveyInstrumentBatchRestoreResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SurveyInstrumentBatchErrorEnvelope"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SurveyInstrumentBatchErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/SurveyInstrumentFeatureCategory": {
       "get": {
         "tags": [
@@ -1218,6 +1336,173 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/SurveyInstrumentFeatureAssignment"
+            },
+            "nullable": true
+          }
+        }
+      },
+      "SurveyInstrumentBatchCatalogDependencies": {
+        "type": "object",
+        "properties": {
+          "ErrorSourceTemplates": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ErrorSource"
+            },
+            "nullable": true
+          },
+          "Identities": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SurveyInstrumentIdentity"
+            },
+            "nullable": true
+          },
+          "FeatureCategories": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SurveyInstrumentFeatureCategory"
+            },
+            "nullable": true
+          }
+        }
+      },
+      "SurveyInstrumentBatchError": {
+        "type": "object",
+        "properties": {
+          "PositionIndex": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "Property": {
+            "type": "string",
+            "nullable": true
+          },
+          "Code": {
+            "type": "string",
+            "nullable": true
+          },
+          "Message": {
+            "type": "string",
+            "nullable": true
+          }
+        }
+      },
+      "SurveyInstrumentBatchErrorEnvelope": {
+        "type": "object",
+        "properties": {
+          "Error": {
+            "type": "string",
+            "nullable": true
+          },
+          "Message": {
+            "type": "string",
+            "nullable": true
+          },
+          "Errors": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SurveyInstrumentBatchError"
+            },
+            "nullable": true
+          }
+        }
+      },
+      "SurveyInstrumentBatchExportDocument": {
+        "type": "object",
+        "properties": {
+          "FormatIdentifier": {
+            "type": "string",
+            "nullable": true
+          },
+          "SchemaVersion": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "ExportedAtUtc": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "CatalogDependencies": {
+            "$ref": "#/components/schemas/SurveyInstrumentBatchCatalogDependencies"
+          },
+          "SurveyInstruments": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SurveyInstrument"
+            },
+            "nullable": true
+          }
+        }
+      },
+      "SurveyInstrumentBatchExportRequest": {
+        "type": "object",
+        "properties": {
+          "Scope": {
+            "$ref": "#/components/schemas/SurveyInstrumentBatchExportScope"
+          },
+          "SurveyInstrumentIDs": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "nullable": true
+          }
+        }
+      },
+      "SurveyInstrumentBatchExportScope": {
+        "enum": [
+          "Unspecified",
+          "All",
+          "Selected"
+        ],
+        "type": "string"
+      },
+      "SurveyInstrumentBatchRestoreConflictPolicy": {
+        "enum": [
+          "Unspecified",
+          "FailIfExists",
+          "ReplaceExisting"
+        ],
+        "type": "string"
+      },
+      "SurveyInstrumentBatchRestoreRequest": {
+        "type": "object",
+        "properties": {
+          "ConflictPolicy": {
+            "$ref": "#/components/schemas/SurveyInstrumentBatchRestoreConflictPolicy"
+          },
+          "Document": {
+            "$ref": "#/components/schemas/SurveyInstrumentBatchExportDocument"
+          }
+        }
+      },
+      "SurveyInstrumentBatchRestoreResponse": {
+        "type": "object",
+        "properties": {
+          "RestoredAtUtc": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "CreatedCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "ReplacedCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "CreatedCatalogDefinitionCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "SurveyInstrumentIDs": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
             },
             "nullable": true
           }

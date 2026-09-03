@@ -416,6 +416,124 @@
         }
       }
     },
+    "/SurveyInstrument/BatchExport": {
+      "post": {
+        "tags": [
+          "SurveyInstrument"
+        ],
+        "operationId": "BatchExportSurveyInstruments",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OSDC.Drilling.SurveyInstrument.Model.SurveyInstrumentBatchExportRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OSDC.Drilling.SurveyInstrument.Model.SurveyInstrumentBatchExportRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/OSDC.Drilling.SurveyInstrument.Model.SurveyInstrumentBatchExportRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OSDC.Drilling.SurveyInstrument.Model.SurveyInstrumentBatchExportDocument"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OSDC.Drilling.SurveyInstrument.Model.SurveyInstrumentBatchErrorEnvelope"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OSDC.Drilling.SurveyInstrument.Model.SurveyInstrumentBatchErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/SurveyInstrument/BatchRestore": {
+      "post": {
+        "tags": [
+          "SurveyInstrument"
+        ],
+        "operationId": "BatchRestoreSurveyInstruments",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OSDC.Drilling.SurveyInstrument.Model.SurveyInstrumentBatchRestoreRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OSDC.Drilling.SurveyInstrument.Model.SurveyInstrumentBatchRestoreRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/OSDC.Drilling.SurveyInstrument.Model.SurveyInstrumentBatchRestoreRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OSDC.Drilling.SurveyInstrument.Model.SurveyInstrumentBatchRestoreResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OSDC.Drilling.SurveyInstrument.Model.SurveyInstrumentBatchErrorEnvelope"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OSDC.Drilling.SurveyInstrument.Model.SurveyInstrumentBatchErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/SurveyInstrumentFeatureCategory": {
       "get": {
         "tags": [
@@ -1221,6 +1339,180 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/OSDC.Drilling.SurveyInstrument.Model.SurveyInstrumentFeatureAssignment"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "OSDC.Drilling.SurveyInstrument.Model.SurveyInstrumentBatchCatalogDependencies": {
+        "type": "object",
+        "properties": {
+          "ErrorSourceTemplates": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OSDC.DotnetLibraries.Drilling.Surveying.ErrorSource"
+            },
+            "nullable": true
+          },
+          "Identities": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OSDC.Drilling.SurveyInstrument.Model.SurveyInstrumentIdentity"
+            },
+            "nullable": true
+          },
+          "FeatureCategories": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OSDC.Drilling.SurveyInstrument.Model.SurveyInstrumentFeatureCategory"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "OSDC.Drilling.SurveyInstrument.Model.SurveyInstrumentBatchError": {
+        "type": "object",
+        "properties": {
+          "PositionIndex": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "Property": {
+            "type": "string",
+            "nullable": true
+          },
+          "Code": {
+            "type": "string",
+            "nullable": true
+          },
+          "Message": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "OSDC.Drilling.SurveyInstrument.Model.SurveyInstrumentBatchErrorEnvelope": {
+        "type": "object",
+        "properties": {
+          "Error": {
+            "type": "string",
+            "nullable": true
+          },
+          "Message": {
+            "type": "string",
+            "nullable": true
+          },
+          "Errors": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OSDC.Drilling.SurveyInstrument.Model.SurveyInstrumentBatchError"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "OSDC.Drilling.SurveyInstrument.Model.SurveyInstrumentBatchExportDocument": {
+        "type": "object",
+        "properties": {
+          "FormatIdentifier": {
+            "type": "string",
+            "nullable": true
+          },
+          "SchemaVersion": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "ExportedAtUtc": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "CatalogDependencies": {
+            "$ref": "#/components/schemas/OSDC.Drilling.SurveyInstrument.Model.SurveyInstrumentBatchCatalogDependencies"
+          },
+          "SurveyInstruments": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OSDC.Drilling.SurveyInstrument.Model.SurveyInstrument"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "OSDC.Drilling.SurveyInstrument.Model.SurveyInstrumentBatchExportRequest": {
+        "type": "object",
+        "properties": {
+          "Scope": {
+            "$ref": "#/components/schemas/OSDC.Drilling.SurveyInstrument.Model.SurveyInstrumentBatchExportScope"
+          },
+          "SurveyInstrumentIDs": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "OSDC.Drilling.SurveyInstrument.Model.SurveyInstrumentBatchExportScope": {
+        "enum": [
+          "Unspecified",
+          "All",
+          "Selected"
+        ],
+        "type": "string"
+      },
+      "OSDC.Drilling.SurveyInstrument.Model.SurveyInstrumentBatchRestoreConflictPolicy": {
+        "enum": [
+          "Unspecified",
+          "FailIfExists",
+          "ReplaceExisting"
+        ],
+        "type": "string"
+      },
+      "OSDC.Drilling.SurveyInstrument.Model.SurveyInstrumentBatchRestoreRequest": {
+        "type": "object",
+        "properties": {
+          "ConflictPolicy": {
+            "$ref": "#/components/schemas/OSDC.Drilling.SurveyInstrument.Model.SurveyInstrumentBatchRestoreConflictPolicy"
+          },
+          "Document": {
+            "$ref": "#/components/schemas/OSDC.Drilling.SurveyInstrument.Model.SurveyInstrumentBatchExportDocument"
+          }
+        },
+        "additionalProperties": false
+      },
+      "OSDC.Drilling.SurveyInstrument.Model.SurveyInstrumentBatchRestoreResponse": {
+        "type": "object",
+        "properties": {
+          "RestoredAtUtc": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "CreatedCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "ReplacedCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "CreatedCatalogDefinitionCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "SurveyInstrumentIDs": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
             },
             "nullable": true
           }

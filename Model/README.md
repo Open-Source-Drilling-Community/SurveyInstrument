@@ -28,6 +28,8 @@ Keeping those types here avoids coupling the service and UI projects to each oth
   - Extends the shared surveying model with identity and feature assignments.
 - `SurveyInstrumentIdentity*.cs`, `SurveyInstrumentFeature*.cs`
   - Catalog definitions, options, and assignment contracts based on shared data-management interfaces.
+- `SurveyInstrumentBatch.cs`
+  - Schema-versioned logical backup/restore contracts for instruments and exact-UUID catalog dependencies.
 - `UsageStatisticsSurveyInstrument.cs`
   - Defines `CountPerDay`, `History`, and `UsageStatisticsSurveyInstrument`.
   - Tracks per-endpoint usage counts for both `SurveyInstrument` and `ErrorSource` operations.

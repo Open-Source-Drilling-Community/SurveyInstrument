@@ -89,8 +89,11 @@ public static class McpServiceCollectionExtensions
     private static McpToolBehavior InferBehavior(string name)
     {
         bool readOnly = name.Contains("_get_", StringComparison.Ordinal) ||
-                        name.EndsWith("_get_all", StringComparison.Ordinal);
-        bool destructive = name.Contains("_delete_", StringComparison.Ordinal);
+                        name.EndsWith("_get_all", StringComparison.Ordinal) ||
+                        name.Contains("_check_", StringComparison.Ordinal) ||
+                        name.EndsWith("_batch_export", StringComparison.Ordinal);
+        bool destructive = name.Contains("_delete_", StringComparison.Ordinal) ||
+                           name.EndsWith("_batch_restore", StringComparison.Ordinal);
         bool idempotent = readOnly || name.Contains("_update", StringComparison.Ordinal) ||
                           name.Contains("_patch_", StringComparison.Ordinal) || destructive;
         string title = string.Join(' ', name.Split('_')
@@ -110,6 +113,12 @@ public static class McpServiceCollectionExtensions
             return Tools.McpToolArgumentHelpers.CreateSurveyInstrumentListOutputSchema();
         if (name == "survey_instrument_get_all_light")
             return Tools.McpToolArgumentHelpers.CreateSurveyInstrumentLightListOutputSchema();
+        if (name == "survey_instrument_check_error_source_drift")
+            return Tools.McpToolArgumentHelpers.CreateErrorSourceDriftOutputSchema();
+        if (name == "survey_instrument_batch_export")
+            return Tools.McpToolArgumentHelpers.CreateBatchExportOutputSchema();
+        if (name == "survey_instrument_batch_restore")
+            return Tools.McpToolArgumentHelpers.CreateBatchRestoreOutputSchema();
         if (name == "error_source_get_by_id")
             return Tools.McpToolArgumentHelpers.CreateErrorSourceOutputSchema();
         if (name == "error_source_get_all")

@@ -16,11 +16,13 @@ namespace OSDC.Drilling.SurveyInstrument.Service.Controllers
     {
         private readonly ILogger<SurveyInstrumentManager> _logger;
         private readonly SurveyInstrumentManager _surveyInstrumentManager;
+        private readonly SurveyInstrumentBatchService _batchService;
 
         public SurveyInstrumentController(ILogger<SurveyInstrumentManager> logger, ILogger<ErrorSourceManager> errorSourceLogger, SqlConnectionManager connectionManager)
         {
             _logger = logger;
             _surveyInstrumentManager = SurveyInstrumentManager.GetInstance(_logger, errorSourceLogger, connectionManager);
+            _batchService = new SurveyInstrumentBatchService(connectionManager);
         }
 
         /// <summary>
@@ -135,6 +137,10 @@ namespace OSDC.Drilling.SurveyInstrument.Service.Controllers
         public ActionResult PostSurveyInstrument([FromBody] OSDC.Drilling.SurveyInstrument.Model.SurveyInstrument? data)
         {
             UsageStatisticsSurveyInstrument.Instance.IncrementPostSurveyInstrumentPerDay();
+            if (data != null && !SurveyInstrumentManager.ValidateModelSemantics(data))
+            {
+                return BadRequest(new { error = "invalid_model_family", message = "The supplied fields are incompatible with ModelType." });
+            }
             // Check if surveyInstrument exists in the database through ID
             if (data != null && data.MetaInfo != null && data.MetaInfo.ID != Guid.Empty)
             {
@@ -186,6 +192,10 @@ namespace OSDC.Drilling.SurveyInstrument.Service.Controllers
             DateTimeOffset? expectedModifiedUtc)
         {
             UsageStatisticsSurveyInstrument.Instance.IncrementPutSurveyInstrumentByIdPerDay();
+            if (data != null && !SurveyInstrumentManager.ValidateModelSemantics(data))
+            {
+                return BadRequest(new { error = "invalid_model_family", message = "The supplied fields are incompatible with ModelType." });
+            }
             // Check if SurveyInstrument is in the data base
             if (data != null && data.MetaInfo != null && data.MetaInfo.ID.Equals(id))
             {
@@ -270,6 +280,40 @@ namespace OSDC.Drilling.SurveyInstrument.Service.Controllers
                 _logger.LogWarning("The SurveyInstrument of given ID does not exist");
                 return NotFound();
             }
+        }
+
+        [HttpPost("BatchExport", Name = "BatchExportSurveyInstruments")]
+        [ProducesResponseType<SurveyInstrumentBatchExportDocument>(StatusCodes.Status200OK)]
+        [ProducesResponseType<SurveyInstrumentBatchErrorEnvelope>(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType<SurveyInstrumentBatchErrorEnvelope>(StatusCodes.Status404NotFound)]
+        public ActionResult<SurveyInstrumentBatchExportDocument> BatchExportSurveyInstruments(
+            [FromBody] SurveyInstrumentBatchExportRequest? request)
+        {
+            SurveyInstrumentBatchExportOutcome outcome = _batchService.Export(request);
+            if (outcome.Document != null) return Ok(outcome.Document);
+            return outcome.FailureKind switch
+            {
+                SurveyInstrumentBatchFailureKind.InvalidRequest => BadRequest(outcome.Error),
+                SurveyInstrumentBatchFailureKind.NotFound => NotFound(outcome.Error),
+                _ => StatusCode(StatusCodes.Status500InternalServerError, outcome.Error)
+            };
+        }
+
+        [HttpPost("BatchRestore", Name = "BatchRestoreSurveyInstruments")]
+        [ProducesResponseType<SurveyInstrumentBatchRestoreResponse>(StatusCodes.Status200OK)]
+        [ProducesResponseType<SurveyInstrumentBatchErrorEnvelope>(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType<SurveyInstrumentBatchErrorEnvelope>(StatusCodes.Status409Conflict)]
+        public ActionResult<SurveyInstrumentBatchRestoreResponse> BatchRestoreSurveyInstruments(
+            [FromBody] SurveyInstrumentBatchRestoreRequest? request)
+        {
+            SurveyInstrumentBatchRestoreOutcome outcome = _batchService.Restore(request);
+            if (outcome.Response != null) return Ok(outcome.Response);
+            return outcome.FailureKind switch
+            {
+                SurveyInstrumentBatchFailureKind.InvalidRequest => BadRequest(outcome.Error),
+                SurveyInstrumentBatchFailureKind.Conflict => Conflict(outcome.Error),
+                _ => StatusCode(StatusCodes.Status500InternalServerError, outcome.Error)
+            };
         }
     }
 }
