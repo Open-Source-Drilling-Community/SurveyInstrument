@@ -258,6 +258,17 @@ public sealed class McpServerHttpTests
             Assert.That(restored.IsError, Is.Not.True);
             Assert.That((await GetInstrument(id))["Name"]?.GetValue<string>(), Is.EqualTo("MCP backup test"));
 
+            CallToolResult validated = await _client.CallToolAsync("survey_instrument_validate_catalog_references",
+                new Dictionary<string, object?> { ["id"] = id.ToString() }, cancellationToken: CancellationToken.None);
+            Assert.That(validated.IsError, Is.Not.True);
+            Assert.That(((JsonObject)validated.StructuredContent!)["data"]!["Status"]?.GetValue<string>(), Is.EqualTo("valid"));
+
+            CallToolResult audited = await _client.CallToolAsync("survey_instrument_audit_catalog_references",
+                new Dictionary<string, object?> { ["offset"] = 0, ["limit"] = 100 }, cancellationToken: CancellationToken.None);
+            Assert.That(audited.IsError, Is.Not.True);
+            JsonObject audit = ((JsonObject)audited.StructuredContent!)["data"]!.AsObject();
+            Assert.That(audit["Results"]!.AsArray().Any(value => value?["SurveyInstrumentID"]?.GetValue<string>() == id.ToString()), Is.True);
+
             CallToolResult conflict = await _client.CallToolAsync("survey_instrument_batch_restore",
                 new Dictionary<string, object?>
                 {
@@ -278,6 +289,81 @@ public sealed class McpServerHttpTests
                     ["id"] = id.ToString(),
                     ["expectedModifiedUtc"] = latest["LastModificationDate"]!.GetValue<string>()
                 }, cancellationToken: CancellationToken.None);
+        }
+    }
+
+    [Test]
+    public async Task Error_source_update_warns_about_unchanged_frozen_snapshots()
+    {
+        Guid sourceId = Guid.NewGuid();
+        Guid instrumentId = Guid.NewGuid();
+        string timestamp = DateTimeOffset.UtcNow.ToString("O");
+        JsonObject source = new()
+        {
+            ["MetaInfo"] = new JsonObject { ["ID"] = sourceId.ToString() },
+            ["ErrorCode"] = "DRFR",
+            ["Description"] = "original template"
+        };
+        CallToolResult sourceCreated = await _client.CallToolAsync("error_source_create",
+            new Dictionary<string, object?> { ["errorSource"] = source }, cancellationToken: CancellationToken.None);
+        Assert.That(sourceCreated.IsError, Is.Not.True);
+
+        var instrument = new JsonObject
+        {
+            ["MetaInfo"] = new JsonObject { ["ID"] = instrumentId.ToString() },
+            ["Name"] = "snapshot impact test",
+            ["CreationDate"] = timestamp,
+            ["LastModificationDate"] = timestamp,
+            ["ModelType"] = "MWD_ISCWSA",
+            ["ErrorSourceList"] = new JsonArray(source.DeepClone())
+        };
+        CallToolResult instrumentCreated = await _client.CallToolAsync("survey_instrument_create",
+            new Dictionary<string, object?> { ["surveyInstrument"] = instrument }, cancellationToken: CancellationToken.None);
+        Assert.That(instrumentCreated.IsError, Is.Not.True);
+
+        try
+        {
+            source["Description"] = "updated template";
+            CallToolResult updated = await _client.CallToolAsync("error_source_update_by_id",
+                new Dictionary<string, object?> { ["id"] = sourceId.ToString(), ["errorSource"] = source },
+                cancellationToken: CancellationToken.None);
+            Assert.That(updated.IsError, Is.Not.True);
+            JsonObject impact = ((JsonObject)updated.StructuredContent!)["data"]!.AsObject();
+            Assert.Multiple(() =>
+            {
+                Assert.That(impact["AffectedSnapshotCount"]?.GetValue<int>(), Is.EqualTo(1));
+                Assert.That(impact["AffectedSurveyInstrumentIDs"]!.AsArray().Single()!.GetValue<string>(), Is.EqualTo(instrumentId.ToString()));
+                Assert.That(impact["Warning"]?.GetValue<string>(), Does.Contain("not modified"));
+            });
+
+            JsonObject stored = await GetInstrument(instrumentId);
+            Assert.That(stored["ErrorSourceList"]![0]!["Description"]?.GetValue<string>(), Is.EqualTo("original template"));
+
+            JsonObject refreshedSnapshot = source.DeepClone().AsObject();
+            refreshedSnapshot["Description"] = "explicitly refreshed snapshot";
+            CallToolResult replaced = await _client.CallToolAsync("survey_instrument_error_source_mutate",
+                new Dictionary<string, object?>
+                {
+                    ["id"] = instrumentId.ToString(),
+                    ["expectedModifiedUtc"] = stored["LastModificationDate"]!.GetValue<string>(),
+                    ["operation"] = "replace",
+                    ["errorSource"] = refreshedSnapshot
+                }, cancellationToken: CancellationToken.None);
+            Assert.That(replaced.IsError, Is.Not.True);
+            Assert.That((await GetInstrument(instrumentId))["ErrorSourceList"]![0]!["Description"]?.GetValue<string>(),
+                Is.EqualTo("explicitly refreshed snapshot"));
+        }
+        finally
+        {
+            JsonObject latest = await GetInstrument(instrumentId);
+            await _client.CallToolAsync("survey_instrument_delete_by_id",
+                new Dictionary<string, object?>
+                {
+                    ["id"] = instrumentId.ToString(),
+                    ["expectedModifiedUtc"] = latest["LastModificationDate"]!.GetValue<string>()
+                }, cancellationToken: CancellationToken.None);
+            await _client.CallToolAsync("error_source_delete_by_id",
+                new Dictionary<string, object?> { ["id"] = sourceId.ToString() }, cancellationToken: CancellationToken.None);
         }
     }
 

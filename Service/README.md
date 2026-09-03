@@ -200,7 +200,7 @@ dotnet build .\Service\Service.csproj -c Debug
 
 ## MCP server
 
-The service publishes all 27 non-statistics REST operations plus MCP-only patch and error-source drift-check operations as 29 domain MCP tools. Usage-statistics operations are not exposed.
+The service publishes all 27 non-statistics REST operations plus five MCP-only operations—patch, granular error-source snapshot mutation, error-source drift check, single-record catalog-reference validation, and bounded catalog-reference audit—as 32 domain MCP tools. Usage-statistics operations are not exposed.
 
 Tool descriptions distinguish compact discovery (`get_all_ids`, `get_all_meta_info`, and Survey Instrument `get_all_light`) from complete-model retrieval. Create and update tools expose explicit nested JSON Schemas rather than generic object bodies; `ModelType` is an enforcing four-branch discriminator and `ErrorCode` is the complete enum rather than free text. Every tool also publishes an explicit success-output schema, title, and MCP read-only/destructive/idempotent/open-world annotations. Unknown top-level arguments are rejected before controller invocation. Successful calls return structured JSON and a text fallback; failed HTTP-style results and unexpected exceptions are converted to stable sanitized MCP error envelopes.
 
@@ -209,6 +209,12 @@ Tool descriptions distinguish compact discovery (`get_all_ids`, `get_all_meta_in
 Survey Instrument update, patch, and delete require `expectedModifiedUtc` from the latest read and return `stale_write` on a mismatch. Patch uses top-level JSON Merge Patch semantics: omitted fields are retained, arrays are replaced as a whole, and resource identity/server timestamps are protected. Error Source CRUD manages a template library. `ErrorSourceList` entries embedded in an instrument are authoritative snapshots; a copied template UUID records provenance, but later template edits do not propagate into stored instruments.
 
 `survey_instrument_check_error_source_drift` compares those frozen snapshots with current same-UUID templates and reports `in_sync`, `drifted`, or `catalog_missing` without modifying either side.
+
+`survey_instrument_validate_catalog_references` and `survey_instrument_audit_catalog_references` verify that identity, feature-category, and category-scoped feature-option assignment UUIDs still resolve in the local catalogs. Normal creates, updates, and restores already enforce these relationships; the diagnostics are intended for legacy imports or externally corrupted databases. The audit is deterministic, UUID ordered, and capped at 100 records per call.
+
+Successful `error_source_update_by_id` calls return the IDs and count of survey instruments carrying same-UUID frozen snapshots, together with a non-fatal warning when any exist. The update never propagates into those snapshots.
+
+`survey_instrument_error_source_mutate` performs a concurrency-protected `add`, `replace`, or `remove` of one embedded snapshot. This avoids whole-array replacement while retaining model-family validation; in particular, removing the final snapshot from an ISCWSA instrument is rejected.
 
 The schemas document the caller-owned `MetaInfo.ID`, the requirement that an update path ID match the body's ID, all four survey model families, embedded `ErrorSourceList` objects, identity and feature assignments, catalog concurrency tokens, classification flags, and inclination intervals.
 

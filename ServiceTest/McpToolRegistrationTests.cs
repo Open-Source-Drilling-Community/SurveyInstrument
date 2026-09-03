@@ -80,14 +80,17 @@ public sealed class McpToolRegistrationTests
         Assert.That(endpointMethods, Is.EquivalentTo(EndpointToolMap.Keys.Take(17)));
         Assert.That(_tools.Keys, Is.EquivalentTo(EndpointToolMap.Values
             .Append("survey_instrument_patch_by_id")
+            .Append("survey_instrument_error_source_mutate")
             .Append("survey_instrument_check_error_source_drift")
+            .Append("survey_instrument_validate_catalog_references")
+            .Append("survey_instrument_audit_catalog_references")
             .Append("ping")));
     }
 
     [Test]
     public void Registered_tools_have_unique_names_and_descriptions()
     {
-        Assert.That(_tools.Count, Is.EqualTo(EndpointToolMap.Count + 3));
+        Assert.That(_tools.Count, Is.EqualTo(EndpointToolMap.Count + 6));
         Assert.That(_tools.Values.Select(tool => tool.Name), Is.Unique);
         Assert.That(_tools.Values.All(tool => !string.IsNullOrWhiteSpace(tool.Description)), Is.True);
     }
@@ -148,6 +151,24 @@ public sealed class McpToolRegistrationTests
     }
 
     [Test]
+    public void Error_source_snapshot_mutation_is_granular_guarded_and_schema_discriminated()
+    {
+        IMcpTool mutation = _tools["survey_instrument_error_source_mutate"];
+        string input = mutation.InputSchema.ToJsonString();
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(input, Does.Contain("expectedModifiedUtc"));
+            Assert.That(input, Does.Contain("\"const\":\"add\""));
+            Assert.That(input, Does.Contain("\"const\":\"replace\""));
+            Assert.That(input, Does.Contain("\"const\":\"remove\""));
+            Assert.That(input, Does.Contain("errorSourceId"));
+            Assert.That(mutation.Behavior.IdempotentHint, Is.True);
+            Assert.That(mutation.OutputSchema.ToJsonString(), Does.Contain("ErrorSourceList"));
+        });
+    }
+
+    [Test]
     public void Feature_catalog_write_schema_documents_exclusivity_validity_and_options()
     {
         string schema = _tools["survey_instrument_feature_category_update_by_id"].InputSchema!.ToJsonString();
@@ -204,6 +225,41 @@ public sealed class McpToolRegistrationTests
             Assert.That(output, Does.Contain("drifted"));
             Assert.That(output, Does.Contain("catalog_missing"));
             Assert.That(output, Does.Contain("HasDrift"));
+        });
+    }
+
+    [Test]
+    public void Catalog_reference_diagnostics_are_read_only_bounded_and_explicit()
+    {
+        IMcpTool validate = _tools["survey_instrument_validate_catalog_references"];
+        IMcpTool audit = _tools["survey_instrument_audit_catalog_references"];
+        string validationOutput = validate.OutputSchema.ToJsonString();
+        string auditInput = audit.InputSchema.ToJsonString();
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(validate.Behavior.ReadOnlyHint, Is.True);
+            Assert.That(audit.Behavior.ReadOnlyHint, Is.True);
+            Assert.That(validationOutput, Does.Contain("identity_missing"));
+            Assert.That(validationOutput, Does.Contain("feature_category_missing"));
+            Assert.That(validationOutput, Does.Contain("feature_option_missing"));
+            Assert.That(auditInput, Does.Contain("\"maximum\":100"));
+            Assert.That(audit.OutputSchema.ToJsonString(), Does.Contain("HasMore"));
+        });
+    }
+
+    [Test]
+    public void Error_source_update_reports_frozen_snapshot_impact()
+    {
+        IMcpTool update = _tools["error_source_update_by_id"];
+        string output = update.OutputSchema.ToJsonString();
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(update.Description, Does.Contain("frozen snapshots"));
+            Assert.That(output, Does.Contain("AffectedSnapshotCount"));
+            Assert.That(output, Does.Contain("AffectedSurveyInstrumentIDs"));
+            Assert.That(output, Does.Contain("Warning"));
         });
     }
 

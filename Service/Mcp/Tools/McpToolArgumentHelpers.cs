@@ -69,6 +69,33 @@ internal static class McpToolArgumentHelpers
         return schema;
     }
 
+    public static JsonObject CreateErrorSourceSnapshotMutationSchema()
+    {
+        JsonObject schema = CreateConcurrencySchema("Identifier of the persisted survey instrument whose ErrorSourceList should change.");
+        JsonObject properties = (JsonObject)schema["properties"]!;
+        properties["operation"] = EnumSchema("Single snapshot operation.", "add", "replace", "remove");
+        properties["errorSource"] = ErrorSourceSchema();
+        properties["errorSourceId"] = StringSchema("UUID of the embedded snapshot to remove.", "uuid");
+        ((JsonArray)schema["required"]!).Add("operation");
+        schema["oneOf"] = new JsonArray(
+            new JsonObject
+            {
+                ["properties"] = new JsonObject { ["operation"] = new JsonObject { ["const"] = "add" } },
+                ["required"] = new JsonArray("errorSource"), ["not"] = new JsonObject { ["required"] = new JsonArray("errorSourceId") }
+            },
+            new JsonObject
+            {
+                ["properties"] = new JsonObject { ["operation"] = new JsonObject { ["const"] = "replace" } },
+                ["required"] = new JsonArray("errorSource"), ["not"] = new JsonObject { ["required"] = new JsonArray("errorSourceId") }
+            },
+            new JsonObject
+            {
+                ["properties"] = new JsonObject { ["operation"] = new JsonObject { ["const"] = "remove" } },
+                ["required"] = new JsonArray("errorSourceId"), ["not"] = new JsonObject { ["required"] = new JsonArray("errorSource") }
+            });
+        return schema;
+    }
+
     public static JsonObject CreateErrorSourceSchema(bool includeId = false) => CreateBodySchema(
         "errorSource", ErrorSourceSchema(),
         "Complete error-source representation. JSON property names are case-sensitive and use PascalCase.",
@@ -145,6 +172,25 @@ internal static class McpToolArgumentHelpers
             }
         },
         ["required"] = new JsonArray("request"), ["additionalProperties"] = false
+    };
+
+    public static JsonObject CreateCatalogReferenceAuditSchema() => new()
+    {
+        ["type"] = "object",
+        ["properties"] = new JsonObject
+        {
+            ["offset"] = new JsonObject
+            {
+                ["type"] = "integer", ["minimum"] = 0, ["default"] = 0,
+                ["description"] = "Zero-based offset into the deterministic UUID-ordered instrument list."
+            },
+            ["limit"] = new JsonObject
+            {
+                ["type"] = "integer", ["minimum"] = 1, ["maximum"] = 100, ["default"] = 50,
+                ["description"] = "Maximum number of instruments to validate in this page."
+            }
+        },
+        ["additionalProperties"] = false
     };
 
     public static JsonObject CreateIdsOutputSchema() => SuccessEnvelope(new JsonObject
@@ -250,6 +296,69 @@ internal static class McpToolArgumentHelpers
         },
         ["required"] = new JsonArray("SurveyInstrumentID", "HasDrift", "Results"), ["additionalProperties"] = false
     });
+
+    public static JsonObject CreateCatalogReferenceValidationOutputSchema() =>
+        SuccessEnvelope(CatalogReferenceValidationSchema());
+
+    public static JsonObject CreateCatalogReferenceAuditOutputSchema() => SuccessEnvelope(new JsonObject
+    {
+        ["type"] = "object",
+        ["properties"] = new JsonObject
+        {
+            ["Offset"] = new JsonObject { ["type"] = "integer", ["minimum"] = 0 },
+            ["Limit"] = new JsonObject { ["type"] = "integer", ["minimum"] = 1, ["maximum"] = 100 },
+            ["CheckedCount"] = new JsonObject { ["type"] = "integer", ["minimum"] = 0 },
+            ["ValidCount"] = new JsonObject { ["type"] = "integer", ["minimum"] = 0 },
+            ["InvalidCount"] = new JsonObject { ["type"] = "integer", ["minimum"] = 0 },
+            ["HasMore"] = new JsonObject { ["type"] = "boolean" },
+            ["Results"] = new JsonObject { ["type"] = "array", ["items"] = CatalogReferenceValidationSchema() }
+        },
+        ["required"] = new JsonArray("Offset", "Limit", "CheckedCount", "ValidCount", "InvalidCount", "HasMore", "Results"),
+        ["additionalProperties"] = false
+    });
+
+    public static JsonObject CreateErrorSourceUpdateImpactOutputSchema() => SuccessEnvelope(new JsonObject
+    {
+        ["type"] = "object",
+        ["properties"] = new JsonObject
+        {
+            ["ErrorSourceID"] = StringSchema("Updated error-source template UUID.", "uuid"),
+            ["AffectedSnapshotCount"] = new JsonObject { ["type"] = "integer", ["minimum"] = 0 },
+            ["AffectedSurveyInstrumentIDs"] = new JsonObject
+            {
+                ["type"] = "array", ["items"] = StringSchema("Survey-instrument UUID containing a frozen snapshot.", "uuid")
+            },
+            ["Warning"] = NullableString("Non-fatal warning that embedded snapshots were deliberately not propagated.")
+        },
+        ["required"] = new JsonArray("ErrorSourceID", "AffectedSnapshotCount", "AffectedSurveyInstrumentIDs", "Warning"),
+        ["additionalProperties"] = false
+    });
+
+    private static JsonObject CatalogReferenceValidationSchema() => new()
+    {
+        ["type"] = "object",
+        ["properties"] = new JsonObject
+        {
+            ["SurveyInstrumentID"] = StringSchema("Validated survey-instrument UUID.", "uuid"),
+            ["Status"] = EnumSchema("Whether every identity, feature-category, and feature-option assignment resolves in the local catalogs.", "valid", "invalid"),
+            ["Issues"] = new JsonObject
+            {
+                ["type"] = "array",
+                ["items"] = new JsonObject
+                {
+                    ["type"] = "object",
+                    ["properties"] = new JsonObject
+                    {
+                        ["Path"] = new JsonObject { ["type"] = "string" },
+                        ["Code"] = EnumSchema("Bounded catalog-integrity failure code.", "identity_missing", "feature_category_missing", "feature_option_missing"),
+                        ["ReferencedID"] = StringSchema("Missing catalog UUID.", "uuid")
+                    },
+                    ["required"] = new JsonArray("Path", "Code", "ReferencedID"), ["additionalProperties"] = false
+                }
+            }
+        },
+        ["required"] = new JsonArray("SurveyInstrumentID", "Status", "Issues"), ["additionalProperties"] = false
+    };
 
     private static JsonObject BatchDocumentSchema(bool enforceModelFamily = false) => new()
     {
@@ -362,26 +471,33 @@ internal static class McpToolArgumentHelpers
         return schema;
     }
 
+    private static readonly string[] FamilySpecificFields =
+    [
+        "ErrorSourceList", "Dip", "Declination", "Gravity", "BField", "Latitude", "EarthRotRate", "CantAngle",
+        "GyroRunningSpeed", "ExtRefInitInc", "GyroSwitching", "GyroMinDist", "GyroNoiseRed",
+        "UseRelDepthError", "RelDepthError", "UseMisalignment", "Misalignment", "UseTrueInclination",
+        "TrueInclination", "UseReferenceError", "ReferenceError", "UseDrillStringMag", "DrillStringMag",
+        "UseGyroCompassError", "GyroCompassError"
+    ];
+
     private static JsonArray ModelTypeBranches() => new(
         ModelTypeBranch("MWD_WolffDeWardt", "MWD Wolff-DeWardt model. The Use*/value pairs are the active error parameters; DrillStringMag is MWD-specific.",
-            "ErrorSourceList", "Latitude", "EarthRotRate", "CantAngle", "GyroRunningSpeed", "ExtRefInitInc",
-            "GyroSwitching", "GyroMinDist", "GyroNoiseRed", "UseGyroCompassError", "GyroCompassError"),
+            "Dip", "Declination", "Gravity", "BField", "UseRelDepthError", "RelDepthError", "UseMisalignment", "Misalignment",
+            "UseTrueInclination", "TrueInclination", "UseReferenceError", "ReferenceError", "UseDrillStringMag", "DrillStringMag"),
         ModelTypeBranch("Gyro_WolffDeWardt", "Gyro Wolff-DeWardt model. The Use*/value pairs are the active error parameters; GyroCompassError is gyro-specific.",
-            "ErrorSourceList", "Dip", "Declination", "Gravity", "BField", "UseDrillStringMag", "DrillStringMag"),
+            "Latitude", "EarthRotRate", "CantAngle", "GyroRunningSpeed", "ExtRefInitInc", "GyroSwitching", "GyroMinDist", "GyroNoiseRed",
+            "UseRelDepthError", "RelDepthError", "UseMisalignment", "Misalignment", "UseTrueInclination", "TrueInclination",
+            "UseReferenceError", "ReferenceError", "UseGyroCompassError", "GyroCompassError"),
         ModelTypeBranch("MWD_ISCWSA", "MWD ISCWSA model. ErrorSourceList plus geomagnetic/gravity context define the model.",
-            "Latitude", "EarthRotRate", "CantAngle", "GyroRunningSpeed", "ExtRefInitInc", "GyroSwitching", "GyroMinDist",
-            "GyroNoiseRed", "UseRelDepthError", "RelDepthError", "UseMisalignment", "Misalignment", "UseTrueInclination",
-            "TrueInclination", "UseReferenceError", "ReferenceError", "UseDrillStringMag", "DrillStringMag",
-            "UseGyroCompassError", "GyroCompassError"),
+            "ErrorSourceList", "Dip", "Declination", "Gravity", "BField"),
         ModelTypeBranch("Gyro_ISCWSA", "Gyro ISCWSA model. ErrorSourceList plus gyro and Earth-rotation context define the model.",
-            "Dip", "Declination", "Gravity", "BField", "UseRelDepthError", "RelDepthError", "UseMisalignment",
-            "Misalignment", "UseTrueInclination", "TrueInclination", "UseReferenceError", "ReferenceError",
-            "UseDrillStringMag", "DrillStringMag", "UseGyroCompassError", "GyroCompassError"));
+            "ErrorSourceList", "Latitude", "EarthRotRate", "CantAngle", "GyroRunningSpeed", "ExtRefInitInc", "GyroSwitching", "GyroMinDist", "GyroNoiseRed"));
 
-    private static JsonObject ModelTypeBranch(string modelType, string description, params string[] forbidden)
+    private static JsonObject ModelTypeBranch(string modelType, string description, params string[] allowed)
     {
         JsonArray forbiddenPresence = new();
-        foreach (string property in forbidden)
+        HashSet<string> allowedFields = allowed.ToHashSet(StringComparer.Ordinal);
+        foreach (string property in FamilySpecificFields.Where(field => !allowedFields.Contains(field)))
         {
             forbiddenPresence.Add(new JsonObject { ["required"] = new JsonArray(property) });
         }

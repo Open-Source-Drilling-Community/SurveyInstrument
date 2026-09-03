@@ -91,11 +91,14 @@ public static class McpServiceCollectionExtensions
         bool readOnly = name.Contains("_get_", StringComparison.Ordinal) ||
                         name.EndsWith("_get_all", StringComparison.Ordinal) ||
                         name.Contains("_check_", StringComparison.Ordinal) ||
+                        name.Contains("_validate_", StringComparison.Ordinal) ||
+                        name.Contains("_audit_", StringComparison.Ordinal) ||
                         name.EndsWith("_batch_export", StringComparison.Ordinal);
         bool destructive = name.Contains("_delete_", StringComparison.Ordinal) ||
                            name.EndsWith("_batch_restore", StringComparison.Ordinal);
         bool idempotent = readOnly || name.Contains("_update", StringComparison.Ordinal) ||
-                          name.Contains("_patch_", StringComparison.Ordinal) || destructive;
+                          name.Contains("_patch_", StringComparison.Ordinal) ||
+                          name == "survey_instrument_error_source_mutate" || destructive;
         string title = string.Join(' ', name.Split('_')
             .Select(word => char.ToUpperInvariant(word[0]) + word[1..]));
         return new McpToolBehavior(title, readOnly, destructive, idempotent);
@@ -109,12 +112,18 @@ public static class McpServiceCollectionExtensions
             return Tools.McpToolArgumentHelpers.CreateMetaInfoListOutputSchema();
         if (name == "survey_instrument_get_by_id")
             return Tools.McpToolArgumentHelpers.CreateSurveyInstrumentOutputSchema();
+        if (name == "survey_instrument_error_source_mutate")
+            return Tools.McpToolArgumentHelpers.CreateSurveyInstrumentOutputSchema();
         if (name == "survey_instrument_get_all")
             return Tools.McpToolArgumentHelpers.CreateSurveyInstrumentListOutputSchema();
         if (name == "survey_instrument_get_all_light")
             return Tools.McpToolArgumentHelpers.CreateSurveyInstrumentLightListOutputSchema();
         if (name == "survey_instrument_check_error_source_drift")
             return Tools.McpToolArgumentHelpers.CreateErrorSourceDriftOutputSchema();
+        if (name == "survey_instrument_validate_catalog_references")
+            return Tools.McpToolArgumentHelpers.CreateCatalogReferenceValidationOutputSchema();
+        if (name == "survey_instrument_audit_catalog_references")
+            return Tools.McpToolArgumentHelpers.CreateCatalogReferenceAuditOutputSchema();
         if (name == "survey_instrument_batch_export")
             return Tools.McpToolArgumentHelpers.CreateBatchExportOutputSchema();
         if (name == "survey_instrument_batch_restore")
@@ -123,6 +132,8 @@ public static class McpServiceCollectionExtensions
             return Tools.McpToolArgumentHelpers.CreateErrorSourceOutputSchema();
         if (name == "error_source_get_all")
             return Tools.McpToolArgumentHelpers.CreateErrorSourceListOutputSchema();
+        if (name == "error_source_update_by_id")
+            return Tools.McpToolArgumentHelpers.CreateErrorSourceUpdateImpactOutputSchema();
         if (name.StartsWith("survey_instrument_identity_", StringComparison.Ordinal))
         {
             if (name.EndsWith("_get_by_id", StringComparison.Ordinal))

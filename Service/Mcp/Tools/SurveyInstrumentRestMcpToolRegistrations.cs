@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Threading;
@@ -68,6 +69,10 @@ public static class SurveyInstrumentRestMcpToolRegistrations
             (sp, args, ct) => InvokeById(args, ct, id => SurveyInstrumentController(sp).GetSurveyInstrumentById(id)));
         services.AddLegacyMcpTool("survey_instrument_check_error_source_drift", "Compare every frozen ErrorSourceList snapshot in one survey instrument with the current standalone template carrying the same MetaInfo.ID. The read-only result reports in_sync, drifted, or catalog_missing per UUID and never modifies the instrument or template catalog.", McpToolArgumentHelpers.CreateGuidSchema("id", "UUID of the survey instrument whose embedded snapshots should be checked."),
             InvokeErrorSourceDriftCheck);
+        services.AddLegacyMcpTool("survey_instrument_validate_catalog_references", "Validate one stored survey instrument's identity, feature-category, and feature-option assignment UUIDs against the local Survey Instrument catalogs without changing data. Normal writes already enforce these references; this diagnostic detects legacy, imported, or externally corrupted records and returns bounded issue codes.", McpToolArgumentHelpers.CreateGuidSchema("id", "UUID of the survey instrument whose local catalog assignments should be validated."),
+            InvokeCatalogReferenceValidation);
+        services.AddLegacyMcpTool("survey_instrument_audit_catalog_references", "Validate a deterministic, bounded page of stored survey instruments against the local identity and feature catalogs without changing data. Results identify missing identity definitions, feature categories, and category-scoped options, allowing legacy or imported catalog corruption to be audited without loading every complete record into the MCP response.", McpToolArgumentHelpers.CreateCatalogReferenceAuditSchema(),
+            InvokeCatalogReferenceAudit);
         services.AddLegacyMcpTool("survey_instrument_get_all_light", "List lightweight survey-instrument records containing metadata, name, description, and timestamps. Use this for human-readable discovery; it omits model parameters and error-source details. Retrieve a selected full record by UUID afterward.", McpToolArgumentHelpers.CreateEmptySchema(),
             (sp, _, ct) => Invoke(ct, () => SurveyInstrumentController(sp).GetAllSurveyInstrumentLight()));
         services.AddLegacyMcpTool("survey_instrument_get_all", "Retrieve every survey instrument with its complete error-model data, including embedded error sources and physical parameters. This can be a large response; prefer IDs, metadata, or light records for discovery. SI values are used and angles are radians.", McpToolArgumentHelpers.CreateEmptySchema(),
@@ -84,6 +89,8 @@ public static class SurveyInstrumentRestMcpToolRegistrations
             InvokeSurveyInstrumentUpdate);
         services.AddLegacyMcpTool("survey_instrument_patch_by_id", "Partially update one survey instrument with optimistic concurrency protection. Supply only changed top-level fields in patch; omitted fields are retained, arrays are replaced as a whole, and null clears nullable fields. MetaInfo and server timestamps cannot be patched. A stale expectedModifiedUtc returns stale_write.", McpToolArgumentHelpers.CreateSurveyInstrumentPatchSchema(),
             InvokeSurveyInstrumentPatch);
+        services.AddLegacyMcpTool("survey_instrument_error_source_mutate", "Add, replace, or remove one embedded ErrorSourceList snapshot without resending the complete array. The operation is atomic and requires the latest survey-instrument LastModificationDate as expectedModifiedUtc. Add rejects a duplicate snapshot UUID, replace and remove reject an unknown snapshot UUID, and family semantics still prevent an ISCWSA instrument from ending with an empty list.", McpToolArgumentHelpers.CreateErrorSourceSnapshotMutationSchema(),
+            InvokeErrorSourceSnapshotMutation);
         services.AddLegacyMcpTool("survey_instrument_delete_by_id", "Permanently delete a stored survey instrument with optimistic concurrency protection. expectedModifiedUtc must equal the LastModificationDate from the latest read; an unknown UUID returns not_found and a stale request returns stale_write without deleting data.", McpToolArgumentHelpers.CreateSurveyInstrumentDeleteSchema(),
             InvokeSurveyInstrumentDelete);
     }
@@ -100,8 +107,8 @@ public static class SurveyInstrumentRestMcpToolRegistrations
             (sp, _, ct) => Invoke(ct, () => ErrorSourceController(sp).GetAllErrorSource()));
         services.AddLegacyMcpTool("error_source_create", "Persist a new reusable survey error-source template. Generate a non-empty errorSource.MetaInfo.ID first; an existing UUID produces a conflict. Instruments embed authoritative snapshots rather than live references, so later template updates do not propagate. Use the named quantity's SI unit.", McpToolArgumentHelpers.CreateErrorSourceSchema(),
             (sp, args, ct) => InvokeWithBody<ErrorSourceModel>(args, "errorSource", ct, data => ErrorSourceController(sp).PostErrorSource(data)));
-        services.AddLegacyMcpTool("error_source_update_by_id", "Replace an existing independently stored error-source definition. The path id must exactly match errorSource.MetaInfo.ID or the request is rejected. Send the complete desired record, with Magnitude in the SI unit named by MagnitudeQuantity and inclination fields in radians.", McpToolArgumentHelpers.CreateErrorSourceSchema(includeId: true),
-            (sp, args, ct) => InvokeWithIdAndBody<ErrorSourceModel>(args, "errorSource", ct, (id, data) => ErrorSourceController(sp).PutErrorSourceById(id, data)));
+        services.AddLegacyMcpTool("error_source_update_by_id", "Replace an existing independently stored error-source definition. The path id must exactly match errorSource.MetaInfo.ID or the request is rejected. The success result warns when stored instruments contain same-UUID frozen snapshots and lists their IDs; those snapshots remain unchanged until explicitly refreshed. Magnitude uses the named quantity's SI unit and inclination fields use radians.", McpToolArgumentHelpers.CreateErrorSourceSchema(includeId: true),
+            InvokeErrorSourceUpdate);
         services.AddLegacyMcpTool("error_source_delete_by_id", "Permanently delete the independently stored error source identified by UUID. Use a read operation first when the target is uncertain. This does not accept an ErrorCode in place of the resource UUID and returns not found for an unknown ID.", McpToolArgumentHelpers.CreateGuidSchema("id", "UUID of the independently stored error source to delete."),
             (sp, args, ct) => InvokeDelete(args, ct, id => ErrorSourceController(sp).DeleteErrorSourceById(id)));
     }
@@ -158,6 +165,144 @@ public static class SurveyInstrumentRestMcpToolRegistrations
             }
         });
     }
+
+    private static Task<JsonNode?> InvokeCatalogReferenceValidation(
+        IServiceProvider serviceProvider, JsonObject? arguments, CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        if (!McpToolArgumentHelpers.TryParseGuid(arguments, "id", out Guid id, out JsonNode? error))
+            return Task.FromResult(error);
+        ActionResult<SurveyInstrumentModel?> lookup = SurveyInstrumentController(serviceProvider).GetSurveyInstrumentById(id);
+        SurveyInstrumentModel? instrument = lookup.Value ?? (lookup.Result as ObjectResult)?.Value as SurveyInstrumentModel;
+        if (instrument == null) return Task.FromResult<JsonNode?>(McpActionResultConverter.FromActionResult(lookup));
+        CatalogReferenceSets catalogs = GetCatalogReferenceSets(serviceProvider);
+        return Task.FromResult<JsonNode?>(Success(ValidateCatalogReferences(instrument, catalogs)));
+    }
+
+    private static Task<JsonNode?> InvokeCatalogReferenceAudit(
+        IServiceProvider serviceProvider, JsonObject? arguments, CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        if (!TryGetBoundedInteger(arguments, "offset", 0, 0, int.MaxValue, out int offset, out JsonNode? error) ||
+            !TryGetBoundedInteger(arguments, "limit", 50, 1, 100, out int limit, out error))
+            return Task.FromResult(error);
+
+        ActionResult<IEnumerable<SurveyInstrumentModel?>> action = SurveyInstrumentController(serviceProvider).GetAllSurveyInstrument();
+        IEnumerable<SurveyInstrumentModel?>? values = action.Value ??
+            (action.Result as ObjectResult)?.Value as IEnumerable<SurveyInstrumentModel?>;
+        if (values == null) return Task.FromResult<JsonNode?>(McpActionResultConverter.FromActionResult(action));
+
+        SurveyInstrumentModel[] ordered = values.Where(value => value?.MetaInfo != null).Cast<SurveyInstrumentModel>()
+            .OrderBy(value => value.MetaInfo!.ID).ToArray();
+        CatalogReferenceSets catalogs = GetCatalogReferenceSets(serviceProvider);
+        JsonArray results = new(ordered.Skip(offset).Take(limit).Select(value =>
+            (JsonNode?)ValidateCatalogReferences(value, catalogs)).ToArray());
+        int invalid = results.Count(value => value?["Status"]?.GetValue<string>() == "invalid");
+        return Task.FromResult<JsonNode?>(Success(new JsonObject
+        {
+            ["Offset"] = offset,
+            ["Limit"] = limit,
+            ["CheckedCount"] = results.Count,
+            ["ValidCount"] = results.Count - invalid,
+            ["InvalidCount"] = invalid,
+            ["HasMore"] = offset + results.Count < ordered.Length,
+            ["Results"] = results
+        }));
+    }
+
+    private static Task<JsonNode?> InvokeErrorSourceUpdate(
+        IServiceProvider serviceProvider, JsonObject? arguments, CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        if (!McpToolArgumentHelpers.TryParseGuid(arguments, "id", out Guid id, out JsonNode? error))
+            return Task.FromResult(error);
+        if (!TryDeserialize(arguments, "errorSource", out ErrorSourceModel? data, out error))
+            return Task.FromResult(error);
+
+        ActionResult<IEnumerable<SurveyInstrumentModel?>> allAction = SurveyInstrumentController(serviceProvider).GetAllSurveyInstrument();
+        IEnumerable<SurveyInstrumentModel?> values = allAction.Value ??
+            (allAction.Result as ObjectResult)?.Value as IEnumerable<SurveyInstrumentModel?> ?? [];
+        SurveyInstrumentModel[] affectedInstruments = values
+            .Where(value => value?.ErrorSourceList?.Any(source => source.MetaInfo?.ID == id) == true)
+            .Cast<SurveyInstrumentModel>().ToArray();
+        Guid[] affected = affectedInstruments
+            .Select(value => value!.MetaInfo!.ID).Distinct().OrderBy(value => value).ToArray();
+        int affectedSnapshotCount = affectedInstruments.Sum(value =>
+            value.ErrorSourceList?.Count(source => source.MetaInfo?.ID == id) ?? 0);
+
+        ActionResult update = ErrorSourceController(serviceProvider).PutErrorSourceById(id, data);
+        JsonNode? converted = McpActionResultConverter.FromActionResult(update);
+        if (converted?["status"]?.GetValue<int>() != 200) return Task.FromResult(converted);
+        return Task.FromResult<JsonNode?>(Success(new JsonObject
+        {
+            ["ErrorSourceID"] = id.ToString(),
+            ["AffectedSnapshotCount"] = affectedSnapshotCount,
+            ["AffectedSurveyInstrumentIDs"] = new JsonArray(affected.Select(value => (JsonNode?)value.ToString()).ToArray()),
+            ["Warning"] = affected.Length == 0 ? null :
+                $"{affectedSnapshotCount} frozen snapshot(s) across {affected.Length} survey instrument(s) were not modified."
+        }));
+    }
+
+    private static CatalogReferenceSets GetCatalogReferenceSets(IServiceProvider serviceProvider)
+    {
+        SqlConnectionManager connections = serviceProvider.GetRequiredService<SqlConnectionManager>();
+        HashSet<Guid> identities = new SurveyInstrumentIdentityManager(connections).GetAll()
+            .Where(value => value.MetaInfo != null).Select(value => value.MetaInfo!.ID).ToHashSet();
+        Dictionary<Guid, HashSet<Guid>> features = new SurveyInstrumentFeatureCategoryManager(connections).GetAll()
+            .Where(value => value.MetaInfo != null).ToDictionary(value => value.MetaInfo!.ID,
+                value => (value.Options ?? []).Select(option => option.ID).ToHashSet());
+        return new CatalogReferenceSets(identities, features);
+    }
+
+    private static JsonObject ValidateCatalogReferences(SurveyInstrumentModel instrument, CatalogReferenceSets catalogs)
+    {
+        JsonArray issues = [];
+        int index = 0;
+        foreach (Model.SurveyInstrumentIdentityAssignment assignment in instrument.SurveyInstrumentIdentityAssignments ?? [])
+        {
+            if (assignment.IdentityID is not Guid id || !catalogs.Identities.Contains(id))
+                issues.Add(CatalogIssue($"SurveyInstrumentIdentityAssignments[{index}].IdentityID", "identity_missing", assignment.IdentityID));
+            index++;
+        }
+        index = 0;
+        foreach (Model.SurveyInstrumentFeatureAssignment assignment in instrument.SurveyInstrumentFeatureAssignments ?? [])
+        {
+            if (assignment.FeatureCategoryID is not Guid categoryId || !catalogs.Features.TryGetValue(categoryId, out HashSet<Guid>? options))
+                issues.Add(CatalogIssue($"SurveyInstrumentFeatureAssignments[{index}].FeatureCategoryID", "feature_category_missing", assignment.FeatureCategoryID));
+            else if (assignment.FeatureOptionID is not Guid optionId || !options.Contains(optionId))
+                issues.Add(CatalogIssue($"SurveyInstrumentFeatureAssignments[{index}].FeatureOptionID", "feature_option_missing", assignment.FeatureOptionID));
+            index++;
+        }
+        return new JsonObject
+        {
+            ["SurveyInstrumentID"] = instrument.MetaInfo!.ID.ToString(),
+            ["Status"] = issues.Count == 0 ? "valid" : "invalid",
+            ["Issues"] = issues
+        };
+    }
+
+    private static JsonObject CatalogIssue(string path, string code, Guid? referencedId) => new()
+    {
+        ["Path"] = path, ["Code"] = code, ["ReferencedID"] = (referencedId ?? Guid.Empty).ToString()
+    };
+
+    private static bool TryGetBoundedInteger(JsonObject? arguments, string name, int defaultValue,
+        int minimum, int maximum, out int value, out JsonNode? error)
+    {
+        value = defaultValue;
+        error = null;
+        if (arguments?[name] == null) return true;
+        if (!int.TryParse(arguments[name]!.ToString(), out value) || value < minimum || value > maximum)
+        {
+            error = McpToolResponses.CreateValidationError($"Argument '{name}' must be an integer from {minimum} through {maximum}.");
+            return false;
+        }
+        return true;
+    }
+
+    private static JsonObject Success(JsonNode data) => new() { ["status"] = 200, ["data"] = data };
+
+    private sealed record CatalogReferenceSets(HashSet<Guid> Identities, Dictionary<Guid, HashSet<Guid>> Features);
 
     private static Task<JsonNode?> InvokeSurveyInstrumentPatch(
         IServiceProvider serviceProvider, JsonObject? arguments, CancellationToken cancellationToken)
@@ -216,6 +361,54 @@ public static class SurveyInstrumentRestMcpToolRegistrations
         }
         return Task.FromResult<JsonNode?>(McpActionResultConverter.FromActionResult(
             controller!.DeleteSurveyInstrumentById(id, expected)));
+    }
+
+    private static Task<JsonNode?> InvokeErrorSourceSnapshotMutation(
+        IServiceProvider serviceProvider, JsonObject? arguments, CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        if (!TryGetSurveyInstrumentWriteContext(serviceProvider, arguments, out Guid id,
+                out DateTimeOffset expected, out SurveyInstrumentController? controller,
+                out SurveyInstrumentModel? current, out JsonNode? error))
+            return Task.FromResult(error);
+
+        string? operation = arguments?["operation"]?.GetValue<string>();
+        List<ErrorSourceModel> snapshots = (current!.ErrorSourceList ?? []).ToList();
+        if (operation is "add" or "replace")
+        {
+            if (!TryDeserialize(arguments, "errorSource", out ErrorSourceModel? snapshot, out error))
+                return Task.FromResult(error);
+            Guid snapshotId = snapshot!.MetaInfo?.ID ?? Guid.Empty;
+            if (snapshotId == Guid.Empty)
+                return Task.FromResult<JsonNode?>(McpToolResponses.CreateValidationError("errorSource.MetaInfo.ID must be a non-empty UUID."));
+            int index = snapshots.FindIndex(value => value.MetaInfo?.ID == snapshotId);
+            if (operation == "add" && index >= 0)
+                return Task.FromResult<JsonNode?>(McpToolResponses.CreateConflict("snapshot_exists", "An embedded error-source snapshot with this UUID already exists."));
+            if (operation == "replace" && index < 0)
+                return Task.FromResult<JsonNode?>(McpToolResponses.CreateConflict("snapshot_not_found", "No embedded error-source snapshot with this UUID exists."));
+            if (operation == "add") snapshots.Add(snapshot);
+            else snapshots[index] = snapshot;
+        }
+        else if (operation == "remove")
+        {
+            if (!McpToolArgumentHelpers.TryParseGuid(arguments, "errorSourceId", out Guid snapshotId, out error))
+                return Task.FromResult(error);
+            int index = snapshots.FindIndex(value => value.MetaInfo?.ID == snapshotId);
+            if (index < 0)
+                return Task.FromResult<JsonNode?>(McpToolResponses.CreateConflict("snapshot_not_found", "No embedded error-source snapshot with this UUID exists."));
+            snapshots.RemoveAt(index);
+        }
+        else
+        {
+            return Task.FromResult<JsonNode?>(McpToolResponses.CreateValidationError("Argument 'operation' must be add, replace, or remove."));
+        }
+
+        current.ErrorSourceList = snapshots;
+        JsonObject updated = McpActionResultConverter.FromActionResult(
+            controller!.PutSurveyInstrumentById(id, current, expected));
+        return updated["status"]?.GetValue<int>() == 200
+            ? Task.FromResult<JsonNode?>(McpActionResultConverter.FromActionResult(controller.GetSurveyInstrumentById(id)))
+            : Task.FromResult<JsonNode?>(updated);
     }
 
     private static bool TryGetSurveyInstrumentWriteContext(
