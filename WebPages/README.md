@@ -9,6 +9,7 @@ It is the main UI feature library of the solution. `WebApp` hosts it, but most o
 - Provide the SurveyInstrument management page.
 - Provide the SurveyInstrument edit page.
 - Provide identity and feature catalog management pages.
+- Provide versioned survey-instrument backup and atomic restore workflows.
 - Provide the usage statistics page.
 - Wrap the generated NSwag client behind a host-configured abstraction.
 - Package the pages as a reusable RCL and NuGet package.
@@ -39,6 +40,10 @@ It is where reusable application UI is implemented without tying it to one speci
   - Manages identity definitions such as official, manufacturer, model, and tool names.
 - `SurveyInstrumentFeatures.razor`
   - Manages feature categories, exclusivity/validity flags, and options.
+- `SurveyInstrumentBackupRestore.razor`
+  - Exports all or selected survey instruments to a versioned JSON file.
+  - Previews and validates uploaded backups before an explicitly confirmed atomic restore.
+  - Supports fail-on-conflict and replace-existing policies and reports catalog dependencies.
 - `StatisticsSurveyInstrument.razor`
   - Displays aggregate usage statistics returned by the service.
 

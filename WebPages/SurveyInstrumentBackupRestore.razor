@@ -1,0 +1,347 @@
+@page "/SurveyInstrumentBackupRestore"
+@implements IAsyncDisposable
+@using System.Text.Json
+@inject ILogger<SurveyInstrumentBackupRestore> logger
+@inject ISnackbar Snackbar
+@inject IDialogService DialogService
+@inject ISurveyInstrumentAPIUtils Api
+@inject IJSRuntime JSRuntime
+
+<MudText Typo="Typo.h4" Class="mt-4 mb-4">Survey Instrument backup and restore</MudText>
+@if (_busy)
+{
+    <MudProgressLinear Indeterminate="true" Class="mb-3" />
+}
+
+<MudExpansionPanels MultiExpansion="true">
+    <MudExpansionPanel Text="Backup survey instruments" Expanded="true">
+        <MudText Typo="Typo.body2" Class="mb-3">
+            Export all survey instruments or an ordered selection to one versioned JSON backup file.
+            Referenced identity and feature definitions are included together with applicable error-source templates;
+            embedded error sources remain frozen snapshots.
+        </MudText>
+
+        @if (_instruments == null)
+        {
+            <MudProgressLinear Indeterminate="true" />
+        }
+        else
+        {
+            <MudDataGrid T="SurveyInstrumentLight" @key="_gridKey" Items="@_instruments" MultiSelection="true"
+                         SelectedItems="@_selected" SelectedItemsChanged="SelectedChanged"
+                         QuickFilter="@InstrumentFilter" Hover="true" SortMode="SortMode.Multiple"
+                         Filterable="false" ReadOnly="true" Elevation="0">
+                <ToolBarContent>
+                    <MudText Typo="Typo.h6">Available survey instruments</MudText>
+                    <MudSpacer />
+                    <MudTextField @bind-Value="_search" Placeholder="Search" Immediate="true" Class="mt-0"
+                                  Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" />
+                </ToolBarContent>
+                <Columns>
+                    <SelectColumn T="SurveyInstrumentLight" />
+                    <PropertyColumn Property="item => item.Name" Title="Name" Sortable="true" />
+                    <PropertyColumn Property="item => item.Description" Title="Description" Sortable="true" />
+                    <TemplateColumn Title="UUID" Sortable="false">
+                        <CellTemplate>@(context.Item.MetaInfo?.ID.ToString() ?? "-")</CellTemplate>
+                    </TemplateColumn>
+                </Columns>
+                <PagerContent><MudDataGridPager T="SurveyInstrumentLight" /></PagerContent>
+            </MudDataGrid>
+
+            <MudContainer Class="d-flex flex-row align-center pa-0 mt-4">
+                <MudButton Class="me-2" Variant="Variant.Filled" Color="Color.Primary"
+                           StartIcon="@Icons.Material.Filled.Download" Disabled="@(_busy || _instruments.Count == 0)"
+                           OnClick="ExportAllAsync">Backup all (@_instruments.Count)</MudButton>
+                <MudButton Variant="Variant.Filled" Color="Color.Primary"
+                           StartIcon="@Icons.Material.Filled.Download" Disabled="@(_busy || _selected.Count == 0)"
+                           OnClick="ExportSelectedAsync">Backup selected (@_selected.Count)</MudButton>
+            </MudContainer>
+            @if (_backupErrors.Count != 0)
+            {
+                <MudAlert Severity="Severity.Error" Dense="true" Class="mt-3">
+                    @foreach (string error in _backupErrors) { <MudText Typo="Typo.body2">- @error</MudText> }
+                </MudAlert>
+            }
+        }
+    </MudExpansionPanel>
+
+    <MudExpansionPanel Text="Restore survey instruments">
+        <MudAlert Severity="Severity.Info" Dense="true" Class="mb-3">
+            The server validates the complete backup and restores its instruments and catalog dependencies in one
+            transaction. Any validation or catalog conflict leaves the database unchanged.
+        </MudAlert>
+        <label class="mud-button-root mud-button mud-button-filled mud-button-filled-primary mud-button-filled-size-medium">
+            Choose backup file
+            <InputFile OnChange="LoadFileAsync" accept=".json,application/json" style="display:none" />
+        </label>
+        @if (!string.IsNullOrWhiteSpace(_fileName))
+        {
+            <MudText Typo="Typo.body2" Class="mt-2">Selected file: @_fileName</MudText>
+        }
+
+        @if (_document != null)
+        {
+            <MudGrid Class="mt-3">
+                <MudItem xs="12" md="4"><MudText Typo="Typo.subtitle2">Format</MudText><MudText Typo="Typo.body2">@_document.FormatIdentifier</MudText></MudItem>
+                <MudItem xs="6" md="2"><MudText Typo="Typo.subtitle2">Schema version</MudText><MudText Typo="Typo.body2">@_document.SchemaVersion</MudText></MudItem>
+                <MudItem xs="6" md="2"><MudText Typo="Typo.subtitle2">Instruments</MudText><MudText Typo="Typo.body2">@(_document.SurveyInstruments?.Count ?? 0)</MudText></MudItem>
+                <MudItem xs="12" md="4"><MudText Typo="Typo.subtitle2">Exported at UTC</MudText><MudText Typo="Typo.body2">@_document.ExportedAtUtc.ToString("u")</MudText></MudItem>
+            </MudGrid>
+
+            @if (_document.CatalogDependencies != null)
+            {
+                <MudGrid Class="mt-2">
+                    <MudItem xs="12" sm="4"><MudText Typo="Typo.subtitle2">Error-source templates</MudText><MudText Typo="Typo.body2">@(_document.CatalogDependencies.ErrorSourceTemplates?.Count ?? 0)</MudText></MudItem>
+                    <MudItem xs="12" sm="4"><MudText Typo="Typo.subtitle2">Identity definitions</MudText><MudText Typo="Typo.body2">@(_document.CatalogDependencies.Identities?.Count ?? 0)</MudText></MudItem>
+                    <MudItem xs="12" sm="4"><MudText Typo="Typo.subtitle2">Feature categories</MudText><MudText Typo="Typo.body2">@(_document.CatalogDependencies.FeatureCategories?.Count ?? 0)</MudText></MudItem>
+                </MudGrid>
+            }
+
+            @if (_validationErrors.Count != 0)
+            {
+                <MudAlert Severity="Severity.Error" Dense="true" Class="mt-3">
+                    <MudText Typo="Typo.subtitle2">This file cannot be restored:</MudText>
+                    @foreach (string error in _validationErrors) { <MudText Typo="Typo.body2">- @error</MudText> }
+                </MudAlert>
+            }
+            @if (_validationErrors.Count == 0)
+            {
+                <MudDataGrid T="SurveyInstrument" Items="@_document.SurveyInstruments" QuickFilter="@RestoreFilter"
+                             Hover="true" SortMode="SortMode.Multiple" Filterable="false" ReadOnly="true"
+                             Elevation="0" Class="mt-3">
+                    <ToolBarContent>
+                        <MudText Typo="Typo.h6">Backup contents</MudText><MudSpacer />
+                        <MudTextField @bind-Value="_restoreSearch" Placeholder="Search" Immediate="true" Class="mt-0"
+                                      Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" />
+                    </ToolBarContent>
+                    <Columns>
+                        <PropertyColumn Property="item => item.Name" Title="Name" Sortable="true" />
+                        <PropertyColumn Property="item => item.ModelType" Title="Model family" Sortable="true" />
+                        <PropertyColumn Property="item => item.Description" Title="Description" Sortable="true" />
+                        <TemplateColumn Title="UUID"><CellTemplate>@(context.Item.MetaInfo?.ID.ToString() ?? "-")</CellTemplate></TemplateColumn>
+                    </Columns>
+                    <PagerContent><MudDataGridPager T="SurveyInstrument" /></PagerContent>
+                </MudDataGrid>
+
+                <MudText Typo="Typo.subtitle2" Class="mt-4 mb-1">If a survey-instrument UUID already exists</MudText>
+                <MudRadioGroup T="SurveyInstrumentBatchRestoreConflictPolicy" @bind-Value="_conflictPolicy">
+                    <MudRadio T="SurveyInstrumentBatchRestoreConflictPolicy"
+                              Value="SurveyInstrumentBatchRestoreConflictPolicy.FailIfExists" Color="Color.Primary">
+                        Stop without changing anything
+                    </MudRadio>
+                    <MudRadio T="SurveyInstrumentBatchRestoreConflictPolicy"
+                              Value="SurveyInstrumentBatchRestoreConflictPolicy.ReplaceExisting" Color="Color.Error">
+                        Replace existing survey instruments
+                    </MudRadio>
+                </MudRadioGroup>
+                @if (_conflictPolicy == SurveyInstrumentBatchRestoreConflictPolicy.ReplaceExisting)
+                {
+                    <MudAlert Severity="Severity.Warning" Dense="true" Class="mt-2">
+                        Matching survey instruments will be replaced only after the complete backup passes validation.
+                    </MudAlert>
+                }
+                <MudButton Class="mt-3" Variant="Variant.Filled"
+                           Color="@(_conflictPolicy == SurveyInstrumentBatchRestoreConflictPolicy.ReplaceExisting ? Color.Error : Color.Primary)"
+                           StartIcon="@Icons.Material.Filled.Restore" Disabled="@(_busy || !CanRestore)"
+                           OnClick="RestoreAsync">Restore @(_document.SurveyInstruments?.Count ?? 0) instrument(s)</MudButton>
+            }
+        }
+        @if (_serverErrors.Count != 0)
+        {
+            <MudAlert Severity="Severity.Error" Dense="true" Class="mt-3">
+                @foreach (string error in _serverErrors) { <MudText Typo="Typo.body2">- @error</MudText> }
+            </MudAlert>
+        }
+    </MudExpansionPanel>
+</MudExpansionPanels>
+
+@code {
+    private const long MaximumFileBytes = 256L * 1024L * 1024L;
+    private const string ExpectedFormat = "OSDC.Drilling.SurveyInstrument.BatchExport";
+    private const int ExpectedSchemaVersion = 1;
+    private List<SurveyInstrumentLight>? _instruments;
+    private HashSet<SurveyInstrumentLight> _selected = [];
+    private readonly List<string> _backupErrors = [], _validationErrors = [], _serverErrors = [];
+    private string? _search, _restoreSearch, _fileName;
+    private int _gridKey;
+    private bool _busy;
+    private SurveyInstrumentBatchExportDocument? _document;
+    private SurveyInstrumentBatchRestoreConflictPolicy _conflictPolicy = SurveyInstrumentBatchRestoreConflictPolicy.FailIfExists;
+    private IJSObjectReference? _downloadModule;
+    private bool CanRestore => _document?.SurveyInstruments is { Count: > 0 } && _validationErrors.Count == 0;
+
+    protected override Task OnInitializedAsync() => LoadInstrumentsAsync();
+
+    private async Task LoadInstrumentsAsync()
+    {
+        try
+        {
+            _instruments = ((await Api.ClientSurveyInstrument.GetAllSurveyInstrumentLightAsync()) ?? [])
+                .Where(item => item?.MetaInfo?.ID is Guid id && id != Guid.Empty)
+                .OrderBy(item => item.Name, StringComparer.OrdinalIgnoreCase).ThenBy(item => item.MetaInfo.ID).ToList();
+            _selected = [];
+            _gridKey++;
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Unable to load survey instruments for backup");
+            _instruments = [];
+            Snackbar.Add("Unable to load survey instruments for backup.", Severity.Error);
+        }
+    }
+
+    private void SelectedChanged(HashSet<SurveyInstrumentLight> values) => _selected = values;
+    private Task ExportAllAsync() => ExportAsync(SurveyInstrumentBatchExportScope.All, null);
+    private Task ExportSelectedAsync() => ExportAsync(SurveyInstrumentBatchExportScope.Selected,
+        _selected.Where(item => item.MetaInfo?.ID is Guid id && id != Guid.Empty).OrderBy(item => item.Name, StringComparer.OrdinalIgnoreCase)
+            .ThenBy(item => item.MetaInfo!.ID).Select(item => item.MetaInfo!.ID).ToList());
+
+    private async Task ExportAsync(SurveyInstrumentBatchExportScope scope, List<Guid>? ids)
+    {
+        try
+        {
+            _busy = true;
+            _backupErrors.Clear();
+            SurveyInstrumentBatchExportDocument document = await Api.ClientSurveyInstrument.BatchExportSurveyInstrumentsAsync(
+                new SurveyInstrumentBatchExportRequest { Scope = scope, SurveyInstrumentIDs = ids });
+            string json = JsonSerializer.Serialize(document, JsonOptions(true));
+            _downloadModule ??= await JSRuntime.InvokeAsync<IJSObjectReference>("import",
+                "./_content/OSDC.Drilling.SurveyInstrument.WebPages/surveyInstrumentBatchBackup.js?v=20260903");
+            await _downloadModule.InvokeVoidAsync("downloadJson",
+                $"survey-instrument-backup-{DateTime.UtcNow:yyyyMMddTHHmmssZ}.json", json);
+            Snackbar.Add($"Backed up {document.SurveyInstruments?.Count ?? 0} survey instrument(s).", Severity.Success);
+        }
+        catch (ApiException<SurveyInstrumentBatchErrorEnvelope> ex)
+        {
+            ShowErrors(ex.Result, "Backup was rejected.", _backupErrors);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Unable to back up survey instruments");
+            _backupErrors.Add("Unable to back up survey instruments.");
+            Snackbar.Add("Unable to back up survey instruments.", Severity.Error);
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+
+    private async Task LoadFileAsync(InputFileChangeEventArgs args)
+    {
+        _document = null;
+        _validationErrors.Clear();
+        _serverErrors.Clear();
+        _fileName = args.File.Name;
+        try
+        {
+            await using Stream stream = args.File.OpenReadStream(MaximumFileBytes);
+            _document = await JsonSerializer.DeserializeAsync<SurveyInstrumentBatchExportDocument>(stream, JsonOptions(false));
+            ValidateDocument();
+            if (_validationErrors.Count == 0)
+            {
+                Snackbar.Add($"Loaded {_document!.SurveyInstruments.Count} survey instrument(s).", Severity.Success);
+            }
+        }
+        catch (Exception ex) when (ex is JsonException or IOException or InvalidOperationException)
+        {
+            logger.LogWarning(ex, "Unable to read backup {FileName}", args.File.Name);
+            _document = null;
+            _validationErrors.Add("The selected file is not a readable Survey Instrument backup.");
+        }
+    }
+
+    private void ValidateDocument()
+    {
+        _validationErrors.Clear();
+        if (_document == null) { _validationErrors.Add("The document is empty."); return; }
+        if (_document.FormatIdentifier != ExpectedFormat) _validationErrors.Add($"FormatIdentifier must be '{ExpectedFormat}'.");
+        if (_document.SchemaVersion != ExpectedSchemaVersion) _validationErrors.Add($"SchemaVersion must be {ExpectedSchemaVersion}.");
+        if (_document.ExportedAtUtc == default || _document.ExportedAtUtc.Offset != TimeSpan.Zero) _validationErrors.Add("ExportedAtUtc must be UTC.");
+        if (_document.CatalogDependencies == null) _validationErrors.Add("CatalogDependencies is required.");
+        else
+        {
+            if (_document.CatalogDependencies.ErrorSourceTemplates == null) _validationErrors.Add("CatalogDependencies.ErrorSourceTemplates is required.");
+            if (_document.CatalogDependencies.Identities == null) _validationErrors.Add("CatalogDependencies.Identities is required.");
+            if (_document.CatalogDependencies.FeatureCategories == null) _validationErrors.Add("CatalogDependencies.FeatureCategories is required.");
+        }
+        if (_document.SurveyInstruments == null || _document.SurveyInstruments.Count == 0)
+        { _validationErrors.Add("At least one survey instrument is required."); return; }
+        HashSet<Guid> ids = [];
+        int index = 0;
+        foreach (SurveyInstrument instrument in _document.SurveyInstruments)
+        {
+            Guid? id = instrument?.MetaInfo?.ID;
+            if (id is null || id == Guid.Empty) _validationErrors.Add($"Survey instrument at position {index} has no UUID.");
+            else if (!ids.Add(id.Value)) _validationErrors.Add($"Survey-instrument UUID '{id}' occurs more than once.");
+            index++;
+        }
+    }
+
+    private async Task RestoreAsync()
+    {
+        if (!CanRestore || _document == null) return;
+        bool? confirmed = await DialogService.ShowMessageBox("Restore survey instruments",
+            _conflictPolicy == SurveyInstrumentBatchRestoreConflictPolicy.ReplaceExisting
+                ? $"Restore {_document.SurveyInstruments.Count} survey instrument(s) and replace matching UUIDs?"
+                : $"Restore {_document.SurveyInstruments.Count} survey instrument(s)? Any existing UUID stops the operation.",
+            yesText: _conflictPolicy == SurveyInstrumentBatchRestoreConflictPolicy.ReplaceExisting ? "Restore and replace" : "Restore",
+            cancelText: "Cancel");
+        if (confirmed != true) return;
+        try
+        {
+            _busy = true;
+            _serverErrors.Clear();
+            SurveyInstrumentBatchRestoreResponse response = await Api.ClientSurveyInstrument.BatchRestoreSurveyInstrumentsAsync(
+                new SurveyInstrumentBatchRestoreRequest { ConflictPolicy = _conflictPolicy, Document = _document });
+            Snackbar.Add($"Restore completed: {response.CreatedCount} created, {response.ReplacedCount} replaced, " +
+                         $"{response.CreatedCatalogDefinitionCount} catalog definition(s) created.", Severity.Success);
+            await LoadInstrumentsAsync();
+        }
+        catch (ApiException<SurveyInstrumentBatchErrorEnvelope> ex)
+        {
+            ShowErrors(ex.Result, "Restore was rejected.", _serverErrors);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Unable to restore survey instruments");
+            _serverErrors.Add("Unable to restore survey instruments.");
+            Snackbar.Add("Unable to restore survey instruments.", Severity.Error);
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+
+    private void ShowErrors(SurveyInstrumentBatchErrorEnvelope? envelope, string fallback, List<string> target)
+    {
+        target.Clear();
+        target.AddRange(envelope?.Errors?.Select(error => error.PositionIndex == null
+            ? $"{error.Property}: {error.Message}"
+            : $"Position {error.PositionIndex}: {error.Property}: {error.Message}") ?? []);
+        if (target.Count == 0) target.Add(envelope?.Message ?? fallback);
+        Snackbar.Add(envelope?.Message ?? fallback, Severity.Error);
+    }
+
+    private static JsonSerializerOptions JsonOptions(bool indented)
+    {
+        JsonSerializerOptions options = new() { PropertyNameCaseInsensitive = true, WriteIndented = indented };
+        options.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
+        return options;
+    }
+
+    private Func<SurveyInstrumentLight, bool> InstrumentFilter => item => string.IsNullOrWhiteSpace(_search) ||
+        $"{item.Name} {item.Description} {item.MetaInfo?.ID}".Contains(_search, StringComparison.OrdinalIgnoreCase);
+    private Func<SurveyInstrument, bool> RestoreFilter => item => string.IsNullOrWhiteSpace(_restoreSearch) ||
+        $"{item.Name} {item.Description} {item.ModelType} {item.MetaInfo?.ID}".Contains(_restoreSearch, StringComparison.OrdinalIgnoreCase);
+
+    public async ValueTask DisposeAsync()
+    {
+        if (_downloadModule != null)
+        {
+            try { await _downloadModule.DisposeAsync(); }
+            catch (JSDisconnectedException) { }
+        }
+    }
+}
