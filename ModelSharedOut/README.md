@@ -52,6 +52,10 @@ This file contains:
 - NSwag-generated DTOs
 - an NSwag-generated `Client`
 - request/response support types used by consumers such as `ServiceTest` and `WebPages`
+- identity and feature catalog contracts and assignment types
+- versioned batch-export documents, restore requests/results, and structured batch errors
+
+The generated client includes the `BatchExportSurveyInstrumentsAsync` and `BatchRestoreSurveyInstrumentsAsync` operations used by the backup/restore page. The MCP-only patch, snapshot, drift, and catalog-diagnostic tools are not generated here because they are not REST controller operations.
 
 ### JSON output
 
@@ -82,6 +86,7 @@ dotnet run --project .\ModelSharedOut\ModelSharedOut.csproj
 ## Important Constraints
 
 - Treat generated outputs as derived artifacts.
+- Do not patch `SurveyInstrumentMergedModel.cs` to add or correct an API operation; update the service/OpenAPI source and regenerate it.
 - If type names look wrong, the fix usually belongs in:
   - the upstream OpenAPI schema generation
   - the reference updater
@@ -93,3 +98,4 @@ dotnet run --project .\ModelSharedOut\ModelSharedOut.csproj
 - Add more schema inputs to `json-schemas/` when this service depends on additional microservice models.
 - Adjust `CustomTypeNameGenerator` if naming collisions appear.
 - Keep the OpenAPI compatibility workaround aligned with the Swagger UI/tooling actually used by the service.
+- After a contract change, verify that both `WebPages` and `ServiceTest` compile against the regenerated file.

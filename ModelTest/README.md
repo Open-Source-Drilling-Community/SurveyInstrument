@@ -27,6 +27,8 @@ The current test suite validates:
 
 It does not currently validate:
 
+- identity and feature assignment rules
+- batch export/restore validation or persistence
 - service persistence
 - OpenAPI generation
 - Blazor UI behavior
@@ -53,6 +55,7 @@ dotnet test .\ModelTest\ModelTest.csproj
 Add tests here when you change:
 
 - `SurveyInstrumentLight`
+- standalone behavior of identity, feature, or batch DTOs that does not require a database
 - usage statistics behavior in `UsageStatisticsSurveyInstrument`
 - assumptions about default property values used by callers
 
@@ -63,3 +66,4 @@ If the behavior depends on an actual running API, prefer `ServiceTest` instead.
 - tests for `History.Increment()` date rollover behavior
 - tests for `UsageStatisticsSurveyInstrument` backup throttling and singleton load behavior
 - tests that exercise `SurveyInstrumentLight` construction paths used by the service
+- serialization round trips for the versioned batch DTOs and their string-valued enums

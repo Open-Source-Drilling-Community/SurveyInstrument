@@ -8,6 +8,7 @@ This project is not a pure unit-test suite. It assumes a live service is availab
 
 - Validate the externally visible HTTP contract of the service.
 - Exercise CRUD behavior for both `ErrorSource` and `SurveyInstrument`.
+- Exercise identity/feature catalogs, batch portability, persistence safety, and the MCP contract.
 - Confirm common success and failure paths, including:
   - create
   - fetch
@@ -89,6 +90,14 @@ If the service runs on another port, update `host` in `Tests.cs` before running.
 - `PUT` workflows
 - `DELETE` workflows
 - `LightData` retrieval through the generated client
+- all/selected batch export and atomic restore behavior
+
+### Persistence and contract safety
+
+- fresh database creation and legacy schema adoption
+- fail-closed behavior for malformed, unknown, incomplete, or newer schemas
+- preservation of existing rows during the schema-version migration
+- MCP registration, JSON schemas, annotations, concurrency guards, and HTTP envelopes
 
 ## Known Limitations
 
@@ -107,6 +116,6 @@ If the service runs on another port, update `host` in `Tests.cs` before running.
 ## MCP coverage
 
 - `McpToolRegistrationTests.cs` verifies all 27 REST-backed tools, the five MCP-only guarded mutation and read-only integrity tools, and `ping`, including strict input/output schemas, enforcing model discrimination, the complete error-code enum, versioned backup contracts, granular snapshot mutation, snapshot drift, catalog-reference diagnostics, template-update impact warnings, timestamp- and content-token concurrency, titles, safety annotations, and pre-invocation rejection of unknown arguments.
-- `McpServerHttpTests.cs` exercises initialization, tool discovery, structured and fallback success content, and stable MCP error envelopes against a running service.
+- `McpServerHttpTests.cs` exercises initialization, tool discovery, structured and fallback success content, schema/model-family rejection, batch round trips, stale timestamp and error-source content-token writes, snapshot warnings and mutation, catalog-reference diagnostics, and stable MCP error envelopes against a running service.
 
 The live HTTP tests require the SurveyInstrument service at the configured test base URL.

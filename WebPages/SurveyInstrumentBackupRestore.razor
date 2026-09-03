@@ -281,12 +281,20 @@
     private async Task RestoreAsync()
     {
         if (!CanRestore || _document == null) return;
-        bool? confirmed = await DialogService.ShowMessageBox("Restore survey instruments",
+        bool? confirmed = await DialogService.ShowMessageBox(
+            "Restore survey instruments",
             _conflictPolicy == SurveyInstrumentBatchRestoreConflictPolicy.ReplaceExisting
                 ? $"Restore {_document.SurveyInstruments.Count} survey instrument(s) and replace matching UUIDs?"
                 : $"Restore {_document.SurveyInstruments.Count} survey instrument(s)? Any existing UUID stops the operation.",
-            yesText: _conflictPolicy == SurveyInstrumentBatchRestoreConflictPolicy.ReplaceExisting ? "Restore and replace" : "Restore",
-            cancelText: "Cancel");
+            _conflictPolicy == SurveyInstrumentBatchRestoreConflictPolicy.ReplaceExisting ? "Restore and replace" : "Restore",
+            null,
+            "Cancel",
+            new DialogOptions
+            {
+                MaxWidth = MaxWidth.ExtraSmall,
+                FullWidth = false,
+                CloseOnEscapeKey = true
+            });
         if (confirmed != true) return;
         try
         {

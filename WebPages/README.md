@@ -44,8 +44,12 @@ It is where reusable application UI is implemented without tying it to one speci
   - Exports all or selected survey instruments to a versioned JSON file.
   - Previews and validates uploaded backups before an explicitly confirmed atomic restore.
   - Supports fail-on-conflict and replace-existing policies and reports catalog dependencies.
+  - Accepts JSON files up to 256 MiB and requires the current format identifier and schema version.
 - `StatisticsSurveyInstrument.razor`
-  - Displays aggregate usage statistics returned by the service.
+  - Displays total calls, today's calls, tracked endpoint count, and last-save time.
+  - Provides a responsive, sortable table by HTTP method, endpoint/operation, logical area, count, and last use.
+- `wwwroot/surveyInstrumentBatchBackup.js`
+  - Small JavaScript module that downloads the generated backup JSON without navigating away from the app.
 
 ## Service Access Layer
 
@@ -68,6 +72,8 @@ To use this library from a Blazor host:
 1. Register an implementation of `ISurveyInstrumentWebPagesConfiguration`.
 2. Register `ISurveyInstrumentAPIUtils`.
 3. Add this assembly to the host router `AdditionalAssemblies`.
+
+The assembly contributes these routes: `/SurveyInstrument`, `/SurveyInstrumentIdentities`, `/SurveyInstrumentFeatures`, `/SurveyInstrumentBackupRestore`, and `/StatisticsSurveyInstrument`.
 
 `WebApp` already does exactly that in its `Program.cs` and `App.razor`.
 
@@ -109,6 +115,8 @@ dotnet build .\WebPages\WebPages.csproj
 ## Important Implementation Notes
 
 - The pages assume the SurveyInstrument service follows the NSwag-generated contract from `ModelSharedOut`.
+- Backup restore is all-or-nothing on the server. `FailIfExists` rejects an existing instrument UUID; `ReplaceExisting` replaces matching instruments only after the entire document and its dependencies pass validation.
+- Embedded error sources in a backup remain frozen snapshots. Included standalone error-source templates preserve provenance but do not become live links.
 - `SurveyInstrumentAPIUtils` currently disables TLS certificate validation for its `HttpClientHandler`.
   - This is practical for some internal environments.
   - It should be revisited if stricter client-side transport security is required.

@@ -2,7 +2,7 @@
 
 The SurveyInstrument repository contains a complete microservice-based solution for storing, editing, and serving drilling survey instrument definitions together with reusable UI components, generated client contracts, and automated tests.
 
-The solution revolves around two main domain families from the upstream OSDC drilling-surveying libraries:
+The solution revolves around four main domain families from the upstream OSDC drilling-surveying libraries and local extensions:
 
 - `SurveyInstrument`
 - `SurveyInstrumentIdentity`
@@ -17,6 +17,8 @@ The repository adds the infrastructure around those domain types:
 - Blazor UI
 - integration and smoke tests
 - per-endpoint usage statistics
+- versioned logical backup and atomic restore
+- MCP access with guarded mutations and integrity diagnostics
 
 ## Solution Structure
 
@@ -101,8 +103,10 @@ Main routes:
   - identity catalog management
 - `/SurveyInstrumentFeatures`
   - feature-category and option management
+- `/SurveyInstrumentBackupRestore`
+  - all-or-selected JSON backup, preview, conflict-policy selection, and atomic restore
 - `/StatisticsSurveyInstrument`
-  - usage statistics
+  - summary cards and a sortable per-endpoint usage table
 
 ## Persistence
 
@@ -219,4 +223,4 @@ The checked-in service publishes 32 domain MCP tools covering Survey Instrument,
 
 MCP is available over streamable HTTP at `/surveyinstrument/api/mcp` and WebSocket at `/surveyinstrument/api/mcp/ws`. Registration with an external MCP hub is optional and disabled by default.
 
-The tools provide strict input schemas and explicit success-output schemas for full Survey Instrument and Error Source payloads, identity and feature catalogs, embedded assignments, and backup documents. Survey Instrument write schemas enforce `ModelType` as a tagged union by forbidding incompatible family fields, and the service repeats the semantic validation before persistence. `ErrorCode` publishes the complete finite enum. Every tool publishes a human-readable title and MCP safety annotations. Successes provide structured JSON plus text fallback; validation, not-found, conflict, stale-write, and unexpected server failures produce stable sanitized MCP error envelopes. Core Survey Instrument writes and catalog writes require optimistic-concurrency timestamps. Batch restore is schema-versioned, validates the complete document first, and commits instruments plus missing exact-UUID dependencies in one SQLite transaction. Referenced identity/feature definitions cannot be removed. The standalone Error Source store is explicitly a template library: instruments own embedded snapshots, and template changes never silently rewrite an existing instrument. Physical inputs and outputs use SI: angles are radians, distances are metres, gravity is m/s², magnetic flux density is tesla, and error-source `Magnitude` is expressed in the SI unit identified by `MagnitudeQuantity`.
+The tools provide strict input schemas and explicit success-output schemas for full Survey Instrument and Error Source payloads, identity and feature catalogs, embedded assignments, and backup documents. Survey Instrument write schemas enforce `ModelType` as a tagged union by forbidding incompatible family fields, and the service repeats the semantic validation before persistence. `ErrorCode` publishes the complete finite enum. Every tool publishes a human-readable title and MCP safety annotations. Successes provide structured JSON plus text fallback; validation, not-found, conflict, stale-write, and unexpected server failures produce stable sanitized MCP error envelopes. Survey Instrument writes and catalog writes require `expectedModifiedUtc`; standalone Error Source updates and deletes require the SHA-256 `expectedVersionToken` returned by the latest read. Batch restore is schema-versioned, validates the complete document first, and commits instruments plus missing exact-UUID dependencies in one SQLite transaction. Referenced identity/feature definitions cannot be removed. The standalone Error Source store is explicitly a template library: instruments own embedded snapshots, and template changes never silently rewrite an existing instrument. Physical inputs and outputs use SI: angles are radians, distances are metres, gravity is m/s², magnetic flux density is tesla, and error-source `Magnitude` is expressed in the SI unit identified by `MagnitudeQuantity`.

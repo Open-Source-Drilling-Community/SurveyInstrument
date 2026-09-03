@@ -6,6 +6,7 @@
 
 - Provide a lightweight listing/view model for survey instruments through `SurveyInstrumentLight`.
 - Define identity/feature catalogs and their instrument assignments.
+- Define the versioned logical backup/restore request, document, result, and error contracts.
 - Persist and expose in-memory usage statistics through `UsageStatisticsSurveyInstrument`.
 - Carry the DocFX inputs used to document the project model surface.
 
@@ -14,6 +15,8 @@
 The core survey-domain objects are shared from external OSDC packages. The SurveyInstrument microservice still needs a few solution-specific types:
 
 - a lightweight record used when the UI only needs metadata for tables and search
+- identity and feature definitions plus per-instrument assignments
+- versioned logical backup/restore wire contracts
 - usage counters for API operations, persisted outside the database
 
 Keeping those types here avoids coupling the service and UI projects to each other.
@@ -30,6 +33,9 @@ Keeping those types here avoids coupling the service and UI projects to each oth
   - Catalog definitions, options, and assignment contracts based on shared data-management interfaces.
 - `SurveyInstrumentBatch.cs`
   - Schema-versioned logical backup/restore contracts for instruments and exact-UUID catalog dependencies.
+  - Supports `All` and `Selected` export scopes.
+  - Carries error-source templates, identity definitions, and feature categories required by the exported instruments.
+  - Defines `FailIfExists` and `ReplaceExisting` restore policies plus structured per-position validation errors.
 - `UsageStatisticsSurveyInstrument.cs`
   - Defines `CountPerDay`, `History`, and `UsageStatisticsSurveyInstrument`.
   - Tracks per-endpoint usage counts for both `SurveyInstrument` and `ErrorSource` operations.
@@ -60,6 +66,12 @@ This means:
 - statistics survival depends on preserving the `home` directory
 - persistence is best-effort, intentionally tolerant of IO errors
 
+### Batch documents
+
+`SurveyInstrumentBatchExportDocument` is a portable logical backup rather than a copy of the SQLite file. The current contract uses format identifier `OSDC.Drilling.SurveyInstrument.BatchExport` and schema version `1`. Embedded instrument error sources remain frozen snapshots; catalog templates are included as dependencies and are not live links.
+
+The model intentionally separates validation errors from the restore result. A successful result reports created instruments, replaced instruments, newly created catalog definitions, and affected UUIDs. The service owns validation and transaction semantics; these model types only describe the wire contract.
+
 ## Operational Notes
 
 - `HOME_DIRECTORY` is relative: `..\home\`
@@ -86,3 +98,4 @@ Unit coverage for this project lives in `ModelTest`.
 - Add new statistics fields when service endpoints are added.
 - Keep `SurveyInstrumentLight` aligned with the columns projected by `SurveyInstrumentManager.GetAllSurveyInstrumentLight()`.
 - Keep the local `SurveyInstrument` extension limited to microservice-owned metadata and assignments; physical survey behavior remains in the upstream model.
+- Increment the batch schema version only for an intentional format change, and keep the service, generated client, UI, MCP schemas, and tests synchronized.

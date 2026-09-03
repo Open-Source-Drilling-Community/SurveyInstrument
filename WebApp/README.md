@@ -34,7 +34,7 @@ This makes `WebPages` reusable from other hosts while keeping deployment-specifi
 - `Shared/MainLayout.razor`
   - Defines the MudBlazor app frame and drawer.
 - `Shared/NavMenu.razor`
-  - Navigation links for Home, SurveyInstrument, and Usage Statistics.
+  - Navigation links for instrument management, identities, features, backup/restore, and usage statistics.
 - `Pages/HomePage.razor`
   - Root route for `/SurveyInstrument/webapp/`.
 - `WebPagesHostConfiguration.cs`
@@ -63,8 +63,14 @@ Key routes exposed through this host:
   - rendered as `HomePage` once combined with the path base, this is `.../SurveyInstrument/webapp/`
 - `/SurveyInstrument`
   - main SurveyInstrument management page from `WebPages`
+- `/SurveyInstrumentIdentities`
+  - identity-definition catalog from `WebPages`
+- `/SurveyInstrumentFeatures`
+  - feature-category and option catalog from `WebPages`
+- `/SurveyInstrumentBackupRestore`
+  - versioned JSON backup and atomic restore workflow from `WebPages`
 - `/StatisticsSurveyInstrument`
-  - usage statistics page from `WebPages`
+  - summary and sortable per-endpoint usage statistics from `WebPages`
 
 Because the app uses:
 
@@ -103,7 +109,7 @@ Deployment assets included here:
 - Helm chart under `charts/osdcdrillingsurveyinstrumentwebappclient`
 - image `docker.io/digiwells/osdcdrillingsurveyinstrumentwebappclient:stable` with `imagePullPolicy: Always`
 
-Keep deployment gated behind successful source verification and confirmed image publication. Use `helm ... --kube-context <context>`, deploy dev first, and verify the home route, `/SurveyInstrument`, and `/StatisticsSurveyInstrument` before production or AWE. The host owns only `/`; the referenced `WebPages` assembly contributes the two feature routes and does not add `/Home` or another root route.
+Keep deployment gated behind successful source verification and confirmed image publication. Use `helm ... --kube-context <context>`, deploy dev first, and verify the home route plus all five `WebPages` routes listed above before production or AWE. The host owns only `/`; the referenced `WebPages` assembly contributes those five feature routes and does not add `/Home` or another root route.
 
 ## Common Maintenance Tasks
 
@@ -111,6 +117,7 @@ Keep deployment gated behind successful source verification and confirmed image 
 - Keep `UsePathBase(...)` aligned with ingress configuration.
 - Keep appsettings values aligned with actual environment endpoints.
 - If `WebPages` adds new routes, ensure `App.razor` continues to include the proper `AdditionalAssemblies`.
+- Keep the navigation labels and home-page capability summary synchronized with the reusable pages.
 
 ## Typical Failure Modes
 
