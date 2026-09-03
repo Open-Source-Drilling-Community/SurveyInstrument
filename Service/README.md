@@ -103,7 +103,9 @@ Important storage characteristics:
 - the database file lives under the solution/container `home` directory
 - JSON payloads for full objects are stored in SQLite tables
 - lightweight list endpoints project selected columns instead of always deserializing full documents
-- managers validate and reseed defaults if the database appears empty or corrupted
+- a fresh database is created in one transaction and then seeded by the resource managers
+- the exact legacy schema is adopted without rewriting rows; unknown, malformed, and newer schemas fail closed without mutation
+- the filename remains `SurveyInstrument.db`
 
 This design favors simple deployment and debugging over advanced database normalization.
 
@@ -148,7 +150,7 @@ The exact port depends on `Properties/launchSettings.json` or your hosting envir
 This project includes:
 
 - `Dockerfile`
-- Helm chart under `charts/norcedrillingsurveyinstrumentservice`
+- Helm chart under `charts/osdcdrillingsurveyinstrumentservice`
 
 The chart contains Kubernetes manifests for:
 
@@ -158,6 +160,10 @@ The chart contains Kubernetes manifests for:
 - service account
 - PVC
 - HPA
+
+The service image is `docker.io/digiwells/osdcdrillingsurveyinstrumentservice:stable`. The chart defaults to `imagePullPolicy: Always`, one replica, and a `Recreate` strategy. It mounts `/home/` from `surveyinstrument-claim`; set `persistence.existingClaim=surveyinstrument-claim` explicitly during the identity cutover. A chart-created PVC has Helm's `keep` policy. Do not uninstall the legacy release or deploy a new image until the PVC, mount, current record counts, and image publication have been confirmed.
+
+Use Helm's `--kube-context` option. Roll out dev first and verify rollout status, the running image digest, service/API health, and unchanged record counts before production or AWE.
 
 ## Cautions
 

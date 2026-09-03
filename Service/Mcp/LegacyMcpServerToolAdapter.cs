@@ -8,7 +8,7 @@ using Microsoft.Extensions.Logging;
 using ModelContextProtocol.Protocol;
 using ModelContextProtocol.Server;
 
-namespace NORCE.Drilling.SurveyInstrument.Service.Mcp;
+namespace OSDC.Drilling.SurveyInstrument.Service.Mcp;
 
 /// <summary>
 /// Adapts the legacy <see cref="IMcpTool"/> abstraction to the ModelContextProtocol server tool contract.

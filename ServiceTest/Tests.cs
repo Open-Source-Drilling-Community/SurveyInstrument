@@ -1,8 +1,9 @@
 using System.Net.Http.Headers;
 using System.Reflection;
-using NORCE.Drilling.SurveyInstrument.ModelShared;
+using OSDC.Drilling.SurveyInstrument.ModelShared;
+using SurveyInstrumentDto = OSDC.Drilling.SurveyInstrument.ModelShared.SurveyInstrument;
 
-namespace ServiceTest
+namespace OSDC.Drilling.SurveyInstrument.ServiceTest
 {
     public class Tests
     {
@@ -46,10 +47,10 @@ namespace ServiceTest
             };
         }
 
-        public SurveyInstrument ConstructSurveyInstrument(MetaInfo metaInfo, List<ErrorSource> errorSourceList)
+        public SurveyInstrumentDto ConstructSurveyInstrument(MetaInfo metaInfo, List<ErrorSource> errorSourceList)
         {
             DateTimeOffset creationDate = DateTimeOffset.UtcNow;
-            return new SurveyInstrument()
+            return new SurveyInstrumentDto()
             {
                 MetaInfo = metaInfo,
                 Name = "default name",
@@ -461,7 +462,7 @@ namespace ServiceTest
             #region post a SurveyInstrument
             Guid guid = Guid.NewGuid();
             MetaInfo metaInfo = new() { ID = guid };
-            SurveyInstrument surveyInstrument = ConstructSurveyInstrument(metaInfo, errorSourceList);
+            SurveyInstrumentDto surveyInstrument = ConstructSurveyInstrument(metaInfo, errorSourceList);
 
             try
             {
@@ -507,7 +508,7 @@ namespace ServiceTest
             #endregion
 
             #region GetAllSurveyInstrumentById
-            SurveyInstrument? surveyInstrument2 = null;
+            SurveyInstrumentDto? surveyInstrument2 = null;
             try
             {
                 surveyInstrument2 = await nSwagClient.GetSurveyInstrumentByIdAsync(guid);
@@ -541,17 +542,17 @@ namespace ServiceTest
             #endregion
 
             #region GetAllSurveyInstrument
-            List<SurveyInstrument> surveyInstrumentList = new();
+            List<SurveyInstrumentDto> surveyInstrumentList = new();
             try
             {
-                surveyInstrumentList = (List<SurveyInstrument>)await nSwagClient.GetAllSurveyInstrumentAsync();
+                surveyInstrumentList = (List<SurveyInstrumentDto>)await nSwagClient.GetAllSurveyInstrumentAsync();
             }
             catch (ApiException ex)
             {
                 TestContext.WriteLine("Impossible to GET the list of SurveyInstrument\n" + ex.Message);
             }
             Assert.That(surveyInstrumentList, Is.Not.Null);
-            IEnumerable<SurveyInstrument> surveyInstrumentList2 =
+            IEnumerable<SurveyInstrumentDto> surveyInstrumentList2 =
                 from elt in surveyInstrumentList
                 where elt.Name == surveyInstrument.Name
                 select elt;
@@ -600,9 +601,9 @@ namespace ServiceTest
             #region trying to post an empty guid
             Guid guid = Guid.Empty;
             MetaInfo metaInfo = new() { ID = guid };
-            SurveyInstrument surveyInstrument = ConstructSurveyInstrument(metaInfo, errorSourceList);
+            SurveyInstrumentDto surveyInstrument = ConstructSurveyInstrument(metaInfo, errorSourceList);
 
-            SurveyInstrument? surveyInstrument2 = null;
+            SurveyInstrumentDto? surveyInstrument2 = null;
             try
             {
                 await nSwagClient.PostSurveyInstrumentAsync(surveyInstrument);
@@ -710,9 +711,9 @@ namespace ServiceTest
             #region posting a new ID
             Guid guid = Guid.NewGuid();
             MetaInfo metaInfo = new() { ID = guid };
-            SurveyInstrument surveyInstrument = ConstructSurveyInstrument(metaInfo, errorSourceList);
+            SurveyInstrumentDto surveyInstrument = ConstructSurveyInstrument(metaInfo, errorSourceList);
 
-            SurveyInstrument? surveyInstrument2 = null;
+            SurveyInstrumentDto? surveyInstrument2 = null;
             try
             {
                 await nSwagClient.PostSurveyInstrumentAsync(surveyInstrument);
@@ -801,9 +802,9 @@ namespace ServiceTest
             #region posting a new ID
             Guid guid = Guid.NewGuid();
             MetaInfo metaInfo = new() { ID = guid };
-            SurveyInstrument surveyInstrument = ConstructSurveyInstrument(metaInfo, errorSourceList);
+            SurveyInstrumentDto surveyInstrument = ConstructSurveyInstrument(metaInfo, errorSourceList);
 
-            SurveyInstrument? surveyInstrument2 = null;
+            SurveyInstrumentDto? surveyInstrument2 = null;
             try
             {
                 await nSwagClient.PostSurveyInstrumentAsync(surveyInstrument);

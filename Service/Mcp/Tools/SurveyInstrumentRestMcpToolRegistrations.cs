@@ -6,12 +6,12 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using NORCE.Drilling.SurveyInstrument.Service.Controllers;
-using NORCE.Drilling.SurveyInstrument.Service.Managers;
+using OSDC.Drilling.SurveyInstrument.Service.Controllers;
+using OSDC.Drilling.SurveyInstrument.Service.Managers;
 using ErrorSourceModel = OSDC.DotnetLibraries.Drilling.Surveying.ErrorSource;
 using SurveyInstrumentModel = OSDC.DotnetLibraries.Drilling.Surveying.SurveyInstrument;
 
-namespace NORCE.Drilling.SurveyInstrument.Service.Mcp.Tools;
+namespace OSDC.Drilling.SurveyInstrument.Service.Mcp.Tools;
 
 public static class SurveyInstrumentRestMcpToolRegistrations
 {

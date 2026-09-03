@@ -1,13 +1,13 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using OSDC.DotnetLibraries.General.DataManagement;
-using NORCE.Drilling.SurveyInstrument.Service.Managers;
-using NORCE.Drilling.SurveyInstrument.Model;
+using OSDC.Drilling.SurveyInstrument.Service.Managers;
+using OSDC.Drilling.SurveyInstrument.Model;
 
-namespace NORCE.Drilling.SurveyInstrument.Service.Controllers
+namespace OSDC.Drilling.SurveyInstrument.Service.Controllers
 {
     [Produces("application/json")]
     [Route("[controller]")]

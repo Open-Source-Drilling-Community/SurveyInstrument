@@ -1,6 +1,6 @@
-using NORCE.Drilling.SurveyInstrument.ModelShared;
+using OSDC.Drilling.SurveyInstrument.ModelShared;
 
-namespace NORCE.Drilling.SurveyInstrument.WebPages;
+namespace OSDC.Drilling.SurveyInstrument.WebPages;
 
 public class SurveyInstrumentAPIUtils : ISurveyInstrumentAPIUtils
 {

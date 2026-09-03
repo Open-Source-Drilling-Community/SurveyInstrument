@@ -45,7 +45,7 @@ This project is the bridge between those two worlds. It turns OpenAPI definition
 ### C# output
 
 - `ModelSharedOut\SurveyInstrumentMergedModel.cs`
-- Namespace: `NORCE.Drilling.SurveyInstrument.ModelShared`
+- Namespace: `OSDC.Drilling.SurveyInstrument.ModelShared`
 
 This file contains:
 

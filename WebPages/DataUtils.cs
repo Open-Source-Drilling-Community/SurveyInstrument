@@ -1,4 +1,4 @@
-namespace NORCE.Drilling.SurveyInstrument.WebPages;
+namespace OSDC.Drilling.SurveyInstrument.WebPages;
 
 public static class DataUtils
 {

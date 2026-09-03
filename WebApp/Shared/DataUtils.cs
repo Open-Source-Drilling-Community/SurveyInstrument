@@ -1,4 +1,6 @@
-﻿public static class DataUtils
+namespace OSDC.Drilling.SurveyInstrument.WebApp.Shared;
+
+public static class DataUtils
 {
     // default values
     public const double DEFAULT_VALUE = 999.25;

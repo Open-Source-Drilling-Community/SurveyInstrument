@@ -384,7 +384,7 @@
                 "schema": {
                   "type": "array",
                   "items": {
-                    "$ref": "#/components/schemas/NORCE.Drilling.SurveyInstrument.Model.SurveyInstrumentLight"
+                    "$ref": "#/components/schemas/OSDC.Drilling.SurveyInstrument.Model.SurveyInstrumentLight"
                   }
                 }
               }
@@ -428,7 +428,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/NORCE.Drilling.SurveyInstrument.Model.UsageStatisticsSurveyInstrument"
+                  "$ref": "#/components/schemas/OSDC.Drilling.SurveyInstrument.Model.UsageStatisticsSurveyInstrument"
                 }
               }
             }
@@ -439,119 +439,6 @@
   },
   "components": {
     "schemas": {
-      "NORCE.Drilling.SurveyInstrument.Model.CountPerDay": {
-        "type": "object",
-        "properties": {
-          "Date": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "Count": {
-            "type": "integer",
-            "format": "int64"
-          }
-        },
-        "additionalProperties": false
-      },
-      "NORCE.Drilling.SurveyInstrument.Model.History": {
-        "type": "object",
-        "properties": {
-          "Data": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/NORCE.Drilling.SurveyInstrument.Model.CountPerDay"
-            },
-            "nullable": true
-          }
-        },
-        "additionalProperties": false
-      },
-      "NORCE.Drilling.SurveyInstrument.Model.SurveyInstrumentLight": {
-        "type": "object",
-        "properties": {
-          "MetaInfo": {
-            "$ref": "#/components/schemas/OSDC.DotnetLibraries.General.DataManagement.MetaInfo"
-          },
-          "Name": {
-            "type": "string",
-            "nullable": true
-          },
-          "Description": {
-            "type": "string",
-            "nullable": true
-          },
-          "CreationDate": {
-            "type": "string",
-            "format": "date-time",
-            "nullable": true
-          },
-          "LastModificationDate": {
-            "type": "string",
-            "format": "date-time",
-            "nullable": true
-          }
-        },
-        "additionalProperties": false
-      },
-      "NORCE.Drilling.SurveyInstrument.Model.UsageStatisticsSurveyInstrument": {
-        "type": "object",
-        "properties": {
-          "LastSaved": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "BackUpInterval": {
-            "type": "string",
-            "format": "date-span"
-          },
-          "GetAllSurveyInstrumentIdPerDay": {
-            "$ref": "#/components/schemas/NORCE.Drilling.SurveyInstrument.Model.History"
-          },
-          "GetAllSurveyInstrumentMetaInfoPerDay": {
-            "$ref": "#/components/schemas/NORCE.Drilling.SurveyInstrument.Model.History"
-          },
-          "GetSurveyInstrumentByIdPerDay": {
-            "$ref": "#/components/schemas/NORCE.Drilling.SurveyInstrument.Model.History"
-          },
-          "GetAllSurveyInstrumentLightPerDay": {
-            "$ref": "#/components/schemas/NORCE.Drilling.SurveyInstrument.Model.History"
-          },
-          "GetAllSurveyInstrumentPerDay": {
-            "$ref": "#/components/schemas/NORCE.Drilling.SurveyInstrument.Model.History"
-          },
-          "PostSurveyInstrumentPerDay": {
-            "$ref": "#/components/schemas/NORCE.Drilling.SurveyInstrument.Model.History"
-          },
-          "PutSurveyInstrumentByIdPerDay": {
-            "$ref": "#/components/schemas/NORCE.Drilling.SurveyInstrument.Model.History"
-          },
-          "DeleteSurveyInstrumentByIdPerDay": {
-            "$ref": "#/components/schemas/NORCE.Drilling.SurveyInstrument.Model.History"
-          },
-          "GetAllErrorSourceIdPerDay": {
-            "$ref": "#/components/schemas/NORCE.Drilling.SurveyInstrument.Model.History"
-          },
-          "GetAllErrorSourceMetaInfoPerDay": {
-            "$ref": "#/components/schemas/NORCE.Drilling.SurveyInstrument.Model.History"
-          },
-          "GetErrorSourceByIdPerDay": {
-            "$ref": "#/components/schemas/NORCE.Drilling.SurveyInstrument.Model.History"
-          },
-          "GetAllErrorSourcePerDay": {
-            "$ref": "#/components/schemas/NORCE.Drilling.SurveyInstrument.Model.History"
-          },
-          "PostErrorSourcePerDay": {
-            "$ref": "#/components/schemas/NORCE.Drilling.SurveyInstrument.Model.History"
-          },
-          "PutErrorSourceByIdPerDay": {
-            "$ref": "#/components/schemas/NORCE.Drilling.SurveyInstrument.Model.History"
-          },
-          "DeleteErrorSourceByIdPerDay": {
-            "$ref": "#/components/schemas/NORCE.Drilling.SurveyInstrument.Model.History"
-          }
-        },
-        "additionalProperties": false
-      },
       "OSDC.DotnetLibraries.Drilling.Surveying.ErrorCode": {
         "enum": [
           "XYM1",
@@ -875,6 +762,119 @@
           "HttpEndPoint": {
             "type": "string",
             "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "OSDC.Drilling.SurveyInstrument.Model.CountPerDay": {
+        "type": "object",
+        "properties": {
+          "Date": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "Count": {
+            "type": "integer",
+            "format": "int64"
+          }
+        },
+        "additionalProperties": false
+      },
+      "OSDC.Drilling.SurveyInstrument.Model.History": {
+        "type": "object",
+        "properties": {
+          "Data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OSDC.Drilling.SurveyInstrument.Model.CountPerDay"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "OSDC.Drilling.SurveyInstrument.Model.SurveyInstrumentLight": {
+        "type": "object",
+        "properties": {
+          "MetaInfo": {
+            "$ref": "#/components/schemas/OSDC.DotnetLibraries.General.DataManagement.MetaInfo"
+          },
+          "Name": {
+            "type": "string",
+            "nullable": true
+          },
+          "Description": {
+            "type": "string",
+            "nullable": true
+          },
+          "CreationDate": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "LastModificationDate": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "OSDC.Drilling.SurveyInstrument.Model.UsageStatisticsSurveyInstrument": {
+        "type": "object",
+        "properties": {
+          "LastSaved": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "BackUpInterval": {
+            "type": "string",
+            "format": "date-span"
+          },
+          "GetAllSurveyInstrumentIdPerDay": {
+            "$ref": "#/components/schemas/OSDC.Drilling.SurveyInstrument.Model.History"
+          },
+          "GetAllSurveyInstrumentMetaInfoPerDay": {
+            "$ref": "#/components/schemas/OSDC.Drilling.SurveyInstrument.Model.History"
+          },
+          "GetSurveyInstrumentByIdPerDay": {
+            "$ref": "#/components/schemas/OSDC.Drilling.SurveyInstrument.Model.History"
+          },
+          "GetAllSurveyInstrumentLightPerDay": {
+            "$ref": "#/components/schemas/OSDC.Drilling.SurveyInstrument.Model.History"
+          },
+          "GetAllSurveyInstrumentPerDay": {
+            "$ref": "#/components/schemas/OSDC.Drilling.SurveyInstrument.Model.History"
+          },
+          "PostSurveyInstrumentPerDay": {
+            "$ref": "#/components/schemas/OSDC.Drilling.SurveyInstrument.Model.History"
+          },
+          "PutSurveyInstrumentByIdPerDay": {
+            "$ref": "#/components/schemas/OSDC.Drilling.SurveyInstrument.Model.History"
+          },
+          "DeleteSurveyInstrumentByIdPerDay": {
+            "$ref": "#/components/schemas/OSDC.Drilling.SurveyInstrument.Model.History"
+          },
+          "GetAllErrorSourceIdPerDay": {
+            "$ref": "#/components/schemas/OSDC.Drilling.SurveyInstrument.Model.History"
+          },
+          "GetAllErrorSourceMetaInfoPerDay": {
+            "$ref": "#/components/schemas/OSDC.Drilling.SurveyInstrument.Model.History"
+          },
+          "GetErrorSourceByIdPerDay": {
+            "$ref": "#/components/schemas/OSDC.Drilling.SurveyInstrument.Model.History"
+          },
+          "GetAllErrorSourcePerDay": {
+            "$ref": "#/components/schemas/OSDC.Drilling.SurveyInstrument.Model.History"
+          },
+          "PostErrorSourcePerDay": {
+            "$ref": "#/components/schemas/OSDC.Drilling.SurveyInstrument.Model.History"
+          },
+          "PutErrorSourceByIdPerDay": {
+            "$ref": "#/components/schemas/OSDC.Drilling.SurveyInstrument.Model.History"
+          },
+          "DeleteErrorSourceByIdPerDay": {
+            "$ref": "#/components/schemas/OSDC.Drilling.SurveyInstrument.Model.History"
           }
         },
         "additionalProperties": false

@@ -1,7 +1,7 @@
 using MudBlazor;
 using MudBlazor.Services;
-using NORCE.Drilling.SurveyInstrument.WebApp;
-using NORCE.Drilling.SurveyInstrument.WebPages;
+using OSDC.Drilling.SurveyInstrument.WebApp;
+using OSDC.Drilling.SurveyInstrument.WebPages;
 
 var builder = WebApplication.CreateBuilder(args);
 

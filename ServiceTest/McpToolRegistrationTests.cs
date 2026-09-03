@@ -3,12 +3,12 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Routing;
 using Microsoft.Extensions.DependencyInjection;
 using ModelContextProtocol.Server;
-using NORCE.Drilling.SurveyInstrument.Service.Controllers;
-using NORCE.Drilling.SurveyInstrument.Service.Mcp;
-using NORCE.Drilling.SurveyInstrument.Service.Mcp.Tools;
+using OSDC.Drilling.SurveyInstrument.Service.Controllers;
+using OSDC.Drilling.SurveyInstrument.Service.Mcp;
+using OSDC.Drilling.SurveyInstrument.Service.Mcp.Tools;
 using NUnit.Framework;
 
-namespace ServiceTest;
+namespace OSDC.Drilling.SurveyInstrument.ServiceTest;
 
 [TestFixture]
 public sealed class McpToolRegistrationTests

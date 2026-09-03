@@ -1,4 +1,4 @@
-﻿using Microsoft.OpenApi.Models;
+using Microsoft.OpenApi.Models;
 using Microsoft.OpenApi.Readers;
 using Microsoft.OpenApi;
 using NJsonSchema;
@@ -41,7 +41,7 @@ class Program
     private static readonly string CSHARP_MODEL = "SurveyInstrumentMergedModel.cs";
     
     // ### BEGIN CODE SPECIFIC TO ModelSharedOut 3/3 ###
-    private static readonly string NAMESPACE = "NORCE.Drilling.SurveyInstrument.ModelShared"; // should be the same as for ModelSharedIn to avoid type name collision
+    private static readonly string NAMESPACE = "OSDC.Drilling.SurveyInstrument.ModelShared"; // should be the same as for ModelSharedIn to avoid type name collision
     private static readonly string MODELSHARED_FOLDER = "ModelSharedOut";
     private static readonly string JSON_OUTPUT_FOLDER = "Service" + Path.DirectorySeparatorChar + "wwwroot" + Path.DirectorySeparatorChar + "json-schema";
     // ### END CODE SPECIFIC TO ModelSharedOut 3/3 ###

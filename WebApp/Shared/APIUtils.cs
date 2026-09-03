@@ -1,12 +1,14 @@
-﻿public static class APIUtils
+namespace OSDC.Drilling.SurveyInstrument.WebApp.Shared;
+
+public static class APIUtils
 {
     // API parameters
-    public static readonly string HostNameSurveyInstrument = NORCE.Drilling.SurveyInstrument.WebApp.Configuration.SurveyInstrumentHostURL!;
+    public static readonly string HostNameSurveyInstrument = OSDC.Drilling.SurveyInstrument.WebApp.Configuration.SurveyInstrumentHostURL!;
     public static readonly string HostBasePathSurveyInstrument = "SurveyInstrument/api/";
     public static readonly HttpClient HttpClientSurveyInstrument = APIUtils.SetHttpClient(HostNameSurveyInstrument, HostBasePathSurveyInstrument);
-    public static readonly NORCE.Drilling.SurveyInstrument.ModelShared.Client ClientSurveyInstrument = new NORCE.Drilling.SurveyInstrument.ModelShared.Client(APIUtils.HttpClientSurveyInstrument.BaseAddress!.ToString(), APIUtils.HttpClientSurveyInstrument);
+    public static readonly OSDC.Drilling.SurveyInstrument.ModelShared.Client ClientSurveyInstrument = new OSDC.Drilling.SurveyInstrument.ModelShared.Client(APIUtils.HttpClientSurveyInstrument.BaseAddress!.ToString(), APIUtils.HttpClientSurveyInstrument);
 
-    public static readonly string HostNameUnitConversion = NORCE.Drilling.SurveyInstrument.WebApp.Configuration.UnitConversionHostURL!;
+    public static readonly string HostNameUnitConversion = OSDC.Drilling.SurveyInstrument.WebApp.Configuration.UnitConversionHostURL!;
     public static readonly string HostBasePathUnitConversion = "UnitConversion/api/";
 
     // API utility methods

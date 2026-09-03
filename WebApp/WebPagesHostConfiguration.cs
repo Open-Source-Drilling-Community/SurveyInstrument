@@ -1,6 +1,6 @@
-using NORCE.Drilling.SurveyInstrument.WebPages;
+using OSDC.Drilling.SurveyInstrument.WebPages;
 
-namespace NORCE.Drilling.SurveyInstrument.WebApp;
+namespace OSDC.Drilling.SurveyInstrument.WebApp;
 
 public class WebPagesHostConfiguration : ISurveyInstrumentWebPagesConfiguration
 {

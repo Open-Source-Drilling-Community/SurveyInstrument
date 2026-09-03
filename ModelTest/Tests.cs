@@ -1,7 +1,7 @@
 using OSDC.DotnetLibraries.General.DataManagement;
 using OSDC.DotnetLibraries.Drilling.Surveying;
 
-namespace NORCE.Drilling.SurveyInstrument.ModelTest
+namespace OSDC.Drilling.SurveyInstrument.ModelTest
 {
     public class Tests
     {

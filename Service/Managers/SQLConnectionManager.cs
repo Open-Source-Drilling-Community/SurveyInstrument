@@ -1,13 +1,12 @@
-﻿using System;
+using System;
 using System.IO;
 using Microsoft.Extensions.Logging;
-using System.Text;
 using System.Data;
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.Data.Sqlite;
 
-namespace NORCE.Drilling.SurveyInstrument.Service.Managers
+namespace OSDC.Drilling.SurveyInstrument.Service.Managers
 {
     /// <summary>
     /// A manager for the sql database connection, registered as a singleton through dependency injection (see Program.cs)
@@ -33,6 +32,7 @@ namespace NORCE.Drilling.SurveyInstrument.Service.Managers
         public static readonly string HOME_DIRECTORY = ".." + Path.DirectorySeparatorChar + "home" + Path.DirectorySeparatorChar;
         public static readonly string DATABASE_FILENAME = "SurveyInstrument.db";
         public static readonly string DATE_TIME_FORMAT = "yyyy-MM-dd HH:mm:ss";
+        public const int CURRENT_SCHEMA_VERSION = 1;
 
         // dictionary describing tables format
         // Light weight data fields are enumerated explicitly in the data table implementing the light weight data concept
@@ -135,114 +135,87 @@ namespace NORCE.Drilling.SurveyInstrument.Service.Managers
         }
 
         /// <summary>
-        /// This function parses the existing database and check that its structure matches the expected one.
-        /// If not, the existing database is backed-up and the actual database is recreated from scratch
+        /// Creates an empty database transactionally or adopts the unchanged legacy schema by setting its version marker.
+        /// Existing tables and rows are never dropped, renamed, or rebuilt automatically.
         /// </summary>
         private void ManageDataBase()
         {
-            var connection = GetConnection();
-            if (connection != null)
+            using SqliteConnection connection = GetConnection()
+                ?? throw new InvalidOperationException("Unable to open the SurveyInstrument database.");
+
+            List<string> tableNames = [];
+            using (SqliteCommand tables = connection.CreateCommand())
             {
-                bool parseOk = true;
-                bool createDb = false;
-                List<string> tableNameList = new();
-                string query = "SELECT name FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%';";
-
-                using (var command = new SqliteCommand(query, connection))
+                tables.CommandText = "SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'";
+                using SqliteDataReader reader = tables.ExecuteReader();
+                while (reader.Read())
                 {
-                    using (var reader = command.ExecuteReader())
-                    {
-                        while (reader.Read())
-                        {
-                            tableNameList.Add(reader.GetString(0));
-                        }
-                    }
-                }
-
-                if (tableNameList.Count != _tableStructureDict.Count) // unexpected number of tables
-                {
-                    parseOk = false;
-                }
-                else
-                {
-                    foreach (var tableStruct in _tableStructureDict)
-                    {
-                        bool tmpSuccess = false;
-                        foreach (string tableName in tableNameList)
-                        {
-                            if (tableName == tableStruct.Key) // unexpected table names
-                            {
-                                tmpSuccess = true;
-                                break;
-                            }
-                        }
-                        if (!tmpSuccess ||
-                            !CheckDatabaseStructure(tableStruct)) // badly formatted table
-                        {
-                            parseOk = false;
-                            break;
-                        }
-                    }
-                }
-                if (!parseOk)
-                {
-                    createDb = true;
-                    if (tableNameList.Count > 0)
-                    {
-                        _logger.LogWarning("Unexpected structure of the existing database. A timestamped backup copy will be generated");
-                        // backup existing database
-                        string backupFileName = HOME_DIRECTORY + Path.DirectorySeparatorChar + DATABASE_FILENAME;
-                        string timeStamp = DateTime.UtcNow.ToString(DATE_TIME_FORMAT);
-                        backupFileName = backupFileName.Insert(backupFileName.Length - 3, "-" + timeStamp);
-                        try
-                        {
-                            File.Copy(HOME_DIRECTORY + Path.DirectorySeparatorChar + DATABASE_FILENAME, backupFileName);
-                        }
-                        catch (Exception ex)
-                        {
-                            _logger.LogError(ex, "Problem while generating a timestamped backup copy of the existing database");
-                        }
-                        // drop existing tables
-                        _logger.LogWarning("Dropping tables from existing database");
-                        foreach (string tableName in tableNameList)
-                        {
-                            if (!DropTable(tableName))
-                            {
-                                createDb = false;
-                                _logger.LogError("Impossible to drop {tableName}. Database may be corrupted, consider deleting it", tableName);
-                                break;
-                            }
-                        }
-                    }
-                }
-                if (createDb)
-                {
-                    _logger.LogInformation("Creating database tables");
-                    bool success = true;
-                    foreach (var tableStruct in _tableStructureDict)
-                    {
-                        string tableName = tableStruct.Key;
-                        if (CreateTable(tableStruct))
-                        {
-                            if (!IndexTable(tableName))
-                                success = false;
-                        }
-                        else
-                        {
-                            success = false;
-                        }
-                        if (!success)
-                        {
-                            if (!DropTable(tableName))
-                                _logger.LogError("Impossible to drop {key}. Database may be corrupted, consider deleting it", tableName);
-                        }
-
-                    }
+                    tableNames.Add(reader.GetString(0));
                 }
             }
-            else
+
+            using SqliteCommand versionCommand = connection.CreateCommand();
+            versionCommand.CommandText = "PRAGMA user_version";
+            int schemaVersion = Convert.ToInt32(versionCommand.ExecuteScalar());
+            if (schemaVersion > CURRENT_SCHEMA_VERSION)
             {
-                _logger.LogError("Problem opening a new connection while managing database");
+                throw new InvalidOperationException($"SurveyInstrument database schema version {schemaVersion} is newer than supported version {CURRENT_SCHEMA_VERSION}.");
+            }
+
+            if (tableNames.Count == 0)
+            {
+                if (schemaVersion != 0)
+                {
+                    throw new InvalidOperationException("The versioned SurveyInstrument database has no tables. No data was changed.");
+                }
+
+                using SqliteTransaction transaction = connection.BeginTransaction();
+                try
+                {
+                    foreach (KeyValuePair<string, string[]> table in _tableStructureDict)
+                    {
+                        CreateTable(connection, transaction, table);
+                    }
+                    SetSchemaVersion(connection, transaction);
+                    transaction.Commit();
+                }
+                catch
+                {
+                    transaction.Rollback();
+                    throw;
+                }
+                return;
+            }
+
+            List<string> unexpected = tableNames.Except(_tableStructureDict.Keys, StringComparer.Ordinal).ToList();
+            List<string> missing = _tableStructureDict.Keys.Except(tableNames, StringComparer.Ordinal).ToList();
+            List<string> malformed = _tableStructureDict
+                .Where(table => tableNames.Contains(table.Key, StringComparer.Ordinal) && !CheckDatabaseStructure(connection, table))
+                .Select(table => table.Key)
+                .ToList();
+            if (unexpected.Count > 0 || missing.Count > 0 || malformed.Count > 0)
+            {
+                throw new InvalidOperationException(
+                    $"Unexpected SurveyInstrument database structure. No data was changed. Missing=[{string.Join(',', missing)}], unexpected=[{string.Join(',', unexpected)}], malformed=[{string.Join(',', malformed)}].");
+            }
+
+            if (schemaVersion < CURRENT_SCHEMA_VERSION)
+            {
+                using SqliteTransaction transaction = connection.BeginTransaction();
+                try
+                {
+                    foreach (KeyValuePair<string, string[]> table in _tableStructureDict)
+                    {
+                        CreateIndex(connection, transaction, table.Key);
+                    }
+                    SetSchemaVersion(connection, transaction);
+                    transaction.Commit();
+                }
+                catch
+                {
+                    transaction.Rollback();
+                    throw;
+                }
             }
         }
 
@@ -251,139 +224,50 @@ namespace NORCE.Drilling.SurveyInstrument.Service.Managers
         /// </summary>
         /// <param name="tableStructure"></param>
         /// <returns>true if the expected fields exactly match fields of the stored database</returns>
-        private bool CheckDatabaseStructure(KeyValuePair<string, string[]> tableStructure)
+        private static bool CheckDatabaseStructure(SqliteConnection connection, KeyValuePair<string, string[]> tableStructure)
         {
-            var connection = GetConnection();
-            if (connection != null)
+            using SqliteCommand command = connection.CreateCommand();
+            command.CommandText = $"SELECT * FROM {tableStructure.Key}";
+            using SqliteDataReader reader = command.ExecuteReader(CommandBehavior.SchemaOnly);
+            DataTable? schema = reader.GetSchemaTable();
+            if (schema == null || tableStructure.Value.Length != schema.Rows.Count)
             {
-                var command = connection.CreateCommand();
-                string key = tableStructure.Key;
-                StringBuilder sb = new StringBuilder();
-                sb.Append($"SELECT * FROM {key}");
-                command.CommandText = sb.ToString();
-                try
+                return false;
+            }
+            foreach (string field in tableStructure.Value)
+            {
+                string expectedName = field.Split(' ')[0];
+                if (!schema.Rows.Cast<DataRow>().Any(column => column.Field<string>("ColumnName") == expectedName))
                 {
-                    using (var reader = command.ExecuteReader(CommandBehavior.SchemaOnly))
-                    {
-                        var schema = reader.GetSchemaTable();
-                        if (tableStructure.Value.Length != schema.Rows.Count)
-                            return false; // unexpected number of fields in table
-                        foreach (string field in tableStructure.Value)
-                        {
-                            bool tmpSuccess = false;
-                            foreach (DataRow col in schema.Rows)
-                            {
-                                if (field.Split(" ").ElementAt(0) == col.Field<string>("ColumnName"))
-                                {
-                                    tmpSuccess = true;
-                                    break;
-                                }
-                            }
-                            if (!tmpSuccess)
-                                return false; // at least one expected field is not found in stored database
-                        }
-                    }
-                }
-                catch (SqliteException ex)
-                {
-                    _logger.LogError(ex, "Impossible to retrieve schema from table {key}", key);
                     return false;
                 }
-            }
-            else
-            {
-                _logger.LogError("Problem opening a new connection while checking database structure");
-                return false;
             }
             return true;
         }
 
-        private bool CreateTable(KeyValuePair<string, string[]> tabStruct)
+        private static void CreateTable(SqliteConnection connection, SqliteTransaction transaction, KeyValuePair<string, string[]> table)
         {
-            var connection = GetConnection();
-            if (connection != null)
-            {
-                var command = connection.CreateCommand();
-                string key = tabStruct.Key;
-                StringBuilder sb = new StringBuilder();
-                sb.Append($"CREATE TABLE {key} ()");
-                foreach (string col in tabStruct.Value)
-                {
-                    sb.Insert(sb.Length - 1, col + ",");
-                };
-                sb.Remove(sb.Length - 2, 1);
-                command.CommandText = sb.ToString();
-
-                try
-                {
-                    int res = command.ExecuteNonQuery();
-                    _logger.LogInformation("{key} has been successfully created", key);
-                }
-                catch (SqliteException ex)
-                {
-                    _logger.LogError(ex, "Impossible to create {key} which will be dropped", key);
-                    return false;
-                }
-            }
-            else
-            {
-                _logger.LogError("Problem opening a new connection while creating table");
-                return false;
-            }
-            return true;
+            using SqliteCommand create = connection.CreateCommand();
+            create.Transaction = transaction;
+            create.CommandText = $"CREATE TABLE {table.Key} ({string.Join(',', table.Value)})";
+            create.ExecuteNonQuery();
+            CreateIndex(connection, transaction, table.Key);
         }
 
-        private bool IndexTable(string dbName)
+        private static void CreateIndex(SqliteConnection connection, SqliteTransaction transaction, string tableName)
         {
-            var connection = GetConnection();
-            if (connection != null)
-            {
-                var command = connection.CreateCommand();
-                command.CommandText = $"CREATE UNIQUE INDEX {dbName}Index ON {dbName} (ID)";
-                try
-                {
-                    int res = command.ExecuteNonQuery();
-                    _logger.LogInformation("{dbName} has been successfully indexed", dbName);
-                }
-                catch (SqliteException ex)
-                {
-                    _logger.LogError(ex, "Impossible to index {dbName} which will be dropped", dbName);
-                    return false;
-                }
-            }
-            else
-            {
-                _logger.LogError("Problem opening a new connection while creating table");
-                return false;
-            }
-            return true;
+            using SqliteCommand index = connection.CreateCommand();
+            index.Transaction = transaction;
+            index.CommandText = $"CREATE UNIQUE INDEX IF NOT EXISTS {tableName}Index ON {tableName} (ID)";
+            index.ExecuteNonQuery();
         }
 
-        private bool DropTable(string dbName)
+        private static void SetSchemaVersion(SqliteConnection connection, SqliteTransaction transaction)
         {
-            var connection = GetConnection();
-            if (connection != null)
-            {
-                var command = connection.CreateCommand();
-                command.CommandText =
-                            $"DROP TABLE {dbName}";
-                try
-                {
-                    int res = command.ExecuteNonQuery();
-                    _logger.LogWarning("{dbName} has been successfully dropped", dbName);
-                }
-                catch (SqliteException ex)
-                {
-                    _logger.LogError(ex, "Impossible to drop {dbName}", dbName);
-                    return false;
-                }
-            }
-            else
-            {
-                _logger.LogError("Problem opening a new connection while creating table");
-                return false;
-            }
-            return true;
+            using SqliteCommand command = connection.CreateCommand();
+            command.Transaction = transaction;
+            command.CommandText = $"PRAGMA user_version = {CURRENT_SCHEMA_VERSION}";
+            command.ExecuteNonQuery();
         }
     }
 }

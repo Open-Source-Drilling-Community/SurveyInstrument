@@ -1,7 +1,7 @@
 {{/*
 Expand the name of the chart.
 */}}
-{{- define "norcedrillingsurveyinstrumentservice.name" -}}
+{{- define "osdcdrillingsurveyinstrumentwebappclient.name" -}}
 {{- default .Chart.Name .Values.nameOverride | trunc 63 | trimSuffix "-" }}
 {{- end }}
 
@@ -10,7 +10,7 @@ Create a default fully qualified app name.
 We truncate at 63 chars because some Kubernetes name fields are limited to this (by the DNS naming spec).
 If release name contains chart name it will be used as a full name.
 */}}
-{{- define "norcedrillingsurveyinstrumentservice.fullname" -}}
+{{- define "osdcdrillingsurveyinstrumentwebappclient.fullname" -}}
 {{- if .Values.fullnameOverride }}
 {{- .Values.fullnameOverride | trunc 63 | trimSuffix "-" }}
 {{- else }}
@@ -26,16 +26,16 @@ If release name contains chart name it will be used as a full name.
 {{/*
 Create chart name and version as used by the chart label.
 */}}
-{{- define "norcedrillingsurveyinstrumentservice.chart" -}}
+{{- define "osdcdrillingsurveyinstrumentwebappclient.chart" -}}
 {{- printf "%s-%s" .Chart.Name .Chart.Version | replace "+" "_" | trunc 63 | trimSuffix "-" }}
 {{- end }}
 
 {{/*
 Common labels
 */}}
-{{- define "norcedrillingsurveyinstrumentservice.labels" -}}
-helm.sh/chart: {{ include "norcedrillingsurveyinstrumentservice.chart" . }}
-{{ include "norcedrillingsurveyinstrumentservice.selectorLabels" . }}
+{{- define "osdcdrillingsurveyinstrumentwebappclient.labels" -}}
+helm.sh/chart: {{ include "osdcdrillingsurveyinstrumentwebappclient.chart" . }}
+{{ include "osdcdrillingsurveyinstrumentwebappclient.selectorLabels" . }}
 {{- if .Chart.AppVersion }}
 app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
 {{- end }}
@@ -45,17 +45,17 @@ app.kubernetes.io/managed-by: {{ .Release.Service }}
 {{/*
 Selector labels
 */}}
-{{- define "norcedrillingsurveyinstrumentservice.selectorLabels" -}}
-app.kubernetes.io/name: {{ include "norcedrillingsurveyinstrumentservice.name" . }}
+{{- define "osdcdrillingsurveyinstrumentwebappclient.selectorLabels" -}}
+app.kubernetes.io/name: {{ include "osdcdrillingsurveyinstrumentwebappclient.name" . }}
 app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end }}
 
 {{/*
 Create the name of the service account to use
 */}}
-{{- define "norcedrillingsurveyinstrumentservice.serviceAccountName" -}}
+{{- define "osdcdrillingsurveyinstrumentwebappclient.serviceAccountName" -}}
 {{- if .Values.serviceAccount.create }}
-{{- default (include "norcedrillingsurveyinstrumentservice.fullname" .) .Values.serviceAccount.name }}
+{{- default (include "osdcdrillingsurveyinstrumentwebappclient.fullname" .) .Values.serviceAccount.name }}
 {{- else }}
 {{- default "default" .Values.serviceAccount.name }}
 {{- end }}

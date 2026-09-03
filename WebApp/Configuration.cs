@@ -1,4 +1,4 @@
-﻿namespace NORCE.Drilling.SurveyInstrument.WebApp
+namespace OSDC.Drilling.SurveyInstrument.WebApp
 {
     public class Configuration
     {

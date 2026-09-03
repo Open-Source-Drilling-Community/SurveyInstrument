@@ -1,7 +1,7 @@
 using System;
 using System.Text.Json.Nodes;
 
-namespace NORCE.Drilling.SurveyInstrument.Service.Mcp.Tools;
+namespace OSDC.Drilling.SurveyInstrument.Service.Mcp.Tools;
 
 internal static class McpToolArgumentHelpers
 {

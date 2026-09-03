@@ -78,7 +78,7 @@ That gives the pages direct access to the typed NSwag client and DTOs without co
 
 This project is configured as a reusable Razor class library with package metadata:
 
-- package id: `NORCE.Drilling.SurveyInstrument.WebPages`
+- package id: `OSDC.Drilling.SurveyInstrument.WebPages`
 - package README: `README.md`
 - repository URL pointing to the SurveyInstrument GitHub repository
 

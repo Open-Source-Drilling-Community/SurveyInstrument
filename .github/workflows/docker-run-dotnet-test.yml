@@ -3,11 +3,6 @@ name: Docker run & .NET UnitTest
 on:
   workflow_dispatch:
 
-env:
-  # NORCE NuGet Packages Feed settings
-  NORCE_NUGET_USER: ${{ secrets.NORCE_NUGET_USER }}
-  NORCE_NUGET_APIKEY: ${{ secrets.NORCE_NUGET_APIKEY }}
-
 jobs:
   build:
 

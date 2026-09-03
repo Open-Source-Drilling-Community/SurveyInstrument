@@ -1,16 +1,18 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "norcedrillingsurveyinstrumentservice.fullname" . }}
+  name: {{ include "osdcdrillingsurveyinstrumentservice.fullname" . }}
   labels:
-    {{- include "norcedrillingsurveyinstrumentservice.labels" . | nindent 4 }}
+    {{- include "osdcdrillingsurveyinstrumentservice.labels" . | nindent 4 }}
 spec:
+  strategy:
+    type: {{ .Values.strategy.type }}
   {{- if not .Values.autoscaling.enabled }}
   replicas: {{ .Values.replicaCount }}
   {{- end }}
   selector:
     matchLabels:
-      {{- include "norcedrillingsurveyinstrumentservice.selectorLabels" . | nindent 6 }}
+      {{- include "osdcdrillingsurveyinstrumentservice.selectorLabels" . | nindent 6 }}
   template:
     metadata:
       {{- with .Values.podAnnotations }}
@@ -18,13 +20,13 @@ spec:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       labels:
-        {{- include "norcedrillingsurveyinstrumentservice.selectorLabels" . | nindent 8 }}
+        {{- include "osdcdrillingsurveyinstrumentservice.selectorLabels" . | nindent 8 }}
     spec:
       {{- with .Values.imagePullSecrets }}
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      serviceAccountName: {{ include "norcedrillingsurveyinstrumentservice.serviceAccountName" . }}
+      serviceAccountName: {{ include "osdcdrillingsurveyinstrumentservice.serviceAccountName" . }}
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
       containers:
@@ -54,8 +56,12 @@ spec:
             name: surveyinstrumentdb
       volumes:
       - name: surveyinstrumentdb
+        {{- if .Values.persistence.enabled }}
         persistentVolumeClaim:
-          claimName: surveyinstrument-claim
+          claimName: {{ .Values.persistence.existingClaim | default .Values.persistence.claimName }}
+        {{- else }}
+        emptyDir: {}
+        {{- end }}
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}

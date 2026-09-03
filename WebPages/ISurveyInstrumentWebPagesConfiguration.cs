@@ -1,5 +1,5 @@
 using OSDC.DotnetLibraries.Drilling.WebAppUtils;
-namespace NORCE.Drilling.SurveyInstrument.WebPages;
+namespace OSDC.Drilling.SurveyInstrument.WebPages;
 
 public interface ISurveyInstrumentWebPagesConfiguration : ISurveyInstrumentHostURL, IUnitConversionHostURL
 {

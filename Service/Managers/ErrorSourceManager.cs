@@ -1,13 +1,13 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using Microsoft.Extensions.Logging;
 using OSDC.DotnetLibraries.General.DataManagement;
 using Microsoft.Data.Sqlite;
 using System.Text.Json;
-using NORCE.Drilling.SurveyInstrument.Model;
+using OSDC.Drilling.SurveyInstrument.Model;
 using OSDC.DotnetLibraries.Drilling.Surveying;
 
-namespace NORCE.Drilling.SurveyInstrument.Service.Managers
+namespace OSDC.Drilling.SurveyInstrument.Service.Managers
 {
     /// <summary>
     /// A manager for SurveyInstrument. The manager implements the singleton pattern as defined by 

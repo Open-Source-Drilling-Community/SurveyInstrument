@@ -5,12 +5,12 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <AddRazorSupportForMvc>true</AddRazorSupportForMvc>
-    <AssemblyName>NORCE.Drilling.SurveyInstrument.WebPages</AssemblyName>
-    <RootNamespace>NORCE.Drilling.SurveyInstrument.WebPages</RootNamespace>
-    <PackageId>NORCE.Drilling.SurveyInstrument.WebPages</PackageId>
-    <Title>NORCE.Drilling.SurveyInstrument.WebPages</Title>
+    <AssemblyName>OSDC.Drilling.SurveyInstrument.WebPages</AssemblyName>
+    <RootNamespace>OSDC.Drilling.SurveyInstrument.WebPages</RootNamespace>
+    <PackageId>OSDC.Drilling.SurveyInstrument.WebPages</PackageId>
+    <Title>OSDC.Drilling.SurveyInstrument.WebPages</Title>
     <Authors>Eric Cayeux</Authors>
-    <Company>NORCE</Company>
+    <Company>Open Source Drilling Community</Company>
     <Description>Reusable Razor class library containing the SurveyInstrument web pages.</Description>
     <PackageTags>surveyinstrument;drilling;blazor;razor;mudblazor</PackageTags>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>

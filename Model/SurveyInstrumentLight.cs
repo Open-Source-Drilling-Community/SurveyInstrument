@@ -1,7 +1,7 @@
-﻿using OSDC.DotnetLibraries.General.DataManagement;
+using OSDC.DotnetLibraries.General.DataManagement;
 using System;
 
-namespace NORCE.Drilling.SurveyInstrument.Model
+namespace OSDC.Drilling.SurveyInstrument.Model
 {
     /// <summary>
     /// Light weight version of a SurveyInstrument

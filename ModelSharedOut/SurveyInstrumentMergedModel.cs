@@ -20,7 +20,7 @@
 #pragma warning disable 8625 // Disable "CS8625 Cannot convert null literal to non-nullable reference type"
 #pragma warning disable 8765 // Disable "CS8765 Nullability of type of parameter doesn't match overridden member (possibly because of nullability attributes)."
 
-namespace NORCE.Drilling.SurveyInstrument.ModelShared
+namespace OSDC.Drilling.SurveyInstrument.ModelShared
 {
     using System = global::System;
 
@@ -1322,141 +1322,6 @@ namespace NORCE.Drilling.SurveyInstrument.ModelShared
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.4.0.0 (NJsonSchema v11.3.2.0 (Newtonsoft.Json v13.0.0.0))")]
-    public partial class CountPerDay
-    {
-
-        [System.Text.Json.Serialization.JsonPropertyName("Date")]
-        public System.DateTimeOffset Date { get; set; }
-
-        [System.Text.Json.Serialization.JsonPropertyName("Count")]
-        public long Count { get; set; }
-
-        private System.Collections.Generic.IDictionary<string, object> _additionalProperties;
-
-        [System.Text.Json.Serialization.JsonExtensionData]
-        public System.Collections.Generic.IDictionary<string, object> AdditionalProperties
-        {
-            get { return _additionalProperties ?? (_additionalProperties = new System.Collections.Generic.Dictionary<string, object>()); }
-            set { _additionalProperties = value; }
-        }
-
-    }
-
-    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.4.0.0 (NJsonSchema v11.3.2.0 (Newtonsoft.Json v13.0.0.0))")]
-    public partial class History
-    {
-
-        [System.Text.Json.Serialization.JsonPropertyName("Data")]
-        public System.Collections.Generic.ICollection<CountPerDay> Data { get; set; }
-
-        private System.Collections.Generic.IDictionary<string, object> _additionalProperties;
-
-        [System.Text.Json.Serialization.JsonExtensionData]
-        public System.Collections.Generic.IDictionary<string, object> AdditionalProperties
-        {
-            get { return _additionalProperties ?? (_additionalProperties = new System.Collections.Generic.Dictionary<string, object>()); }
-            set { _additionalProperties = value; }
-        }
-
-    }
-
-    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.4.0.0 (NJsonSchema v11.3.2.0 (Newtonsoft.Json v13.0.0.0))")]
-    public partial class SurveyInstrumentLight
-    {
-
-        [System.Text.Json.Serialization.JsonPropertyName("MetaInfo")]
-        public MetaInfo MetaInfo { get; set; }
-
-        [System.Text.Json.Serialization.JsonPropertyName("Name")]
-        public string Name { get; set; }
-
-        [System.Text.Json.Serialization.JsonPropertyName("Description")]
-        public string Description { get; set; }
-
-        [System.Text.Json.Serialization.JsonPropertyName("CreationDate")]
-        public System.DateTimeOffset? CreationDate { get; set; }
-
-        [System.Text.Json.Serialization.JsonPropertyName("LastModificationDate")]
-        public System.DateTimeOffset? LastModificationDate { get; set; }
-
-        private System.Collections.Generic.IDictionary<string, object> _additionalProperties;
-
-        [System.Text.Json.Serialization.JsonExtensionData]
-        public System.Collections.Generic.IDictionary<string, object> AdditionalProperties
-        {
-            get { return _additionalProperties ?? (_additionalProperties = new System.Collections.Generic.Dictionary<string, object>()); }
-            set { _additionalProperties = value; }
-        }
-
-    }
-
-    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.4.0.0 (NJsonSchema v11.3.2.0 (Newtonsoft.Json v13.0.0.0))")]
-    public partial class UsageStatisticsSurveyInstrument
-    {
-
-        [System.Text.Json.Serialization.JsonPropertyName("LastSaved")]
-        public System.DateTimeOffset LastSaved { get; set; }
-
-        [System.Text.Json.Serialization.JsonPropertyName("BackUpInterval")]
-        public string BackUpInterval { get; set; }
-
-        [System.Text.Json.Serialization.JsonPropertyName("GetAllSurveyInstrumentIdPerDay")]
-        public History GetAllSurveyInstrumentIdPerDay { get; set; }
-
-        [System.Text.Json.Serialization.JsonPropertyName("GetAllSurveyInstrumentMetaInfoPerDay")]
-        public History GetAllSurveyInstrumentMetaInfoPerDay { get; set; }
-
-        [System.Text.Json.Serialization.JsonPropertyName("GetSurveyInstrumentByIdPerDay")]
-        public History GetSurveyInstrumentByIdPerDay { get; set; }
-
-        [System.Text.Json.Serialization.JsonPropertyName("GetAllSurveyInstrumentLightPerDay")]
-        public History GetAllSurveyInstrumentLightPerDay { get; set; }
-
-        [System.Text.Json.Serialization.JsonPropertyName("GetAllSurveyInstrumentPerDay")]
-        public History GetAllSurveyInstrumentPerDay { get; set; }
-
-        [System.Text.Json.Serialization.JsonPropertyName("PostSurveyInstrumentPerDay")]
-        public History PostSurveyInstrumentPerDay { get; set; }
-
-        [System.Text.Json.Serialization.JsonPropertyName("PutSurveyInstrumentByIdPerDay")]
-        public History PutSurveyInstrumentByIdPerDay { get; set; }
-
-        [System.Text.Json.Serialization.JsonPropertyName("DeleteSurveyInstrumentByIdPerDay")]
-        public History DeleteSurveyInstrumentByIdPerDay { get; set; }
-
-        [System.Text.Json.Serialization.JsonPropertyName("GetAllErrorSourceIdPerDay")]
-        public History GetAllErrorSourceIdPerDay { get; set; }
-
-        [System.Text.Json.Serialization.JsonPropertyName("GetAllErrorSourceMetaInfoPerDay")]
-        public History GetAllErrorSourceMetaInfoPerDay { get; set; }
-
-        [System.Text.Json.Serialization.JsonPropertyName("GetErrorSourceByIdPerDay")]
-        public History GetErrorSourceByIdPerDay { get; set; }
-
-        [System.Text.Json.Serialization.JsonPropertyName("GetAllErrorSourcePerDay")]
-        public History GetAllErrorSourcePerDay { get; set; }
-
-        [System.Text.Json.Serialization.JsonPropertyName("PostErrorSourcePerDay")]
-        public History PostErrorSourcePerDay { get; set; }
-
-        [System.Text.Json.Serialization.JsonPropertyName("PutErrorSourceByIdPerDay")]
-        public History PutErrorSourceByIdPerDay { get; set; }
-
-        [System.Text.Json.Serialization.JsonPropertyName("DeleteErrorSourceByIdPerDay")]
-        public History DeleteErrorSourceByIdPerDay { get; set; }
-
-        private System.Collections.Generic.IDictionary<string, object> _additionalProperties;
-
-        [System.Text.Json.Serialization.JsonExtensionData]
-        public System.Collections.Generic.IDictionary<string, object> AdditionalProperties
-        {
-            get { return _additionalProperties ?? (_additionalProperties = new System.Collections.Generic.Dictionary<string, object>()); }
-            set { _additionalProperties = value; }
-        }
-
-    }
-
-    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.4.0.0 (NJsonSchema v11.3.2.0 (Newtonsoft.Json v13.0.0.0))")]
     public enum ErrorCode
     {
 
@@ -1917,6 +1782,141 @@ namespace NORCE.Drilling.SurveyInstrument.ModelShared
 
         [System.Text.Json.Serialization.JsonPropertyName("HttpEndPoint")]
         public string HttpEndPoint { get; set; }
+
+        private System.Collections.Generic.IDictionary<string, object> _additionalProperties;
+
+        [System.Text.Json.Serialization.JsonExtensionData]
+        public System.Collections.Generic.IDictionary<string, object> AdditionalProperties
+        {
+            get { return _additionalProperties ?? (_additionalProperties = new System.Collections.Generic.Dictionary<string, object>()); }
+            set { _additionalProperties = value; }
+        }
+
+    }
+
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.4.0.0 (NJsonSchema v11.3.2.0 (Newtonsoft.Json v13.0.0.0))")]
+    public partial class CountPerDay
+    {
+
+        [System.Text.Json.Serialization.JsonPropertyName("Date")]
+        public System.DateTimeOffset Date { get; set; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("Count")]
+        public long Count { get; set; }
+
+        private System.Collections.Generic.IDictionary<string, object> _additionalProperties;
+
+        [System.Text.Json.Serialization.JsonExtensionData]
+        public System.Collections.Generic.IDictionary<string, object> AdditionalProperties
+        {
+            get { return _additionalProperties ?? (_additionalProperties = new System.Collections.Generic.Dictionary<string, object>()); }
+            set { _additionalProperties = value; }
+        }
+
+    }
+
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.4.0.0 (NJsonSchema v11.3.2.0 (Newtonsoft.Json v13.0.0.0))")]
+    public partial class History
+    {
+
+        [System.Text.Json.Serialization.JsonPropertyName("Data")]
+        public System.Collections.Generic.ICollection<CountPerDay> Data { get; set; }
+
+        private System.Collections.Generic.IDictionary<string, object> _additionalProperties;
+
+        [System.Text.Json.Serialization.JsonExtensionData]
+        public System.Collections.Generic.IDictionary<string, object> AdditionalProperties
+        {
+            get { return _additionalProperties ?? (_additionalProperties = new System.Collections.Generic.Dictionary<string, object>()); }
+            set { _additionalProperties = value; }
+        }
+
+    }
+
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.4.0.0 (NJsonSchema v11.3.2.0 (Newtonsoft.Json v13.0.0.0))")]
+    public partial class SurveyInstrumentLight
+    {
+
+        [System.Text.Json.Serialization.JsonPropertyName("MetaInfo")]
+        public MetaInfo MetaInfo { get; set; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("Name")]
+        public string Name { get; set; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("Description")]
+        public string Description { get; set; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("CreationDate")]
+        public System.DateTimeOffset? CreationDate { get; set; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("LastModificationDate")]
+        public System.DateTimeOffset? LastModificationDate { get; set; }
+
+        private System.Collections.Generic.IDictionary<string, object> _additionalProperties;
+
+        [System.Text.Json.Serialization.JsonExtensionData]
+        public System.Collections.Generic.IDictionary<string, object> AdditionalProperties
+        {
+            get { return _additionalProperties ?? (_additionalProperties = new System.Collections.Generic.Dictionary<string, object>()); }
+            set { _additionalProperties = value; }
+        }
+
+    }
+
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.4.0.0 (NJsonSchema v11.3.2.0 (Newtonsoft.Json v13.0.0.0))")]
+    public partial class UsageStatisticsSurveyInstrument
+    {
+
+        [System.Text.Json.Serialization.JsonPropertyName("LastSaved")]
+        public System.DateTimeOffset LastSaved { get; set; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("BackUpInterval")]
+        public string BackUpInterval { get; set; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("GetAllSurveyInstrumentIdPerDay")]
+        public History GetAllSurveyInstrumentIdPerDay { get; set; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("GetAllSurveyInstrumentMetaInfoPerDay")]
+        public History GetAllSurveyInstrumentMetaInfoPerDay { get; set; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("GetSurveyInstrumentByIdPerDay")]
+        public History GetSurveyInstrumentByIdPerDay { get; set; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("GetAllSurveyInstrumentLightPerDay")]
+        public History GetAllSurveyInstrumentLightPerDay { get; set; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("GetAllSurveyInstrumentPerDay")]
+        public History GetAllSurveyInstrumentPerDay { get; set; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("PostSurveyInstrumentPerDay")]
+        public History PostSurveyInstrumentPerDay { get; set; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("PutSurveyInstrumentByIdPerDay")]
+        public History PutSurveyInstrumentByIdPerDay { get; set; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("DeleteSurveyInstrumentByIdPerDay")]
+        public History DeleteSurveyInstrumentByIdPerDay { get; set; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("GetAllErrorSourceIdPerDay")]
+        public History GetAllErrorSourceIdPerDay { get; set; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("GetAllErrorSourceMetaInfoPerDay")]
+        public History GetAllErrorSourceMetaInfoPerDay { get; set; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("GetErrorSourceByIdPerDay")]
+        public History GetErrorSourceByIdPerDay { get; set; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("GetAllErrorSourcePerDay")]
+        public History GetAllErrorSourcePerDay { get; set; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("PostErrorSourcePerDay")]
+        public History PostErrorSourcePerDay { get; set; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("PutErrorSourceByIdPerDay")]
+        public History PutErrorSourceByIdPerDay { get; set; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("DeleteErrorSourceByIdPerDay")]
+        public History DeleteErrorSourceByIdPerDay { get; set; }
 
         private System.Collections.Generic.IDictionary<string, object> _additionalProperties;
 

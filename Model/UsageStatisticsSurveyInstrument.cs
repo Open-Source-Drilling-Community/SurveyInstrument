@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text.Json;
 
-namespace NORCE.Drilling.SurveyInstrument.Model
+namespace OSDC.Drilling.SurveyInstrument.Model
 {
     public struct CountPerDay
     {

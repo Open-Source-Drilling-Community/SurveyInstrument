@@ -30,7 +30,7 @@ This makes `WebPages` reusable from other hosts while keeping deployment-specifi
   - Applies path base `/SurveyInstrument/webapp`.
 - `App.razor`
   - Router entry point.
-  - Includes `NORCE.Drilling.SurveyInstrument.WebApp.ExternalRazorAssemblies.All` as `AdditionalAssemblies` so routes from `WebPages` are discovered.
+  - Includes `OSDC.Drilling.SurveyInstrument.WebApp.ExternalRazorAssemblies.All` as `AdditionalAssemblies` so routes from `WebPages` are discovered.
 - `Shared/MainLayout.razor`
   - Defines the MudBlazor app frame and drawer.
 - `Shared/NavMenu.razor`
@@ -100,7 +100,10 @@ dotnet build .\WebApp\WebApp.csproj
 Deployment assets included here:
 
 - `Dockerfile`
-- Helm chart under `charts/norcedrillingsurveyinstrumentwebappclient`
+- Helm chart under `charts/osdcdrillingsurveyinstrumentwebappclient`
+- image `docker.io/digiwells/osdcdrillingsurveyinstrumentwebappclient:stable` with `imagePullPolicy: Always`
+
+Keep deployment gated behind successful source verification and confirmed image publication. Use `helm ... --kube-context <context>`, deploy dev first, and verify the home route, `/SurveyInstrument`, and `/StatisticsSurveyInstrument` before production or AWE. The host owns only `/`; the referenced `WebPages` assembly contributes the two feature routes and does not add `/Home` or another root route.
 
 ## Common Maintenance Tasks
 

@@ -112,7 +112,9 @@ Default service behavior seeds the database with:
 - default `ErrorSource` records
 - default `SurveyInstrument` records
 
-if the database is empty or appears corrupted.
+only after a fresh, empty database has been created. Startup never deletes, renames, replaces, or rebuilds an existing database. The exact legacy two-table schema is adopted transactionally by setting SQLite `user_version`; unknown, malformed, or newer schemas stop startup without changing tables or rows.
+
+The service image mounts `/home/` from the historical `surveyinstrument-claim` PVC. The chart uses a `Recreate` deployment strategy to prevent overlapping SQLite writers, retains Helm-managed PVCs, and accepts `persistence.existingClaim` for an explicit identity cutover. The filename remains `SurveyInstrument.db`.
 
 ## Generated Artifacts
 
@@ -170,7 +172,15 @@ Two deployable projects include Docker and Helm assets:
 - `WebApp`
   - Dockerfile plus webapp Helm chart
 
-The repository follows the Digiwells/NORCE deployment pattern where service and webapp are hosted as separate containers with matching ingress path bases.
+The repository follows the established Digiwells/OSDC deployment pattern where service and webapp are hosted as separate containers with matching ingress path bases.
+The migrated OSDC identities are:
+
+- .NET root: `OSDC.Drilling.SurveyInstrument`
+- NuGet package: `OSDC.Drilling.SurveyInstrument.WebPages`
+- service image/chart: `docker.io/digiwells/osdcdrillingsurveyinstrumentservice:stable` / `osdcdrillingsurveyinstrumentservice`
+- webapp image/chart: `docker.io/digiwells/osdcdrillingsurveyinstrumentwebappclient:stable` / `osdcdrillingsurveyinstrumentwebappclient`
+
+Deployment is deliberately separate from source migration. Build and publish both images first. Before any upgrade, inspect the selected context, namespace, current Helm release, deployment image and replicas, PVC, and `/home/` mount. For the cutover, pass `--kube-context <context>` and `--set persistence.existingClaim=surveyinstrument-claim`; never uninstall the old release until volume ownership and record counts are verified. Upgrade dev first, verify rollout, image digest, health/API reads, and existing record counts, and only then repeat for production and AWE. The charts default to `stable` with `Always` pull policy.
 
 ## Security Notes
 

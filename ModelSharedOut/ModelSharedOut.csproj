@@ -6,7 +6,9 @@
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>
 		<Authors>Energy Modelling and Automation group</Authors>
-		<Company>NORCE</Company>
+		<Company>Open Source Drilling Community</Company>
+		<RootNamespace>OSDC.Drilling.SurveyInstrument.ModelSharedOut</RootNamespace>
+		<AssemblyName>OSDC.Drilling.SurveyInstrument.ModelSharedOut</AssemblyName>
 		<Title>Auto-generation of the API of the SurveyInstrument microservice (distributed shared model approach)</Title>
 	</PropertyGroup>
 

@@ -21,7 +21,7 @@ This project is not a pure unit-test suite. It assumes a live service is availab
 Tests use:
 
 - a real `HttpClient`
-- a generated `Client` from `NORCE.Drilling.SurveyInstrument.ModelShared`
+- a generated `Client` from `OSDC.Drilling.SurveyInstrument.ModelShared`
 - the running API hosted at a configured local base URL
 
 Because of that, failures can come from:
@@ -40,6 +40,8 @@ Because of that, failures can come from:
     - `ConstructSurveyInstrument`
 - `GlobalUsings.cs`
   - Centralizes shared test usings.
+- `SqlConnectionManagerSafetyTests.cs`
+  - Uses temporary SQLite files to prove fresh transactional creation, idempotent legacy adoption, row preservation, and fail-closed handling of unknown or newer schemas.
 
 ## Runtime Assumptions
 
@@ -63,7 +65,7 @@ The suite also disables TLS certificate validation in the handler for convenienc
 
 ## Running Tests
 
-Start the service first, then run:
+The database-safety and MCP registration tests are self-contained. The CRUD tests in `Tests.cs` are live integration tests and require the service to be running first:
 
 ```powershell
 dotnet test .\ServiceTest\ServiceTest.csproj

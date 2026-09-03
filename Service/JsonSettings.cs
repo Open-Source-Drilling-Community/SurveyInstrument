@@ -1,7 +1,7 @@
-﻿using System.Text.Json;
+using System.Text.Json;
 using System.Text.Json.Serialization;
 
-namespace NORCE.Drilling.SurveyInstrument.Service
+namespace OSDC.Drilling.SurveyInstrument.Service
 {
     public static class JsonSettings
     {

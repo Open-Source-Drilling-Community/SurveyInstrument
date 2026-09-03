@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
-using NORCE.Drilling.SurveyInstrument.Model;
+using OSDC.Drilling.SurveyInstrument.Model;
 
-namespace NORCE.Drilling.SurveyInstrument.Service.Controllers
+namespace OSDC.Drilling.SurveyInstrument.Service.Controllers
 {
     [Produces("application/json")]
     [Route("[controller]")]

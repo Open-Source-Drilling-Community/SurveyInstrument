@@ -4,10 +4,10 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using ModelContextProtocol.Protocol;
-using NORCE.Drilling.SurveyInstrument.Service;
-using NORCE.Drilling.SurveyInstrument.Service.Managers;
-using NORCE.Drilling.SurveyInstrument.Service.Mcp;
-using NORCE.Drilling.SurveyInstrument.Service.Mcp.Tools;
+using OSDC.Drilling.SurveyInstrument.Service;
+using OSDC.Drilling.SurveyInstrument.Service.Managers;
+using OSDC.Drilling.SurveyInstrument.Service.Mcp;
+using OSDC.Drilling.SurveyInstrument.Service.Mcp.Tools;
 
 var builder = WebApplication.CreateBuilder(args);
 
