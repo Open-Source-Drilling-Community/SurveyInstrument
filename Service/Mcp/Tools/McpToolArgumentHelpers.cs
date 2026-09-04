@@ -186,9 +186,10 @@ internal static class McpToolArgumentHelpers
                 ["properties"] = new JsonObject
                 {
                     ["ConflictPolicy"] = EnumSchema("Fail atomically if an instrument UUID exists, or replace existing instruments.", "FailIfExists", "ReplaceExisting"),
+                    ["CatalogPolicy"] = EnumSchema("Require every exact catalog UUID locally, or atomically create missing identities, feature categories, and error-source templates.", "MapExisting", "MapOrCreateMissing"),
                     ["Document"] = BatchDocumentSchema(enforceModelFamily: true)
                 },
-                ["required"] = new JsonArray("ConflictPolicy", "Document"), ["additionalProperties"] = false
+                ["required"] = new JsonArray("ConflictPolicy", "CatalogPolicy", "Document"), ["additionalProperties"] = false
             }
         },
         ["required"] = new JsonArray("request"), ["additionalProperties"] = false

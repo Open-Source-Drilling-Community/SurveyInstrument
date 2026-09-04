@@ -91,6 +91,7 @@ If the service runs on another port, update `host` in `Tests.cs` before running.
 - `DELETE` workflows
 - `LightData` retrieval through the generated client
 - all/selected batch export and atomic restore behavior
+- require-existing and create-missing catalog restore policies
 
 ### Persistence and contract safety
 

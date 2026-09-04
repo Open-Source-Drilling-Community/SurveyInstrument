@@ -53,7 +53,7 @@ This file contains:
 - an NSwag-generated `Client`
 - request/response support types used by consumers such as `ServiceTest` and `WebPages`
 - identity and feature catalog contracts and assignment types
-- versioned batch-export documents, restore requests/results, and structured batch errors
+- versioned batch-export documents, catalog and UUID restore policies, restore results, and structured batch errors
 
 The generated client includes the `BatchExportSurveyInstrumentsAsync` and `BatchRestoreSurveyInstrumentsAsync` operations used by the backup/restore page. The MCP-only patch, snapshot, drift, and catalog-diagnostic tools are not generated here because they are not REST controller operations.
 

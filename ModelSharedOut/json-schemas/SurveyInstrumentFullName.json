@@ -1372,6 +1372,14 @@
         },
         "additionalProperties": false
       },
+      "OSDC.Drilling.SurveyInstrument.Model.SurveyInstrumentBatchCatalogRestorePolicy": {
+        "enum": [
+          "Unspecified",
+          "MapExisting",
+          "MapOrCreateMissing"
+        ],
+        "type": "string"
+      },
       "OSDC.Drilling.SurveyInstrument.Model.SurveyInstrumentBatchError": {
         "type": "object",
         "properties": {
@@ -1482,6 +1490,9 @@
         "properties": {
           "ConflictPolicy": {
             "$ref": "#/components/schemas/OSDC.Drilling.SurveyInstrument.Model.SurveyInstrumentBatchRestoreConflictPolicy"
+          },
+          "CatalogPolicy": {
+            "$ref": "#/components/schemas/OSDC.Drilling.SurveyInstrument.Model.SurveyInstrumentBatchCatalogRestorePolicy"
           },
           "Document": {
             "$ref": "#/components/schemas/OSDC.Drilling.SurveyInstrument.Model.SurveyInstrumentBatchExportDocument"

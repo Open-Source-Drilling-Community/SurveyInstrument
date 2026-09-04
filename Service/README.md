@@ -87,7 +87,7 @@ The `SurveyInstrumentController` exposes:
 - `POST /SurveyInstrument/BatchExport`
   - export all instruments or an explicit UUID selection with their catalog dependencies
 - `POST /SurveyInstrument/BatchRestore`
-  - validate and atomically restore a schema-versioned backup using `FailIfExists` or `ReplaceExisting`
+  - validate and atomically restore a schema-versioned backup using an explicit catalog policy and `FailIfExists` or `ReplaceExisting`
 
 ### Error sources
 
@@ -210,7 +210,7 @@ The service publishes all 27 non-statistics REST operations plus five MCP-only o
 
 Tool descriptions distinguish compact discovery (`get_all_ids`, `get_all_meta_info`, and Survey Instrument `get_all_light`) from complete-model retrieval. Create and update tools expose explicit nested JSON Schemas rather than generic object bodies; `ModelType` is an enforcing four-branch discriminator and `ErrorCode` is the complete enum rather than free text. Every tool also publishes an explicit success-output schema, title, and MCP read-only/destructive/idempotent/open-world annotations. Unknown top-level arguments are rejected before controller invocation. Successful calls return structured JSON and a text fallback; failed HTTP-style results and unexpected exceptions are converted to stable sanitized MCP error envelopes.
 
-`survey_instrument_batch_export` creates a schema-version-1 backup of all instruments or a selected set with its exact-UUID catalog dependencies. The same capability is available through the two REST batch endpoints. `survey_instrument_batch_restore` validates format/version, UUID uniqueness, model semantics, references, conflicts, and catalog compatibility before writing anything; restoration is committed in one SQLite transaction. There is no partial-success mode.
+`survey_instrument_batch_export` creates a schema-version-1 backup of all instruments or a selected set with its exact-UUID catalog dependencies. The same capability is available through the two REST batch endpoints. `survey_instrument_batch_restore` validates format/version, UUID uniqueness, model semantics, references, conflicts, and catalog compatibility before writing anything. `MapExisting` requires every dependency UUID locally; `MapOrCreateMissing` creates absent identity, feature-category, and error-source-template definitions. Restoration is committed in one SQLite transaction. There is no partial-success mode.
 
 Survey Instrument update, patch, and delete require `expectedModifiedUtc` from the latest read and return `stale_write` on a mismatch. Patch uses top-level JSON Merge Patch semantics: omitted fields are retained, arrays are replaced as a whole, and resource identity/server timestamps are protected. Error Source CRUD manages a template library. `ErrorSourceList` entries embedded in an instrument are authoritative snapshots; a copied template UUID records provenance, but later template edits do not propagate into stored instruments.
 

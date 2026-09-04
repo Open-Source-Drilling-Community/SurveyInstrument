@@ -127,19 +127,30 @@ internal sealed class SurveyInstrumentBatchService(SqlConnectionManager connecti
             Dictionary<Guid, Model.SurveyInstrument> localInstruments = Index(
                 Read<Model.SurveyInstrument>(connection, "SurveyInstrumentTable", "SurveyInstrument"), value => value.MetaInfo?.ID);
 
+            bool createMissingCatalogs = request.CatalogPolicy == SurveyInstrumentBatchCatalogRestorePolicy.MapOrCreateMissing;
+
             CheckCatalogConflicts(dependencies.Identities, localIdentities, value => value.MetaInfo!.ID,
                 "CatalogDependencies.Identities", errors);
             CheckCatalogConflicts(dependencies.FeatureCategories, localCategories, value => value.MetaInfo!.ID,
                 "CatalogDependencies.FeatureCategories", errors);
             CheckCatalogConflicts(dependencies.ErrorSourceTemplates, localTemplates, value => value.MetaInfo!.ID,
                 "CatalogDependencies.ErrorSourceTemplates", errors);
+            if (!createMissingCatalogs)
+            {
+                CheckCatalogAvailability(dependencies.Identities, localIdentities, value => value.MetaInfo!.ID,
+                    "CatalogDependencies.Identities", errors);
+                CheckCatalogAvailability(dependencies.FeatureCategories, localCategories, value => value.MetaInfo!.ID,
+                    "CatalogDependencies.FeatureCategories", errors);
+                CheckCatalogAvailability(dependencies.ErrorSourceTemplates, localTemplates, value => value.MetaInfo!.ID,
+                    "CatalogDependencies.ErrorSourceTemplates", errors);
+            }
 
             Dictionary<Guid, SurveyInstrumentIdentity> finalIdentities = localIdentities.Concat(
-                dependencies.Identities.Where(value => !localIdentities.ContainsKey(value.MetaInfo!.ID))
+                dependencies.Identities.Where(value => createMissingCatalogs && !localIdentities.ContainsKey(value.MetaInfo!.ID))
                     .Select(value => new KeyValuePair<Guid, SurveyInstrumentIdentity>(value.MetaInfo!.ID, value)))
                 .ToDictionary(pair => pair.Key, pair => pair.Value);
             Dictionary<Guid, SurveyInstrumentFeatureCategory> finalCategories = localCategories.Concat(
-                dependencies.FeatureCategories.Where(value => !localCategories.ContainsKey(value.MetaInfo!.ID))
+                dependencies.FeatureCategories.Where(value => createMissingCatalogs && !localCategories.ContainsKey(value.MetaInfo!.ID))
                     .Select(value => new KeyValuePair<Guid, SurveyInstrumentFeatureCategory>(value.MetaInfo!.ID, value)))
                 .ToDictionary(pair => pair.Key, pair => pair.Value);
 
@@ -157,11 +168,11 @@ internal sealed class SurveyInstrumentBatchService(SqlConnectionManager connecti
 
             int createdCatalogs = 0, created = 0, replaced = 0;
             using SqliteTransaction transaction = connection.BeginTransaction();
-            foreach (SurveyInstrumentIdentity value in dependencies.Identities.Where(value => !localIdentities.ContainsKey(value.MetaInfo!.ID)))
+            foreach (SurveyInstrumentIdentity value in dependencies.Identities.Where(value => createMissingCatalogs && !localIdentities.ContainsKey(value.MetaInfo!.ID)))
             { WriteIdentity(connection, transaction, value); createdCatalogs++; }
-            foreach (SurveyInstrumentFeatureCategory value in dependencies.FeatureCategories.Where(value => !localCategories.ContainsKey(value.MetaInfo!.ID)))
+            foreach (SurveyInstrumentFeatureCategory value in dependencies.FeatureCategories.Where(value => createMissingCatalogs && !localCategories.ContainsKey(value.MetaInfo!.ID)))
             { WriteCategory(connection, transaction, value); createdCatalogs++; }
-            foreach (ErrorSource value in dependencies.ErrorSourceTemplates.Where(value => !localTemplates.ContainsKey(value.MetaInfo!.ID)))
+            foreach (ErrorSource value in dependencies.ErrorSourceTemplates.Where(value => createMissingCatalogs && !localTemplates.ContainsKey(value.MetaInfo!.ID)))
             { WriteErrorSource(connection, transaction, value); createdCatalogs++; }
             foreach (Model.SurveyInstrument value in document.SurveyInstruments)
             {
@@ -263,6 +274,8 @@ internal sealed class SurveyInstrumentBatchService(SqlConnectionManager connecti
         if (request?.Document == null) return [Error(null, "Document", "required", "A backup document is required.")];
         if (request.ConflictPolicy is not SurveyInstrumentBatchRestoreConflictPolicy.FailIfExists and not SurveyInstrumentBatchRestoreConflictPolicy.ReplaceExisting)
             errors.Add(Error(null, "ConflictPolicy", "invalid_policy", "ConflictPolicy must be FailIfExists or ReplaceExisting."));
+        if (request.CatalogPolicy is not SurveyInstrumentBatchCatalogRestorePolicy.MapExisting and not SurveyInstrumentBatchCatalogRestorePolicy.MapOrCreateMissing)
+            errors.Add(Error(null, "CatalogPolicy", "invalid_catalog_policy", "CatalogPolicy must be MapExisting or MapOrCreateMissing."));
         if (request.Document.FormatIdentifier != SurveyInstrumentBatchExportDocument.CurrentFormatIdentifier)
             errors.Add(Error(null, "Document.FormatIdentifier", "unsupported_format", "The backup format identifier is unsupported."));
         if (request.Document.SchemaVersion != SurveyInstrumentBatchExportDocument.CurrentSchemaVersion)
@@ -307,6 +320,15 @@ internal sealed class SurveyInstrumentBatchService(SqlConnectionManager connecti
         foreach (T value in incoming)
             if (local.TryGetValue(id(value), out T? existing) && !SemanticJson(existing).Equals(SemanticJson(value)))
                 errors.Add(Error(null, property, "catalog_definition_conflict", $"Catalog UUID '{id(value)}' has different local content."));
+    }
+
+    private static void CheckCatalogAvailability<T>(IEnumerable<T> incoming, IReadOnlyDictionary<Guid, T> local,
+        Func<T, Guid> id, string property, List<SurveyInstrumentBatchError> errors)
+    {
+        foreach (T value in incoming)
+            if (!local.ContainsKey(id(value)))
+                errors.Add(Error(null, property, "catalog_definition_missing",
+                    $"Catalog UUID '{id(value)}' does not exist locally and catalog creation is disabled."));
     }
 
     private static string SemanticJson<T>(T value)

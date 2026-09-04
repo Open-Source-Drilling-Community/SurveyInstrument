@@ -35,7 +35,7 @@ Keeping those types here avoids coupling the service and UI projects to each oth
   - Schema-versioned logical backup/restore contracts for instruments and exact-UUID catalog dependencies.
   - Supports `All` and `Selected` export scopes.
   - Carries error-source templates, identity definitions, and feature categories required by the exported instruments.
-  - Defines `FailIfExists` and `ReplaceExisting` restore policies plus structured per-position validation errors.
+  - Defines `MapExisting` and `MapOrCreateMissing` catalog policies, `FailIfExists` and `ReplaceExisting` instrument policies, and structured per-position validation errors.
 - `UsageStatisticsSurveyInstrument.cs`
   - Defines `CountPerDay`, `History`, and `UsageStatisticsSurveyInstrument`.
   - Tracks per-endpoint usage counts for both `SurveyInstrument` and `ErrorSource` operations.

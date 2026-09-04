@@ -123,7 +123,19 @@
                     <PagerContent><MudDataGridPager T="SurveyInstrument" /></PagerContent>
                 </MudDataGrid>
 
-                <MudText Typo="Typo.subtitle2" Class="mt-4 mb-1">If a survey-instrument UUID already exists</MudText>
+                <MudText Typo="Typo.subtitle2" Class="mt-4 mb-1">Catalog definitions</MudText>
+                <MudRadioGroup T="SurveyInstrumentBatchCatalogRestorePolicy" @bind-Value="_catalogPolicy">
+                    <MudRadio T="SurveyInstrumentBatchCatalogRestorePolicy"
+                              Value="SurveyInstrumentBatchCatalogRestorePolicy.MapExisting" Color="Color.Primary">
+                        Require matching catalog UUIDs to exist
+                    </MudRadio>
+                    <MudRadio T="SurveyInstrumentBatchCatalogRestorePolicy"
+                              Value="SurveyInstrumentBatchCatalogRestorePolicy.MapOrCreateMissing" Color="Color.Primary">
+                        Use matching definitions and create missing definitions
+                    </MudRadio>
+                </MudRadioGroup>
+
+                <MudText Typo="Typo.subtitle2" Class="mt-3 mb-1">If a survey-instrument UUID already exists</MudText>
                 <MudRadioGroup T="SurveyInstrumentBatchRestoreConflictPolicy" @bind-Value="_conflictPolicy">
                     <MudRadio T="SurveyInstrumentBatchRestoreConflictPolicy"
                               Value="SurveyInstrumentBatchRestoreConflictPolicy.FailIfExists" Color="Color.Primary">
@@ -166,6 +178,7 @@
     private int _gridKey;
     private bool _busy;
     private SurveyInstrumentBatchExportDocument? _document;
+    private SurveyInstrumentBatchCatalogRestorePolicy _catalogPolicy = SurveyInstrumentBatchCatalogRestorePolicy.MapExisting;
     private SurveyInstrumentBatchRestoreConflictPolicy _conflictPolicy = SurveyInstrumentBatchRestoreConflictPolicy.FailIfExists;
     private IJSObjectReference? _downloadModule;
     private bool CanRestore => _document?.SurveyInstruments is { Count: > 0 } && _validationErrors.Count == 0;
@@ -301,7 +314,12 @@
             _busy = true;
             _serverErrors.Clear();
             SurveyInstrumentBatchRestoreResponse response = await Api.ClientSurveyInstrument.BatchRestoreSurveyInstrumentsAsync(
-                new SurveyInstrumentBatchRestoreRequest { ConflictPolicy = _conflictPolicy, Document = _document });
+                new SurveyInstrumentBatchRestoreRequest
+                {
+                    CatalogPolicy = _catalogPolicy,
+                    ConflictPolicy = _conflictPolicy,
+                    Document = _document
+                });
             Snackbar.Add($"Restore completed: {response.CreatedCount} created, {response.ReplacedCount} replaced, " +
                          $"{response.CreatedCatalogDefinitionCount} catalog definition(s) created.", Severity.Success);
             await LoadInstrumentsAsync();

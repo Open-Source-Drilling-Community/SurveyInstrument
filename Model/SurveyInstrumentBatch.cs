@@ -38,9 +38,18 @@ public enum SurveyInstrumentBatchRestoreConflictPolicy
     ReplaceExisting = 2
 }
 
+public enum SurveyInstrumentBatchCatalogRestorePolicy
+{
+    Unspecified = 0,
+    MapExisting = 1,
+    MapOrCreateMissing = 2
+}
+
 public sealed class SurveyInstrumentBatchRestoreRequest
 {
     public SurveyInstrumentBatchRestoreConflictPolicy ConflictPolicy { get; set; }
+    public SurveyInstrumentBatchCatalogRestorePolicy CatalogPolicy { get; set; } =
+        SurveyInstrumentBatchCatalogRestorePolicy.MapOrCreateMissing;
     public SurveyInstrumentBatchExportDocument? Document { get; set; }
 }
 

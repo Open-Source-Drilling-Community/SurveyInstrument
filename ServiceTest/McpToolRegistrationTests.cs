@@ -212,6 +212,8 @@ public sealed class McpToolRegistrationTests
             Assert.That(export, Does.Contain("FeatureCategories"));
             Assert.That(restore, Does.Contain("FailIfExists"));
             Assert.That(restore, Does.Contain("ReplaceExisting"));
+            Assert.That(restore, Does.Contain("MapExisting"));
+            Assert.That(restore, Does.Contain("MapOrCreateMissing"));
             Assert.That(_tools["survey_instrument_batch_export"].Behavior.ReadOnlyHint, Is.True);
             Assert.That(_tools["survey_instrument_batch_restore"].Behavior.DestructiveHint, Is.True);
         });

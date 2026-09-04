@@ -252,6 +252,7 @@ public sealed class McpServerHttpTests
                     ["request"] = new JsonObject
                     {
                         ["ConflictPolicy"] = "FailIfExists",
+                        ["CatalogPolicy"] = "MapExisting",
                         ["Document"] = document.DeepClone()
                     }
                 }, cancellationToken: CancellationToken.None);
@@ -275,6 +276,7 @@ public sealed class McpServerHttpTests
                     ["request"] = new JsonObject
                     {
                         ["ConflictPolicy"] = "FailIfExists",
+                        ["CatalogPolicy"] = "MapExisting",
                         ["Document"] = document.DeepClone()
                     }
                 }, cancellationToken: CancellationToken.None);
