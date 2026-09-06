@@ -1,5 +1,7 @@
 # WebPages
 
+This release targets MudBlazor 9.9.0 and the matching OSDC shared web component packages.
+
 `WebPages` is a reusable Razor class library that contains the actual SurveyInstrument Blazor pages and the typed API access layer used by the host application.
 
 It is the main UI feature library of the solution. `WebApp` hosts it, but most of the business-facing UI lives here.

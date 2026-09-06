@@ -19,7 +19,7 @@
     <PackageProjectUrl>https://github.com/Open-Source-Drilling-Community/SurveyInstrument</PackageProjectUrl>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
-    <Version>1.1.0</Version>
+    <Version>1.1.1</Version>
   </PropertyGroup>
 
   <ItemGroup>
@@ -31,7 +31,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="OSDC.DotnetLibraries.Drilling.WebAppUtils" Version="1.1.2" />
+    <PackageReference Include="OSDC.DotnetLibraries.Drilling.WebAppUtils" Version="1.1.5" />
   </ItemGroup>
 
 </Project>

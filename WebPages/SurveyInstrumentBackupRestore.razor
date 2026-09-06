@@ -294,7 +294,7 @@
     private async Task RestoreAsync()
     {
         if (!CanRestore || _document == null) return;
-        bool? confirmed = await DialogService.ShowMessageBox(
+        bool? confirmed = await DialogService.ShowMessageBoxAsync(
             "Restore survey instruments",
             _conflictPolicy == SurveyInstrumentBatchRestoreConflictPolicy.ReplaceExisting
                 ? $"Restore {_document.SurveyInstruments.Count} survey instrument(s) and replace matching UUIDs?"
