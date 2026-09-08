@@ -314,6 +314,7 @@ public sealed class McpToolRegistrationTests
     public void Resource_output_schemas_describe_success_envelopes_and_complete_data()
     {
         string instrument = _tools["survey_instrument_get_by_id"].OutputSchema.ToJsonString();
+        string create = _tools["survey_instrument_create"].OutputSchema.ToJsonString();
         string errorSources = _tools["error_source_get_all"].OutputSchema.ToJsonString();
         string features = _tools["survey_instrument_feature_category_get_all"].OutputSchema.ToJsonString();
 
@@ -322,6 +323,7 @@ public sealed class McpToolRegistrationTests
             Assert.That(instrument, Does.Contain("\"status\""));
             Assert.That(instrument, Does.Contain("SurveyInstrumentFeatureAssignments"));
             Assert.That(instrument, Does.Contain("ErrorSourceList"));
+            Assert.That(create, Is.EqualTo(instrument));
             Assert.That(errorSources, Does.Contain("MagnitudeQuantity"));
             Assert.That(features, Does.Contain("HasValidityPeriod"));
             Assert.That(features, Does.Contain("Options"));

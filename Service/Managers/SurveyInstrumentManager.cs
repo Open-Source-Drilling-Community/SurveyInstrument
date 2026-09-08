@@ -76,7 +76,7 @@ namespace OSDC.Drilling.SurveyInstrument.Service.Managers
             get
             {
                 int count = 0;
-                var connection = _connectionManager.GetConnection();
+                using var connection = _connectionManager.GetConnection();
                 if (connection != null)
                 {
                     var command = connection.CreateCommand();
@@ -104,7 +104,7 @@ namespace OSDC.Drilling.SurveyInstrument.Service.Managers
 
         public bool Clear()
         {
-            var connection = _connectionManager.GetConnection();
+            using var connection = _connectionManager.GetConnection();
             if (connection != null)
             {
                 bool success = false;
@@ -136,11 +136,12 @@ namespace OSDC.Drilling.SurveyInstrument.Service.Managers
         public bool Contains(Guid guid)
         {
             int count = 0;
-            var connection = _connectionManager.GetConnection();
+            using var connection = _connectionManager.GetConnection();
             if (connection != null)
             {
                 var command = connection.CreateCommand();
-                command.CommandText = $"SELECT COUNT(*) FROM SurveyInstrumentTable WHERE ID = '{guid}'";
+                command.CommandText = "SELECT COUNT(*) FROM SurveyInstrumentTable WHERE ID = $id";
+                command.Parameters.AddWithValue("$id", guid);
                 try
                 {
                     using SqliteDataReader reader = command.ExecuteReader();
@@ -168,7 +169,7 @@ namespace OSDC.Drilling.SurveyInstrument.Service.Managers
         public List<Guid>? GetAllSurveyInstrumentId()
         {
             List<Guid> ids = [];
-            var connection = _connectionManager.GetConnection();
+            using var connection = _connectionManager.GetConnection();
             if (connection != null)
             {
                 var command = connection.CreateCommand();
@@ -203,7 +204,7 @@ namespace OSDC.Drilling.SurveyInstrument.Service.Managers
         public List<MetaInfo?>? GetAllSurveyInstrumentMetaInfo()
         {
             List<MetaInfo?> metaInfos = new();
-            var connection = _connectionManager.GetConnection();
+            using var connection = _connectionManager.GetConnection();
             if (connection != null)
             {
                 var command = connection.CreateCommand();
@@ -241,12 +242,13 @@ namespace OSDC.Drilling.SurveyInstrument.Service.Managers
         {
             if (!guid.Equals(Guid.Empty))
             {
-                var connection = _connectionManager.GetConnection();
+                using var connection = _connectionManager.GetConnection();
                 if (connection != null)
                 {
                     OSDC.Drilling.SurveyInstrument.Model.SurveyInstrument? surveyInstrument;
                     var command = connection.CreateCommand();
-                    command.CommandText = $"SELECT SurveyInstrument FROM SurveyInstrumentTable WHERE ID = '{guid}'";
+                    command.CommandText = "SELECT SurveyInstrument FROM SurveyInstrumentTable WHERE ID = $id";
+                    command.Parameters.AddWithValue("$id", guid);
                     try
                     {
                         using var reader = command.ExecuteReader();
@@ -254,6 +256,11 @@ namespace OSDC.Drilling.SurveyInstrument.Service.Managers
                         {
                             string data = reader.GetString(0);
                             surveyInstrument = JsonSerializer.Deserialize<OSDC.Drilling.SurveyInstrument.Model.SurveyInstrument>(data, JsonSettings.Options);
+                            if (surveyInstrument != null)
+                            {
+                                surveyInstrument.LastModificationDate ??=
+                                    surveyInstrument.CreationDate ?? DateTimeOffset.UnixEpoch;
+                            }
                             if (surveyInstrument != null && surveyInstrument.MetaInfo != null && !surveyInstrument.MetaInfo.ID.Equals(guid))
                                 throw new SqliteException("SQLite database corrupted: returned SurveyInstrument is null or has been jsonified with the wrong ID.", 1);
                         }
@@ -290,7 +297,7 @@ namespace OSDC.Drilling.SurveyInstrument.Service.Managers
         public List<OSDC.Drilling.SurveyInstrument.Model.SurveyInstrument?>? GetAllSurveyInstrument()
         {
             List<OSDC.Drilling.SurveyInstrument.Model.SurveyInstrument?> vals = [];
-            var connection = _connectionManager.GetConnection();
+            using var connection = _connectionManager.GetConnection();
             if (connection != null)
             {
                 var command = connection.CreateCommand();
@@ -302,6 +309,11 @@ namespace OSDC.Drilling.SurveyInstrument.Service.Managers
                     {
                         string data = reader.GetString(0);
                         OSDC.Drilling.SurveyInstrument.Model.SurveyInstrument? surveyInstrument = JsonSerializer.Deserialize<OSDC.Drilling.SurveyInstrument.Model.SurveyInstrument>(data, JsonSettings.Options);
+                        if (surveyInstrument != null)
+                        {
+                            surveyInstrument.LastModificationDate ??=
+                                surveyInstrument.CreationDate ?? DateTimeOffset.UnixEpoch;
+                        }
                         vals.Add(surveyInstrument);
                     }
                     _logger.LogInformation("Returning the list of existing SurveyInstrument from SurveyInstrumentTable");
@@ -327,7 +339,7 @@ namespace OSDC.Drilling.SurveyInstrument.Service.Managers
         public List<SurveyInstrumentLight>? GetAllSurveyInstrumentLight()
         {
             List<SurveyInstrumentLight>? surveyInstrumentLightList = [];
-            var connection = _connectionManager.GetConnection();
+            using var connection = _connectionManager.GetConnection();
             if (connection != null)
             {
                 var command = connection.CreateCommand();
@@ -348,6 +360,7 @@ namespace OSDC.Drilling.SurveyInstrument.Service.Managers
                         DateTimeOffset? lastModificationDate = null;
                         if (DateTimeOffset.TryParse(reader.GetString(4), out DateTimeOffset lDate))
                             lastModificationDate = lDate;
+                        lastModificationDate ??= creationDate ?? DateTimeOffset.UnixEpoch;
                         surveyInstrumentLightList.Add(new SurveyInstrumentLight(
                                 metaInfo,
                                 string.IsNullOrEmpty(name) ? null : name,
@@ -386,7 +399,7 @@ namespace OSDC.Drilling.SurveyInstrument.Service.Managers
             if (surveyInstrument != null && surveyInstrument.MetaInfo != null && surveyInstrument.MetaInfo.ID != Guid.Empty)
             {
                 //update SurveyInstrumentTable
-                var connection = _connectionManager.GetConnection();
+                using var connection = _connectionManager.GetConnection();
                 if (connection != null)
                 {
                     using SqliteTransaction transaction = connection.BeginTransaction();
@@ -394,32 +407,24 @@ namespace OSDC.Drilling.SurveyInstrument.Service.Managers
                     try
                     {
                         //add the SurveyInstrument to the SurveyInstrumentTable
+                        DateTimeOffset now = DateTimeOffset.UtcNow;
+                        surveyInstrument.CreationDate = now;
+                        surveyInstrument.LastModificationDate = now;
                         string metaInfo = JsonSerializer.Serialize(surveyInstrument.MetaInfo, JsonSettings.Options);
-                        string? cDate = null;
-                        if (surveyInstrument.CreationDate != null)
-                            cDate = ((DateTimeOffset)surveyInstrument.CreationDate).ToString(SqlConnectionManager.DATE_TIME_FORMAT);
-                        string? lDate = null;
-                        if (surveyInstrument.LastModificationDate != null)
-                            lDate = ((DateTimeOffset)surveyInstrument.LastModificationDate).ToString("O");
+                        string cDate = now.ToString("O");
+                        string lDate = cDate;
                         string data = JsonSerializer.Serialize(surveyInstrument, JsonSettings.Options);
                         var command = connection.CreateCommand();
-                        command.CommandText = "INSERT INTO SurveyInstrumentTable (" +
-                            "ID, " +
-                            "MetaInfo, " +
-                            "Name, " +
-                            "Description, " +
-                            "CreationDate, " +
-                            "LastModificationDate, " +
-                            "SurveyInstrument" +
-                            ") VALUES (" +
-                            $"'{surveyInstrument.MetaInfo.ID}', " +
-                            $"'{metaInfo}', " +
-                            $"'{surveyInstrument.Name}', " +
-                            $"'{surveyInstrument.Description}', " +
-                            $"'{cDate}', " +
-                            $"'{lDate}', " +
-                            $"'{data}'" +
-                            ")";
+                        command.CommandText = "INSERT INTO SurveyInstrumentTable " +
+                            "(ID, MetaInfo, Name, Description, CreationDate, LastModificationDate, SurveyInstrument) " +
+                            "VALUES ($id, $metaInfo, $name, $description, $creationDate, $lastModificationDate, $document)";
+                        command.Parameters.AddWithValue("$id", surveyInstrument.MetaInfo.ID);
+                        command.Parameters.AddWithValue("$metaInfo", metaInfo);
+                        command.Parameters.AddWithValue("$name", surveyInstrument.Name ?? string.Empty);
+                        command.Parameters.AddWithValue("$description", surveyInstrument.Description ?? string.Empty);
+                        command.Parameters.AddWithValue("$creationDate", cDate);
+                        command.Parameters.AddWithValue("$lastModificationDate", lDate);
+                        command.Parameters.AddWithValue("$document", data);
                         int count = command.ExecuteNonQuery();
                         if (count != 1)
                         {
@@ -474,7 +479,9 @@ namespace OSDC.Drilling.SurveyInstrument.Service.Managers
             bool success = true;
             if (guid != Guid.Empty && surveyInstrument != null && surveyInstrument.MetaInfo != null && surveyInstrument.MetaInfo.ID == guid)
             {
-                var connection = _connectionManager.GetConnection();
+                OSDC.Drilling.SurveyInstrument.Model.SurveyInstrument? stored = GetSurveyInstrumentById(guid);
+                surveyInstrument.CreationDate = stored?.CreationDate ?? surveyInstrument.CreationDate;
+                using var connection = _connectionManager.GetConnection();
                 if (connection != null)
                 {
                     using SqliteTransaction transaction = connection.BeginTransaction();
@@ -484,24 +491,33 @@ namespace OSDC.Drilling.SurveyInstrument.Service.Managers
                         string metaInfo = JsonSerializer.Serialize(surveyInstrument.MetaInfo, JsonSettings.Options);
                         string? expectedDate = expectedModifiedUtc?.ToString("O");
                         string? expectedLegacyDate = expectedModifiedUtc?.ToString(SqlConnectionManager.DATE_TIME_FORMAT);
-                        string? cDate = null;
-                        if (surveyInstrument.CreationDate != null)
-                            cDate = ((DateTimeOffset)surveyInstrument.CreationDate).ToString(SqlConnectionManager.DATE_TIME_FORMAT);
+                        string? cDate = surveyInstrument.CreationDate?.ToString("O");
                         surveyInstrument.LastModificationDate = DateTimeOffset.UtcNow;
                         string? lDate = ((DateTimeOffset)surveyInstrument.LastModificationDate).ToString("O");
                         string data = JsonSerializer.Serialize(surveyInstrument, JsonSettings.Options);
                         var command = connection.CreateCommand();
-                        command.CommandText = $"UPDATE SurveyInstrumentTable SET " +
-                            $"MetaInfo = '{metaInfo}', " +
-                            $"Name = '{surveyInstrument.Name}', " +
-                            $"Description = '{surveyInstrument.Description}', " +
-                            $"CreationDate = '{cDate}', " +
-                            $"LastModificationDate = '{lDate}', " +
-                            $"SurveyInstrument = '{data}' " +
-                            $"WHERE ID = '{guid}'" +
+                        command.CommandText = "UPDATE SurveyInstrumentTable SET " +
+                            "MetaInfo = $metaInfo, Name = $name, Description = $description, " +
+                            "CreationDate = $creationDate, LastModificationDate = $lastModificationDate, " +
+                            "SurveyInstrument = $document WHERE ID = $id" +
                             (expectedDate == null ? string.Empty :
-                                $" AND (LastModificationDate = '{expectedDate}' OR " +
-                                $"(length(LastModificationDate) = 19 AND LastModificationDate = '{expectedLegacyDate}'))");
+                                " AND (LastModificationDate = $expectedDate OR " +
+                                "(length(LastModificationDate) = 19 AND LastModificationDate = $expectedLegacyDate) OR " +
+                                "($expectedIsLegacyDefault = 1 AND (LastModificationDate IS NULL OR LastModificationDate = '')))");
+                        command.Parameters.AddWithValue("$metaInfo", metaInfo);
+                        command.Parameters.AddWithValue("$name", surveyInstrument.Name ?? string.Empty);
+                        command.Parameters.AddWithValue("$description", surveyInstrument.Description ?? string.Empty);
+                        command.Parameters.AddWithValue("$creationDate", cDate ?? string.Empty);
+                        command.Parameters.AddWithValue("$lastModificationDate", lDate);
+                        command.Parameters.AddWithValue("$document", data);
+                        command.Parameters.AddWithValue("$id", guid);
+                        if (expectedDate != null)
+                        {
+                            command.Parameters.AddWithValue("$expectedDate", expectedDate);
+                            command.Parameters.AddWithValue("$expectedLegacyDate", expectedLegacyDate!);
+                            command.Parameters.AddWithValue("$expectedIsLegacyDefault",
+                                expectedModifiedUtc == DateTimeOffset.UnixEpoch ? 1 : 0);
+                        }
                         int count = command.ExecuteNonQuery();
                         if (count != 1)
                         {
@@ -640,7 +656,7 @@ namespace OSDC.Drilling.SurveyInstrument.Service.Managers
         {
             if (!guid.Equals(Guid.Empty))
             {
-                var connection = _connectionManager.GetConnection();
+                using var connection = _connectionManager.GetConnection();
                 if (connection != null)
                 {
                     using var transaction = connection.BeginTransaction();
@@ -651,10 +667,19 @@ namespace OSDC.Drilling.SurveyInstrument.Service.Managers
                         var command = connection.CreateCommand();
                         string? expectedDate = expectedModifiedUtc?.ToString("O");
                         string? expectedLegacyDate = expectedModifiedUtc?.ToString(SqlConnectionManager.DATE_TIME_FORMAT);
-                        command.CommandText = $"DELETE FROM SurveyInstrumentTable WHERE ID = '{guid}'" +
+                        command.CommandText = "DELETE FROM SurveyInstrumentTable WHERE ID = $id" +
                             (expectedDate == null ? string.Empty :
-                                $" AND (LastModificationDate = '{expectedDate}' OR " +
-                                $"(length(LastModificationDate) = 19 AND LastModificationDate = '{expectedLegacyDate}'))");
+                                " AND (LastModificationDate = $expectedDate OR " +
+                                "(length(LastModificationDate) = 19 AND LastModificationDate = $expectedLegacyDate) OR " +
+                                "($expectedIsLegacyDefault = 1 AND (LastModificationDate IS NULL OR LastModificationDate = '')))");
+                        command.Parameters.AddWithValue("$id", guid);
+                        if (expectedDate != null)
+                        {
+                            command.Parameters.AddWithValue("$expectedDate", expectedDate);
+                            command.Parameters.AddWithValue("$expectedLegacyDate", expectedLegacyDate!);
+                            command.Parameters.AddWithValue("$expectedIsLegacyDefault",
+                                expectedModifiedUtc == DateTimeOffset.UnixEpoch ? 1 : 0);
+                        }
                         int count = command.ExecuteNonQuery();
                         if (count != 1)
                         {

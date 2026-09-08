@@ -85,8 +85,8 @@ public static class SurveyInstrumentRestMcpToolRegistrations
         services.AddLegacyMcpTool("survey_instrument_batch_restore", "Validate and atomically restore a schema-version-1 Survey Instrument backup. MapExisting requires every exact catalog UUID to exist locally; MapOrCreateMissing atomically creates missing identities, feature categories, and error-source templates. FailIfExists preserves every existing instrument; ReplaceExisting replaces matching instrument UUIDs. Differing content at an existing catalog UUID rejects the whole restore.", McpToolArgumentHelpers.CreateBatchRestoreSchema(),
             (sp, args, ct) => InvokeWithBodyResult<BatchRestoreRequestModel, BatchRestoreResponseModel>(args, "request", ct,
                 request => SurveyInstrumentController(sp).BatchRestoreSurveyInstruments(request)));
-        services.AddLegacyMcpTool("survey_instrument_create", "Persist a new complete survey-instrument error model. Generate a non-empty surveyInstrument.MetaInfo.ID first; an existing UUID produces a conflict. Select one of the four discriminated ModelType families, embed authoritative ErrorSource snapshots when required, and supply physical values in SI with angles in radians.", McpToolArgumentHelpers.CreateSurveyInstrumentSchema(),
-            (sp, args, ct) => InvokeWithBody<SurveyInstrumentModel>(args, "surveyInstrument", ct, data => SurveyInstrumentController(sp).PostSurveyInstrument(data)));
+        services.AddLegacyMcpTool("survey_instrument_create", "Persist a new complete survey-instrument error model and return it with server-owned CreationDate and LastModificationDate. Generate a non-empty surveyInstrument.MetaInfo.ID first; an existing UUID produces a conflict. Select one of the four discriminated ModelType families, embed authoritative ErrorSource snapshots when required, and supply physical values in SI with angles in radians.", McpToolArgumentHelpers.CreateSurveyInstrumentSchema(),
+            InvokeSurveyInstrumentCreate);
         services.AddLegacyMcpTool("survey_instrument_update_by_id", "Replace an existing survey-instrument definition with optimistic concurrency protection. The path id must match surveyInstrument.MetaInfo.ID and expectedModifiedUtc must equal the latest LastModificationDate. Send the complete desired representation; a stale request returns stale_write without changing data.", McpToolArgumentHelpers.CreateSurveyInstrumentSchema(includeId: true),
             InvokeSurveyInstrumentUpdate);
         services.AddLegacyMcpTool("survey_instrument_patch_by_id", "Partially update one survey instrument with optimistic concurrency protection. Supply only changed top-level fields in patch; omitted fields are retained, arrays are replaced as a whole, and null clears nullable fields. MetaInfo and server timestamps cannot be patched. A stale expectedModifiedUtc returns stale_write.", McpToolArgumentHelpers.CreateSurveyInstrumentPatchSchema(),
@@ -364,6 +364,23 @@ public static class SurveyInstrumentRestMcpToolRegistrations
     }
 
     private static JsonObject Success(JsonNode data) => new() { ["status"] = 200, ["data"] = data };
+
+    private static Task<JsonNode?> InvokeSurveyInstrumentCreate(
+        IServiceProvider serviceProvider, JsonObject? arguments, CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        if (!TryDeserialize(arguments, "surveyInstrument", out SurveyInstrumentModel? data, out JsonNode? error))
+        {
+            return Task.FromResult(error);
+        }
+
+        ActionResult result = SurveyInstrumentController(serviceProvider).PostSurveyInstrument(data);
+        JsonObject response = McpActionResultConverter.FromActionResult(result);
+        int status = response["status"]?.GetValue<int>() ?? 500;
+        return Task.FromResult<JsonNode?>(status is >= 200 and <= 299 && data != null
+            ? Success(JsonSerializer.SerializeToNode(data, JsonSettings.Options)!)
+            : response);
+    }
 
     private sealed record CatalogReferenceSets(HashSet<Guid> Identities, Dictionary<Guid, HashSet<Guid>> Features);
 

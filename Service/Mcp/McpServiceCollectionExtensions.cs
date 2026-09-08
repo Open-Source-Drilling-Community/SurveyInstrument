@@ -110,7 +110,7 @@ public static class McpServiceCollectionExtensions
             return Tools.McpToolArgumentHelpers.CreateIdsOutputSchema();
         if (name.EndsWith("_get_all_meta_info", StringComparison.Ordinal))
             return Tools.McpToolArgumentHelpers.CreateMetaInfoListOutputSchema();
-        if (name == "survey_instrument_get_by_id")
+        if (name is "survey_instrument_get_by_id" or "survey_instrument_create")
             return Tools.McpToolArgumentHelpers.CreateSurveyInstrumentOutputSchema();
         if (name == "survey_instrument_error_source_mutate")
             return Tools.McpToolArgumentHelpers.CreateSurveyInstrumentOutputSchema();

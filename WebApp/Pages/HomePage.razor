@@ -139,6 +139,8 @@
         Survey instrument updates, patches, and deletes use <b>optimistic concurrency</b>: every mutation must echo
         back the <code>LastModificationDate</code> (as <code>expectedModifiedUtc</code>) from the caller's latest
         read, and a stale request is rejected rather than silently overwriting a concurrent change. Because a
+        create operation assigns both timestamps on the server, MCP returns the created instrument with the first
+        usable token; descriptions containing apostrophes are stored without special escaping by callers. Because a
         standalone Error Source template carries no modification timestamp, its concurrency instead relies on a
         lowercase SHA-256 <code>versionToken</code> computed from the stored representation; MCP updates and deletes
         must supply the exact current token.
