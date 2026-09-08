@@ -41,7 +41,7 @@ It is where reusable application UI is implemented without tying it to one speci
 - `SurveyInstrumentIdentities.razor`
   - Manages identity definitions such as official, manufacturer, model, and tool names.
 - `SurveyInstrumentFeatures.razor`
-  - Manages feature categories, exclusivity/validity flags, and options.
+  - Manages feature categories, exclusivity/validity flags, and options using the common resource-service catalog grid, bulk selection, validation, deletion confirmation, and add/save/reload actions.
 - `SurveyInstrumentBackupRestore.razor`
   - Exports all or selected survey instruments to a versioned JSON file.
   - Previews and validates uploaded backups before an explicitly confirmed atomic restore.
