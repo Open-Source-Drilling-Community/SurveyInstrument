@@ -140,8 +140,10 @@ namespace OSDC.Drilling.SurveyInstrument.Service.Managers
             if (connection != null)
             {
                 var command = connection.CreateCommand();
-                command.CommandText = "SELECT COUNT(*) FROM SurveyInstrumentTable WHERE ID = $id";
-                command.Parameters.AddWithValue("$id", guid);
+                command.CommandText = "SELECT COUNT(*) FROM SurveyInstrumentTable " +
+                    "WHERE ID = $idText OR ID = $idValue";
+                command.Parameters.AddWithValue("$idText", guid.ToString());
+                command.Parameters.AddWithValue("$idValue", guid);
                 try
                 {
                     using SqliteDataReader reader = command.ExecuteReader();
@@ -247,8 +249,10 @@ namespace OSDC.Drilling.SurveyInstrument.Service.Managers
                 {
                     OSDC.Drilling.SurveyInstrument.Model.SurveyInstrument? surveyInstrument;
                     var command = connection.CreateCommand();
-                    command.CommandText = "SELECT SurveyInstrument FROM SurveyInstrumentTable WHERE ID = $id";
-                    command.Parameters.AddWithValue("$id", guid);
+                    command.CommandText = "SELECT SurveyInstrument FROM SurveyInstrumentTable " +
+                        "WHERE ID = $idText OR ID = $idValue";
+                    command.Parameters.AddWithValue("$idText", guid.ToString());
+                    command.Parameters.AddWithValue("$idValue", guid);
                     try
                     {
                         using var reader = command.ExecuteReader();
@@ -418,7 +422,7 @@ namespace OSDC.Drilling.SurveyInstrument.Service.Managers
                         command.CommandText = "INSERT INTO SurveyInstrumentTable " +
                             "(ID, MetaInfo, Name, Description, CreationDate, LastModificationDate, SurveyInstrument) " +
                             "VALUES ($id, $metaInfo, $name, $description, $creationDate, $lastModificationDate, $document)";
-                        command.Parameters.AddWithValue("$id", surveyInstrument.MetaInfo.ID);
+                        command.Parameters.AddWithValue("$id", surveyInstrument.MetaInfo.ID.ToString());
                         command.Parameters.AddWithValue("$metaInfo", metaInfo);
                         command.Parameters.AddWithValue("$name", surveyInstrument.Name ?? string.Empty);
                         command.Parameters.AddWithValue("$description", surveyInstrument.Description ?? string.Empty);
@@ -499,7 +503,7 @@ namespace OSDC.Drilling.SurveyInstrument.Service.Managers
                         command.CommandText = "UPDATE SurveyInstrumentTable SET " +
                             "MetaInfo = $metaInfo, Name = $name, Description = $description, " +
                             "CreationDate = $creationDate, LastModificationDate = $lastModificationDate, " +
-                            "SurveyInstrument = $document WHERE ID = $id" +
+                            "SurveyInstrument = $document WHERE (ID = $idText OR ID = $idValue)" +
                             (expectedDate == null ? string.Empty :
                                 " AND (LastModificationDate = $expectedDate OR " +
                                 "(length(LastModificationDate) = 19 AND LastModificationDate = $expectedLegacyDate) OR " +
@@ -510,7 +514,8 @@ namespace OSDC.Drilling.SurveyInstrument.Service.Managers
                         command.Parameters.AddWithValue("$creationDate", cDate ?? string.Empty);
                         command.Parameters.AddWithValue("$lastModificationDate", lDate);
                         command.Parameters.AddWithValue("$document", data);
-                        command.Parameters.AddWithValue("$id", guid);
+                        command.Parameters.AddWithValue("$idText", guid.ToString());
+                        command.Parameters.AddWithValue("$idValue", guid);
                         if (expectedDate != null)
                         {
                             command.Parameters.AddWithValue("$expectedDate", expectedDate);
@@ -667,12 +672,13 @@ namespace OSDC.Drilling.SurveyInstrument.Service.Managers
                         var command = connection.CreateCommand();
                         string? expectedDate = expectedModifiedUtc?.ToString("O");
                         string? expectedLegacyDate = expectedModifiedUtc?.ToString(SqlConnectionManager.DATE_TIME_FORMAT);
-                        command.CommandText = "DELETE FROM SurveyInstrumentTable WHERE ID = $id" +
+                        command.CommandText = "DELETE FROM SurveyInstrumentTable WHERE (ID = $idText OR ID = $idValue)" +
                             (expectedDate == null ? string.Empty :
                                 " AND (LastModificationDate = $expectedDate OR " +
                                 "(length(LastModificationDate) = 19 AND LastModificationDate = $expectedLegacyDate) OR " +
                                 "($expectedIsLegacyDefault = 1 AND (LastModificationDate IS NULL OR LastModificationDate = '')))");
-                        command.Parameters.AddWithValue("$id", guid);
+                        command.Parameters.AddWithValue("$idText", guid.ToString());
+                        command.Parameters.AddWithValue("$idValue", guid);
                         if (expectedDate != null)
                         {
                             command.Parameters.AddWithValue("$expectedDate", expectedDate);
