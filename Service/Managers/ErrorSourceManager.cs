@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Microsoft.Extensions.Logging;
 using OSDC.DotnetLibraries.General.DataManagement;
 using Microsoft.Data.Sqlite;
@@ -57,6 +58,10 @@ namespace OSDC.Drilling.SurveyInstrument.Service.Managers
                     _logger.LogWarning("The ErrorSourceTable is corrupted: clearing it and filling it with default ErrorSources");
                     Clear();
                     FillDefault();
+                }
+                else
+                {
+                    EnsureRevision5Defaults(ids);
                 }
             }
         }
@@ -322,7 +327,8 @@ namespace OSDC.Drilling.SurveyInstrument.Service.Managers
         /// <returns>true if the given ErrorSource has been added successfully to the microservice database</returns>
         public bool AddErrorSource(ErrorSource? errorSource)
         {
-            if (errorSource != null && errorSource.MetaInfo != null && errorSource.MetaInfo.ID != Guid.Empty)
+            if (errorSource != null && errorSource.MetaInfo != null && errorSource.MetaInfo.ID != Guid.Empty &&
+                ErrorSourceRevision5.TryValidate(errorSource, requireCurrentCode: true, out _))
             {
                 //update ErrorSourceTable
                 var connection = _connectionManager.GetConnection();
@@ -389,7 +395,8 @@ namespace OSDC.Drilling.SurveyInstrument.Service.Managers
         public bool UpdateErrorSourceById(Guid guid, ErrorSource? errorSource, string? expectedCurrentJson = null)
         {
             bool success = true;
-            if (guid != Guid.Empty && errorSource != null && errorSource.MetaInfo != null && errorSource.MetaInfo.ID == guid)
+            if (guid != Guid.Empty && errorSource != null && errorSource.MetaInfo != null && errorSource.MetaInfo.ID == guid &&
+                ErrorSourceRevision5.TryValidate(errorSource, requireCurrentCode: false, out _))
             {
                 var connection = _connectionManager.GetConnection();
                 if (connection != null)
@@ -538,7 +545,31 @@ namespace OSDC.Drilling.SurveyInstrument.Service.Managers
                 ErrorSourceFactory.Create_MSXY_TI2(),
                 ErrorSourceFactory.Create_MSXY_TI3(),
                 ErrorSourceFactory.Create_MSZ(),
-                ErrorSourceFactory.Create_AMID(),
+                ErrorSourceFactory.Create_AMIL(),
+                ErrorSourceFactory.Create_DSTS(),
+                ErrorSourceFactory.Create_XCLI1(),
+                ErrorSourceFactory.Create_XCLI2(),
+                ErrorSourceFactory.Create_ABXY_TI1(),
+                ErrorSourceFactory.Create_ABXY_TI2(),
+                ErrorSourceFactory.Create_ASXY_TI1(),
+                ErrorSourceFactory.Create_ASXY_TI2(),
+                ErrorSourceFactory.Create_ASXY_TI3(),
+                ErrorSourceFactory.Create_ABIXY_TI1(),
+                ErrorSourceFactory.Create_ABIXY_TI2(),
+                ErrorSourceFactory.Create_ABIZ(),
+                ErrorSourceFactory.Create_ASIXY_TI1(),
+                ErrorSourceFactory.Create_ASIXY_TI2(),
+                ErrorSourceFactory.Create_ASIXY_TI3(),
+                ErrorSourceFactory.Create_ASIZ(),
+                ErrorSourceFactory.Create_MBIXY_TI1(),
+                ErrorSourceFactory.Create_MBIXY_TI2(),
+                ErrorSourceFactory.Create_MSIXY_TI1(),
+                ErrorSourceFactory.Create_MSIXY_TI2(),
+                ErrorSourceFactory.Create_MSIXY_TI3(),
+                ErrorSourceFactory.Create_DEC(),
+                ErrorSourceFactory.Create_DBH(),
+                ErrorSourceFactory.Create_MFI(),
+                ErrorSourceFactory.Create_MDI(),
                 ErrorSourceFactory.Create_DEC_U(),
                 ErrorSourceFactory.Create_DEC_OS(),
                 ErrorSourceFactory.Create_DEC_OH(),
@@ -592,6 +623,51 @@ namespace OSDC.Drilling.SurveyInstrument.Service.Managers
             foreach (ErrorSource? es in errorSourceList)
             {
                 AddErrorSource(es);
+            }
+        }
+
+        /// <summary>
+        /// Adds Revision 5 terms introduced after the original catalogue was deployed without
+        /// rewriting user-maintained templates or removing historic persisted terms.
+        /// </summary>
+        private void EnsureRevision5Defaults(IEnumerable<Guid> existingIds)
+        {
+            HashSet<Guid> ids = existingIds.ToHashSet();
+            ErrorSource[] revision5Sources =
+            [
+                ErrorSourceFactory.Create_AMIL(),
+                ErrorSourceFactory.Create_DSTS(),
+                ErrorSourceFactory.Create_XCLI1(),
+                ErrorSourceFactory.Create_XCLI2(),
+                ErrorSourceFactory.Create_ABXY_TI1(),
+                ErrorSourceFactory.Create_ABXY_TI2(),
+                ErrorSourceFactory.Create_ASXY_TI1(),
+                ErrorSourceFactory.Create_ASXY_TI2(),
+                ErrorSourceFactory.Create_ASXY_TI3(),
+                ErrorSourceFactory.Create_ABIXY_TI1(),
+                ErrorSourceFactory.Create_ABIXY_TI2(),
+                ErrorSourceFactory.Create_ABIZ(),
+                ErrorSourceFactory.Create_ASIXY_TI1(),
+                ErrorSourceFactory.Create_ASIXY_TI2(),
+                ErrorSourceFactory.Create_ASIXY_TI3(),
+                ErrorSourceFactory.Create_ASIZ(),
+                ErrorSourceFactory.Create_MBIXY_TI1(),
+                ErrorSourceFactory.Create_MBIXY_TI2(),
+                ErrorSourceFactory.Create_MSIXY_TI1(),
+                ErrorSourceFactory.Create_MSIXY_TI2(),
+                ErrorSourceFactory.Create_MSIXY_TI3(),
+                ErrorSourceFactory.Create_DEC(),
+                ErrorSourceFactory.Create_DBH(),
+                ErrorSourceFactory.Create_MFI(),
+                ErrorSourceFactory.Create_MDI()
+            ];
+
+            foreach (ErrorSource source in revision5Sources)
+            {
+                if (source.MetaInfo?.ID is Guid id && !ids.Contains(id) && AddErrorSource(source))
+                {
+                    ids.Add(id);
+                }
             }
         }
     }

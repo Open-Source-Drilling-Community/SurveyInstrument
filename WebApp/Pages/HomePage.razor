@@ -41,8 +41,9 @@
                 with a set of optional parameters — relative depth error, misalignment, true inclination, reference
                 error, drill-string magnetism, gyro-compass error — each switched on or off by its own
                 <code>Use...</code> flag. <b>MWD_ISCWSA</b> and <b>Gyro_ISCWSA</b> implement the industry-standard
-                ISCWSA weighting-function formulation, with gyro-specific parameters such as running speed, switching
-                interval, minimum initialization distance, and noise-reduction factor.
+                ISCWSA Error Model Definition Revision 5.13 weighting-function formulation, with gyro-specific
+                parameters such as running speed, switching interval, minimum initialization distance, and
+                noise-reduction factor.
             </MudText>
             <MudText Typo="Typo.body1">
                 A survey instrument can only carry the fields that belong to its own family: create and update
@@ -56,10 +57,16 @@
             <MudText Typo="Typo.h5" Class="mb-3">Error sources: the building blocks of uncertainty</MudText>
             <MudText Typo="Typo.body1" Class="mb-2">
                 An <b>Error Source</b> is one term of a position-uncertainty model: an <code>ErrorCode</code>, a
-                magnitude expressed in the SI unit named by <code>MagnitudeQuantity</code>, systematic/random/global
-                classification flags, an optional inclination interval, and the weighting functions — over
+                magnitude expressed as a one-sigma standard uncertainty in the SI unit named by
+                <code>MagnitudeQuantity</code>, one propagation mode (<b>Random</b>, <b>Systematic</b>,
+                <b>WellByWell</b>, or <b>Global</b>), an optional inclination interval, and the weighting functions — over
                 measured depth, inclination, azimuth, and the vertical-hole special case — that turn that magnitude
                 into a contribution to the position-uncertainty ellipse at a survey station.
+            </MudText>
+            <MudText Typo="Typo.body1" Class="mb-2">
+                Current magnetic axial-interference models use <code>AMIL</code>, whose magnitude is magnetic flux
+                density in tesla. Historic <code>AMID</code> data remains readable as a planar-angle term, but cannot
+                be selected for a new Revision 5 model.
             </MudText>
             <MudText Typo="Typo.body1">
                 The standalone Error Source store is a <i>template library</i>, not a live link: each survey

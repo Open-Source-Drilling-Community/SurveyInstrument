@@ -2780,6 +2780,105 @@ namespace OSDC.Drilling.SurveyInstrument.ModelShared
         [System.Runtime.Serialization.EnumMember(Value = @"GZ_RW")]
         GZ_RW = 80,
 
+        [System.Runtime.Serialization.EnumMember(Value = @"DSTS")]
+        DSTS = 81,
+
+        [System.Runtime.Serialization.EnumMember(Value = @"XCLI1")]
+        XCLI1 = 82,
+
+        [System.Runtime.Serialization.EnumMember(Value = @"XCLI2")]
+        XCLI2 = 83,
+
+        [System.Runtime.Serialization.EnumMember(Value = @"AMIL")]
+        AMIL = 84,
+
+        [System.Runtime.Serialization.EnumMember(Value = @"ABIXY_TI1")]
+        ABIXY_TI1 = 85,
+
+        [System.Runtime.Serialization.EnumMember(Value = @"ABIXY_TI2")]
+        ABIXY_TI2 = 86,
+
+        [System.Runtime.Serialization.EnumMember(Value = @"ABIZ")]
+        ABIZ = 87,
+
+        [System.Runtime.Serialization.EnumMember(Value = @"ASIXY_TI1")]
+        ASIXY_TI1 = 88,
+
+        [System.Runtime.Serialization.EnumMember(Value = @"ASIXY_TI2")]
+        ASIXY_TI2 = 89,
+
+        [System.Runtime.Serialization.EnumMember(Value = @"ASIXY_TI3")]
+        ASIXY_TI3 = 90,
+
+        [System.Runtime.Serialization.EnumMember(Value = @"ASIZ")]
+        ASIZ = 91,
+
+        [System.Runtime.Serialization.EnumMember(Value = @"MBIXY_TI1")]
+        MBIXY_TI1 = 92,
+
+        [System.Runtime.Serialization.EnumMember(Value = @"MBIXY_TI2")]
+        MBIXY_TI2 = 93,
+
+        [System.Runtime.Serialization.EnumMember(Value = @"MSIXY_TI1")]
+        MSIXY_TI1 = 94,
+
+        [System.Runtime.Serialization.EnumMember(Value = @"MSIXY_TI2")]
+        MSIXY_TI2 = 95,
+
+        [System.Runtime.Serialization.EnumMember(Value = @"MSIXY_TI3")]
+        MSIXY_TI3 = 96,
+
+        [System.Runtime.Serialization.EnumMember(Value = @"MFI")]
+        MFI = 97,
+
+        [System.Runtime.Serialization.EnumMember(Value = @"MDI")]
+        MDI = 98,
+
+        [System.Runtime.Serialization.EnumMember(Value = @"CNA")]
+        CNA = 99,
+
+        [System.Runtime.Serialization.EnumMember(Value = @"CNI")]
+        CNI = 100,
+
+        [System.Runtime.Serialization.EnumMember(Value = @"ABXY_TI1")]
+        ABXY_TI1 = 101,
+
+        [System.Runtime.Serialization.EnumMember(Value = @"ABXY_TI2")]
+        ABXY_TI2 = 102,
+
+        [System.Runtime.Serialization.EnumMember(Value = @"ASXY_TI1")]
+        ASXY_TI1 = 103,
+
+        [System.Runtime.Serialization.EnumMember(Value = @"ASXY_TI2")]
+        ASXY_TI2 = 104,
+
+        [System.Runtime.Serialization.EnumMember(Value = @"ASXY_TI3")]
+        ASXY_TI3 = 105,
+
+        [System.Runtime.Serialization.EnumMember(Value = @"DEC")]
+        DEC = 106,
+
+        [System.Runtime.Serialization.EnumMember(Value = @"DBH")]
+        DBH = 107,
+
+    }
+
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.4.0.0 (NJsonSchema v11.3.2.0 (Newtonsoft.Json v13.0.0.0))")]
+    public enum ErrorPropagationMode
+    {
+
+        [System.Runtime.Serialization.EnumMember(Value = @"Random")]
+        Random = 0,
+
+        [System.Runtime.Serialization.EnumMember(Value = @"Systematic")]
+        Systematic = 1,
+
+        [System.Runtime.Serialization.EnumMember(Value = @"WellByWell")]
+        WellByWell = 2,
+
+        [System.Runtime.Serialization.EnumMember(Value = @"Global")]
+        Global = 3,
+
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.4.0.0 (NJsonSchema v11.3.2.0 (Newtonsoft.Json v13.0.0.0))")]
@@ -2798,6 +2897,10 @@ namespace OSDC.Drilling.SurveyInstrument.ModelShared
 
         [System.Text.Json.Serialization.JsonPropertyName("Index")]
         public int Index { get; set; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("PropagationMode")]
+        [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter))]
+        public ErrorPropagationMode PropagationMode { get; set; }
 
         [System.Text.Json.Serialization.JsonPropertyName("IsSystematic")]
         public bool IsSystematic { get; set; }

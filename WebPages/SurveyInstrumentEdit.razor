@@ -98,15 +98,16 @@
                 @ErrorSourceMagnitudeField("DRFR", ErrorCode.DRFR)
                 @ErrorSourceMagnitudeField("DSFS", ErrorCode.DSFS)
                 @ErrorSourceMagnitudeField("DSTG", ErrorCode.DSTG)
+                @ErrorSourceMagnitudeField("DSTS", ErrorCode.DSTS)
                 <MudItem xs="12">
                     <MudText Typo="Typo.h6">Accelerometer Source Terms</MudText>
                 </MudItem>
-                @ErrorSourceMagnitudeField("ABXY-TI1S", ErrorCode.ABXY_TI1S)
-                @ErrorSourceMagnitudeField("ABXY-TI2S", ErrorCode.ABXY_TI2S)
+                @ErrorSourceMagnitudeField("ABXY-TI1", ErrorCode.ABXY_TI1)
+                @ErrorSourceMagnitudeField("ABXY-TI2", ErrorCode.ABXY_TI2)
                 @ErrorSourceMagnitudeField("ABZ", ErrorCode.ABZ)
-                @ErrorSourceMagnitudeField("ASXY_TI1S", ErrorCode.ASXY_TI1S)
-                @ErrorSourceMagnitudeField("ASXY_TI2S", ErrorCode.ASXY_TI2S)
-                @ErrorSourceMagnitudeField("ASXY_TI3S", ErrorCode.ASXY_TI3S)
+                @ErrorSourceMagnitudeField("ASXY-TI1", ErrorCode.ASXY_TI1)
+                @ErrorSourceMagnitudeField("ASXY-TI2", ErrorCode.ASXY_TI2)
+                @ErrorSourceMagnitudeField("ASXY-TI3", ErrorCode.ASXY_TI3)
                 @ErrorSourceMagnitudeField("ASZ", ErrorCode.ASZ)
                 <MudItem xs="12">
                     <MudText Typo="Typo.h6">Magnetometer Sensor Terms</MudText>
@@ -145,7 +146,23 @@
                 <MudItem xs="12">
                     <MudText Typo="Typo.h6">Axial Magnetic Interference Terms</MudText>
                 </MudItem>
-                @ErrorSourceMagnitudeField("AMID", ErrorCode.AMID)
+                @ErrorSourceMagnitudeField("AMIL", ErrorCode.AMIL)
+                @ErrorSourceMagnitudeField("ABIXY-TI1", ErrorCode.ABIXY_TI1)
+                @ErrorSourceMagnitudeField("ABIXY-TI2", ErrorCode.ABIXY_TI2)
+                @ErrorSourceMagnitudeField("ABIZ", ErrorCode.ABIZ)
+                @ErrorSourceMagnitudeField("ASIXY-TI1", ErrorCode.ASIXY_TI1)
+                @ErrorSourceMagnitudeField("ASIXY-TI2", ErrorCode.ASIXY_TI2)
+                @ErrorSourceMagnitudeField("ASIXY-TI3", ErrorCode.ASIXY_TI3)
+                @ErrorSourceMagnitudeField("ASIZ", ErrorCode.ASIZ)
+                @ErrorSourceMagnitudeField("MBIXY-TI1", ErrorCode.MBIXY_TI1)
+                @ErrorSourceMagnitudeField("MBIXY-TI2", ErrorCode.MBIXY_TI2)
+                @ErrorSourceMagnitudeField("MSIXY-TI1", ErrorCode.MSIXY_TI1)
+                @ErrorSourceMagnitudeField("MSIXY-TI2", ErrorCode.MSIXY_TI2)
+                @ErrorSourceMagnitudeField("MSIXY-TI3", ErrorCode.MSIXY_TI3)
+                @ErrorSourceMagnitudeField("MFI", ErrorCode.MFI)
+                @ErrorSourceMagnitudeField("MDI", ErrorCode.MDI)
+                @ErrorSourceMagnitudeField("DEC", ErrorCode.DEC)
+                @ErrorSourceMagnitudeField("DBH", ErrorCode.DBH)
             </MudGrid>
         </MudExpansionPanel>
     }
@@ -431,6 +448,14 @@ private async Task Update()
                 LastModificationDate = DateTimeOffset.UtcNow,
                 ModelType = GetModelType(),
                 ErrorSourceList = BuildErrorSourceList(),
+                Dip = CurrentSurveyInstrument.Dip,
+                Declination = CurrentSurveyInstrument.Declination,
+                Gravity = CurrentSurveyInstrument.Gravity,
+                BField = CurrentSurveyInstrument.BField,
+                Convergence = CurrentSurveyInstrument.Convergence,
+                Latitude = CurrentSurveyInstrument.Latitude,
+                EarthRotRate = CurrentSurveyInstrument.EarthRotRate,
+                CantAngle = CurrentSurveyInstrument.CantAngle,
                 GyroRunningSpeed = CurrentSurveyInstrument.GyroRunningSpeed,
                 ExtRefInitInc = CurrentSurveyInstrument.ExtRefInitInc,
                 GyroSwitching = CurrentSurveyInstrument.GyroSwitching,
@@ -547,12 +572,13 @@ private IEnumerable<ErrorCode> DisplayedIscwsaMagneticCodes()
     yield return ErrorCode.DRFR;
     yield return ErrorCode.DSFS;
     yield return ErrorCode.DSTG;
-    yield return ErrorCode.ABXY_TI1S;
-    yield return ErrorCode.ABXY_TI2S;
+    yield return ErrorCode.DSTS;
+    yield return ErrorCode.ABXY_TI1;
+    yield return ErrorCode.ABXY_TI2;
     yield return ErrorCode.ABZ;
-    yield return ErrorCode.ASXY_TI1S;
-    yield return ErrorCode.ASXY_TI2S;
-    yield return ErrorCode.ASXY_TI3S;
+    yield return ErrorCode.ASXY_TI1;
+    yield return ErrorCode.ASXY_TI2;
+    yield return ErrorCode.ASXY_TI3;
     yield return ErrorCode.ASZ;
     yield return ErrorCode.MBXY_TI1;
     yield return ErrorCode.MBXY_TI2;
@@ -571,7 +597,23 @@ private IEnumerable<ErrorCode> DisplayedIscwsaMagneticCodes()
     yield return ErrorCode.DBH_OH;
     yield return ErrorCode.DBH_OI;
     yield return ErrorCode.DBHR;
-    yield return ErrorCode.AMID;
+    yield return ErrorCode.AMIL;
+    yield return ErrorCode.ABIXY_TI1;
+    yield return ErrorCode.ABIXY_TI2;
+    yield return ErrorCode.ABIZ;
+    yield return ErrorCode.ASIXY_TI1;
+    yield return ErrorCode.ASIXY_TI2;
+    yield return ErrorCode.ASIXY_TI3;
+    yield return ErrorCode.ASIZ;
+    yield return ErrorCode.MBIXY_TI1;
+    yield return ErrorCode.MBIXY_TI2;
+    yield return ErrorCode.MSIXY_TI1;
+    yield return ErrorCode.MSIXY_TI2;
+    yield return ErrorCode.MSIXY_TI3;
+    yield return ErrorCode.MFI;
+    yield return ErrorCode.MDI;
+    yield return ErrorCode.DEC;
+    yield return ErrorCode.DBH;
     yield return ErrorCode.SAGE;
     yield return ErrorCode.XYM1;
     yield return ErrorCode.XYM2;
@@ -584,6 +626,18 @@ private IEnumerable<ErrorCode> DisplayedIscwsaMagneticCodes()
 private IEnumerable<ErrorCode> DisplayedIscwsaGyroCodes()
 {
     HashSet<ErrorCode> magneticCodes = DisplayedIscwsaMagneticCodes().ToHashSet();
+    ErrorCode[] historicMagneticCodes =
+    [
+        ErrorCode.AMID,
+        ErrorCode.ABXY_TI1S,
+        ErrorCode.ABXY_TI2S,
+        ErrorCode.ABIXY_TI1S,
+        ErrorCode.ABIXY_TI2S,
+        ErrorCode.ASXY_TI1S,
+        ErrorCode.ASXY_TI2S,
+        ErrorCode.ASXY_TI3S
+    ];
+    magneticCodes.UnionWith(historicMagneticCodes);
     return Enum.GetValues<ErrorCode>().Where(code => !magneticCodes.Contains(code));
 }
 

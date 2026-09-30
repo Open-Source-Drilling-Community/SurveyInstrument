@@ -1059,7 +1059,43 @@
           "GXY_GD",
           "GXY_RW",
           "GZ_GD",
-          "GZ_RW"
+          "GZ_RW",
+          "DSTS",
+          "XCLI1",
+          "XCLI2",
+          "AMIL",
+          "ABIXY_TI1",
+          "ABIXY_TI2",
+          "ABIZ",
+          "ASIXY_TI1",
+          "ASIXY_TI2",
+          "ASIXY_TI3",
+          "ASIZ",
+          "MBIXY_TI1",
+          "MBIXY_TI2",
+          "MSIXY_TI1",
+          "MSIXY_TI2",
+          "MSIXY_TI3",
+          "MFI",
+          "MDI",
+          "CNA",
+          "CNI",
+          "ABXY_TI1",
+          "ABXY_TI2",
+          "ASXY_TI1",
+          "ASXY_TI2",
+          "ASXY_TI3",
+          "DEC",
+          "DBH"
+        ],
+        "type": "string"
+      },
+      "OSDC.DotnetLibraries.Drilling.Surveying.ErrorPropagationMode": {
+        "enum": [
+          "Random",
+          "Systematic",
+          "WellByWell",
+          "Global"
         ],
         "type": "string"
       },
@@ -1079,6 +1115,9 @@
           "Index": {
             "type": "integer",
             "format": "int32"
+          },
+          "PropagationMode": {
+            "$ref": "#/components/schemas/OSDC.DotnetLibraries.Drilling.Surveying.ErrorPropagationMode"
           },
           "IsSystematic": {
             "type": "boolean"

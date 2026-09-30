@@ -53,6 +53,8 @@ The full survey-domain types are not authored directly in this repository. They 
 
 The `Model` project adds repository-specific helper types around them.
 
+The current SurveyInstrument contract uses `OSDC.DotnetLibraries.Drilling.Surveying` 1.3.2 and aligns ISCWSA models with Error Model Definition Revision 5.13. Propagation is a closed `Random`, `Systematic`, `WellByWell`, or `Global` mode; magnitudes are nonnegative one-sigma standard uncertainties in the declared SI quantity. Current axial-interference models use `AMIL` (tesla). Historic `AMID` records remain readable as planar-angle terms but cannot be added to a new Revision 5 instrument.
+
 ### Service contract generation
 
 The service generates an OpenAPI schema during Debug builds. `ModelSharedOut` consumes that schema, merges and normalizes it, and generates:

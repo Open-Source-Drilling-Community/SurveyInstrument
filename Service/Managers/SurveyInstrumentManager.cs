@@ -629,6 +629,8 @@ namespace OSDC.Drilling.SurveyInstrument.Service.Managers
             OSDC.Drilling.SurveyInstrument.Model.SurveyInstrument surveyInstrument)
         {
             bool hasErrorSources = surveyInstrument.ErrorSourceList is { Count: > 0 };
+            bool validErrorSources = surveyInstrument.ErrorSourceList?.All(source =>
+                ErrorSourceRevision5.TryValidate(source, requireCurrentCode: true, out _)) ?? true;
             bool wolffParametersDisabled =
                 !surveyInstrument.UseRelDepthError && surveyInstrument.RelDepthError == null &&
                 !surveyInstrument.UseMisalignment && surveyInstrument.Misalignment == null &&
@@ -645,9 +647,9 @@ namespace OSDC.Drilling.SurveyInstrument.Service.Managers
                 OSDC.DotnetLibraries.Drilling.Surveying.SurveyInstrumentModelType.Gyro_WolffDeWardt =>
                     !hasErrorSources && !surveyInstrument.UseDrillStringMag && surveyInstrument.DrillStringMag == null,
                 OSDC.DotnetLibraries.Drilling.Surveying.SurveyInstrumentModelType.MWD_ISCWSA =>
-                    hasErrorSources && wolffParametersDisabled,
+                    hasErrorSources && validErrorSources && wolffParametersDisabled,
                 OSDC.DotnetLibraries.Drilling.Surveying.SurveyInstrumentModelType.Gyro_ISCWSA =>
-                    hasErrorSources && wolffParametersDisabled,
+                    hasErrorSources && validErrorSources && wolffParametersDisabled,
                 _ => false
             };
         }
@@ -917,7 +919,7 @@ namespace OSDC.Drilling.SurveyInstrument.Service.Managers
                         ErrorSourceFactory.Create_DBH_OH(magnitude:2840e-9 * DEG2RAD),
                         ErrorSourceFactory.Create_DBH_OI(magnitude:356e-9 * DEG2RAD),
                         ErrorSourceFactory.Create_DBHR(magnitude:3000e-9 * DEG2RAD),
-                        ErrorSourceFactory.Create_AMID(magnitude:220e-6),
+                        ErrorSourceFactory.Create_AMIL(magnitude:220e-6),
                         ErrorSourceFactory.Create_SAGE(magnitude:0.2 * DEG2RAD),
                         ErrorSourceFactory.Create_XYM1(magnitude:0.1 * DEG2RAD),
                         ErrorSourceFactory.Create_XYM2(magnitude:0.1 * DEG2RAD),
@@ -978,7 +980,7 @@ namespace OSDC.Drilling.SurveyInstrument.Service.Managers
                         ErrorSourceFactory.Create_DBH_OH(magnitude:2840e-9 * DEG2RAD),
                         ErrorSourceFactory.Create_DBH_OI(magnitude:356e-9 * DEG2RAD),
                         ErrorSourceFactory.Create_DBHR(magnitude:3000e-9 * DEG2RAD),
-                        ErrorSourceFactory.Create_AMID(magnitude:220e-6),
+                        ErrorSourceFactory.Create_AMIL(magnitude:220e-6),
                         ErrorSourceFactory.Create_SAGE(magnitude:0.2 * DEG2RAD),
                         ErrorSourceFactory.Create_XYM1(magnitude:0.1 * DEG2RAD),
                         ErrorSourceFactory.Create_XYM2(magnitude:0.1 * DEG2RAD),
@@ -1036,7 +1038,7 @@ namespace OSDC.Drilling.SurveyInstrument.Service.Managers
                         ErrorSourceFactory.Create_XYM4(magnitude:0.2 * DEG2RAD),
                         ErrorSourceFactory.Create_SAG(magnitude:0.1 * DEG2RAD),
                         ErrorSourceFactory.Create_DRFR(magnitude:0.5),
-                        ErrorSourceFactory.Create_DSFS(magnitude:0.5),
+                        ErrorSourceFactory.Create_DRFS(magnitude:0.5),
                         ErrorSourceFactory.Create_DSFS(magnitude:0.001),
                         ErrorSourceFactory.Create_DSTG(magnitude:5.0e-7),
                         ]
@@ -1413,7 +1415,7 @@ namespace OSDC.Drilling.SurveyInstrument.Service.Managers
                         ErrorSourceFactory.Create_DBH_OH(magnitude:2840e-9 * DEG2RAD),
                         ErrorSourceFactory.Create_DBH_OI(magnitude:356e-9 * DEG2RAD),
                         ErrorSourceFactory.Create_DBHR(magnitude:3000e-9 * DEG2RAD),
-                        ErrorSourceFactory.Create_AMID(magnitude:220e-6),
+                        ErrorSourceFactory.Create_AMIL(magnitude:220e-6),
                         ErrorSourceFactory.Create_SAGE(magnitude:0.2 * DEG2RAD),
                         ErrorSourceFactory.Create_XYM1(magnitude:0.1 * DEG2RAD),
                         ErrorSourceFactory.Create_XYM2(magnitude:0.1 * DEG2RAD),

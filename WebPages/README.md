@@ -36,7 +36,8 @@ It is where reusable application UI is implemented without tying it to one speci
   - Editor for a selected survey instrument.
   - Supports Wolff and de Wardt and ISCWSA model choices.
   - Supports magnetic and gyro-specific UI behavior.
-  - Includes grouped ISCWSA magnetic and gyro error-term sections.
+  - Includes grouped ISCWSA Revision 5 magnetic and gyro error-term sections, including AMIL and the axial-interference correction terms.
+  - Preserves environmental fields such as dip, declination, gravity, magnetic field, convergence, latitude, Earth rotation rate, and cant angle while editing.
   - Edits identity values and feature assignments, including validity dates where allowed.
 - `SurveyInstrumentIdentities.razor`
   - Manages identity definitions such as official, manufacturer, model, and tool names.

@@ -6,7 +6,7 @@
 
 - Host the HTTP API under `/SurveyInstrument/api`.
 - Persist `SurveyInstrument` and `ErrorSource` records in SQLite.
-- Seed default error sources and default survey instruments when the database is empty.
+- Seed default error sources and default survey instruments when the database is empty, and idempotently add missing Revision 5 error-source templates to an existing database without rewriting stored instruments or templates.
 - Seed the standard identity and survey-feature taxonomies.
 - Publish a merged OpenAPI/Swagger document generated from `ModelSharedOut`.
 - Serve static assets and the generated schema bundle from `wwwroot`.
@@ -90,6 +90,8 @@ The `SurveyInstrumentController` exposes:
   - validate and atomically restore a schema-versioned backup using an explicit catalog policy and `FailIfExists` or `ReplaceExisting`
 
 ### Error sources
+
+Error-source writes are validated against the ISCWSA Revision 5.13 contract: the propagation mode is one of `Random`, `Systematic`, `WellByWell`, or `Global`; magnitude is a finite nonnegative one-sigma standard uncertainty; enabled inclination intervals are ordered and finite; and known terms require their prescribed SI quantity. New resources cannot use historic `AMID`; existing historic records can still be read and updated for compatibility. The active catalogue includes `AMIL`, `DSTS`, `XCLI1`, `XCLI2`, and the Revision 5 axial-interference correction terms. Startup adds missing Revision 5 templates by stable UUID and does not delete or rewrite existing data.
 
 The `ErrorSourceController` exposes the same shape for `ErrorSource` resources:
 
