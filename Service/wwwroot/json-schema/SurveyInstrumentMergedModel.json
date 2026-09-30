@@ -11,6 +11,7 @@
         "tags": [
           "ErrorSource"
         ],
+        "summary": "Returns the list of Guid of all ErrorSource present in the microservice database at endpoint SurveyInstrument/api/ErrorSource",
         "operationId": "GetAllErrorSourceId",
         "responses": {
           "200": {
@@ -33,6 +34,7 @@
         "tags": [
           "ErrorSource"
         ],
+        "summary": "Performs calculation on the given ErrorSource and adds it to the microservice database, at the endpoint SurveyInstrument/api/ErrorSource",
         "operationId": "PostErrorSource",
         "requestBody": {
           "content": {
@@ -65,6 +67,7 @@
         "tags": [
           "ErrorSource"
         ],
+        "summary": "Returns the list of MetaInfo of all ErrorSource present in the microservice database, at endpoint SurveyInstrument/api/ErrorSource/MetaInfo",
         "operationId": "GetAllErrorSourceMetaInfo",
         "responses": {
           "200": {
@@ -88,6 +91,7 @@
         "tags": [
           "ErrorSource"
         ],
+        "summary": "Returns the ErrorSource identified by its Guid from the microservice database, at endpoint SurveyInstrument/api/ErrorSource/MetaInfo/id",
         "operationId": "GetErrorSourceById",
         "parameters": [
           {
@@ -117,6 +121,7 @@
         "tags": [
           "ErrorSource"
         ],
+        "summary": "Performs calculation on the given ErrorSource and updates it in the microservice database, at the endpoint SurveyInstrument/api/ErrorSource/id",
         "operationId": "PutErrorSourceById",
         "parameters": [
           {
@@ -158,6 +163,7 @@
         "tags": [
           "ErrorSource"
         ],
+        "summary": "Deletes the ErrorSource of given ID from the microservice database, at the endpoint SurveyInstrument/api/ErrorSource/id",
         "operationId": "DeleteErrorSourceById",
         "parameters": [
           {
@@ -182,6 +188,7 @@
         "tags": [
           "ErrorSource"
         ],
+        "summary": "Returns the list of all ErrorSource present in the microservice database, at endpoint SurveyInstrument/api/ErrorSource/HeavyData",
         "operationId": "GetAllErrorSource",
         "responses": {
           "200": {
@@ -205,6 +212,7 @@
         "tags": [
           "SurveyInstrument"
         ],
+        "summary": "Returns the list of Guid of all SurveyInstrument present in the microservice database at endpoint SurveyInstrument/api/SurveyInstrument",
         "operationId": "GetAllSurveyInstrumentId",
         "responses": {
           "200": {
@@ -227,6 +235,7 @@
         "tags": [
           "SurveyInstrument"
         ],
+        "summary": "Performs calculation on the given SurveyInstrument and adds it to the microservice database, at the endpoint SurveyInstrument/api/SurveyInstrument",
         "operationId": "PostSurveyInstrument",
         "requestBody": {
           "content": {
@@ -259,6 +268,7 @@
         "tags": [
           "SurveyInstrument"
         ],
+        "summary": "Returns the list of MetaInfo of all SurveyInstrument present in the microservice database, at endpoint SurveyInstrument/api/SurveyInstrument/MetaInfo",
         "operationId": "GetAllSurveyInstrumentMetaInfo",
         "responses": {
           "200": {
@@ -282,6 +292,7 @@
         "tags": [
           "SurveyInstrument"
         ],
+        "summary": "Returns the SurveyInstrument identified by its Guid from the microservice database, at endpoint SurveyInstrument/api/SurveyInstrument/MetaInfo/id",
         "operationId": "GetSurveyInstrumentById",
         "parameters": [
           {
@@ -311,6 +322,7 @@
         "tags": [
           "SurveyInstrument"
         ],
+        "summary": "Performs calculation on the given SurveyInstrument and updates it in the microservice database, at the endpoint SurveyInstrument/api/SurveyInstrument/id",
         "operationId": "PutSurveyInstrumentById",
         "parameters": [
           {
@@ -352,6 +364,7 @@
         "tags": [
           "SurveyInstrument"
         ],
+        "summary": "Deletes the SurveyInstrument of given ID from the microservice database, at the endpoint SurveyInstrument/api/SurveyInstrument/id",
         "operationId": "DeleteSurveyInstrumentById",
         "parameters": [
           {
@@ -376,6 +389,7 @@
         "tags": [
           "SurveyInstrument"
         ],
+        "summary": "Returns the list of all SurveyInstrumentLight present in the microservice database, at endpoint SurveyInstrument/api/SurveyInstrument/LightData",
         "operationId": "GetAllSurveyInstrumentLight",
         "responses": {
           "200": {
@@ -399,6 +413,7 @@
         "tags": [
           "SurveyInstrument"
         ],
+        "summary": "Returns the list of all SurveyInstrument present in the microservice database, at endpoint SurveyInstrument/api/SurveyInstrument/HeavyData",
         "operationId": "GetAllSurveyInstrument",
         "responses": {
           "200": {
@@ -960,6 +975,7 @@
         "tags": [
           "SurveyInstrumentUsageStatistics"
         ],
+        "summary": "Returns the usage statistics present in the microservice database at endpoint SurveyInstrument/api/SurveyInstrumentUsageStatistics",
         "operationId": "GetSurveyInstrumentUsageStatistics",
         "responses": {
           "200": {
@@ -1107,7 +1123,8 @@
           "MDI_OH",
           "MDI_OI"
         ],
-        "type": "string"
+        "type": "string",
+        "description": "Closed ISCWSA/survey error-source vocabulary. Revision 5 axial-correction terms use MFIR and MFI_U/OS/OH/OI for total magnetic-field uncertainty in tesla, and MDIR and MDI_U/OS/OH/OI for magnetic-dip uncertainty in radians. R is random, U is Well-by-Well, and OS/OH/OI are Global crustal-omission terms for standard, high-definition, and in-field referencing models. AMIL is axial magnetic interference in tesla; AMID and the unsuffixed early OSDC axial terms are legacy read compatibility values and are rejected in new Revision 5 models."
       },
       "ErrorPropagationMode": {
         "enum": [
@@ -1116,10 +1133,33 @@
           "WellByWell",
           "Global"
         ],
-        "type": "string"
+        "type": "string",
+        "description": "Mutually exclusive ISCWSA Revision 5 correlation mode: Random (R) is independent between survey stations; Systematic (S) is correlated between stations in the same survey leg but independent between legs; WellByWell (W) is correlated across legs within the same well but independent between wells; Global (G) is fully correlated across all survey stations, legs, and wells in the project or field. Null is reserved for readable legacy records whose mode is derived from the deprecated boolean flags."
       },
       "ErrorSource": {
         "type": "object",
+        "allOf": [
+          {
+            "not": {
+              "required": [
+                "IsContinuous",
+                "IsStationary"
+              ],
+              "properties": {
+                "IsContinuous": {
+                  "enum": [
+                    true
+                  ]
+                },
+                "IsStationary": {
+                  "enum": [
+                    true
+                  ]
+                }
+              }
+            }
+          }
+        ],
         "properties": {
           "MetaInfo": {
             "$ref": "#/components/schemas/MetaInfo"
@@ -1133,60 +1173,80 @@
           },
           "Index": {
             "type": "integer",
-            "format": "int32"
+            "description": "Implementation ordering field only; it has no independent physical meaning.",
+            "format": "int32",
+            "x-osdc-semantic": "ErrorSourceOrderingIndex"
           },
           "PropagationMode": {
             "$ref": "#/components/schemas/ErrorPropagationMode"
           },
           "IsSystematic": {
-            "type": "boolean"
+            "type": "boolean",
+            "description": "Deprecated legacy compatibility flag. For current data use the single PropagationMode value."
           },
           "IsRandom": {
-            "type": "boolean"
+            "type": "boolean",
+            "description": "Deprecated legacy compatibility flag. For current data use the single PropagationMode value."
           },
           "IsGlobal": {
-            "type": "boolean"
+            "type": "boolean",
+            "description": "Deprecated legacy compatibility flag. Global is a distinct PropagationMode, not a flag independent of Random or Systematic."
           },
           "SingularIssues": {
             "type": "boolean"
           },
           "IsContinuous": {
-            "type": "boolean"
+            "type": "boolean",
+            "description": "Gyroscopic-tool operating-mode flag. Continuous and Stationary are mutually exclusive; both may be false when the distinction does not apply."
           },
           "IsStationary": {
-            "type": "boolean"
+            "type": "boolean",
+            "description": "Gyroscopic-tool operating-mode flag. Stationary and Continuous are mutually exclusive; both may be false when the distinction does not apply."
           },
           "KOperatorImposed": {
-            "type": "boolean"
+            "type": "boolean",
+            "description": "Opaque legacy compatibility flag retained until its mathematical behavior and operating boundaries are formally defined.",
+            "x-osdc-semantic": "KOperatorImposed"
           },
           "Magnitude": {
             "type": "number",
+            "description": "Finite, nonnegative one-sigma standard uncertainty in the SI unit required by ErrorCode.",
             "format": "double",
-            "nullable": true
+            "nullable": true,
+            "x-osdc-semantic": "SurveyErrorMagnitude"
           },
           "MagnitudeQuantity": {
             "type": "string",
-            "nullable": true
+            "description": "Closed UnitConversion physical-quantity identifier defining Magnitude's dimension and canonical SI unit.",
+            "nullable": true,
+            "x-osdc-semantic": "ErrorMagnitudeQuantityIdentifier"
           },
           "UseInclinationInterval": {
             "type": "boolean"
           },
           "StartInclination": {
             "type": "number",
+            "description": "Start of the applicable inclination interval in radians.",
             "format": "double",
-            "nullable": true
+            "nullable": true,
+            "x-si-unit": "rad"
           },
           "EndInclination": {
             "type": "number",
+            "description": "End of the applicable inclination interval in radians.",
             "format": "double",
-            "nullable": true
+            "nullable": true,
+            "x-si-unit": "rad"
           },
           "InitInclination": {
             "type": "number",
+            "description": "Initial inclination used by the error source in radians when required by the model.",
             "format": "double",
-            "nullable": true
+            "nullable": true,
+            "x-si-unit": "rad"
           }
-        }
+        },
+        "description": "One ISCWSA survey error source. Magnitude is a finite, nonnegative one-sigma standard uncertainty in the SI unit identified by MagnitudeQuantity."
       },
       "SurveyInstrumentModelType": {
         "enum": [
@@ -1279,40 +1339,61 @@
           },
           "Dip": {
             "type": "number",
-            "format": "double"
+            "description": "Geomagnetic dip (inclination) in radians.",
+            "format": "double",
+            "x-si-unit": "rad"
           },
           "Declination": {
             "type": "number",
-            "format": "double"
+            "description": "Geomagnetic declination, positive east of true north, in radians.",
+            "format": "double",
+            "x-si-unit": "rad"
           },
           "Gravity": {
             "type": "number",
-            "format": "double"
+            "description": "Local gravitational acceleration in metres per second squared.",
+            "format": "double",
+            "x-si-unit": "m/s2"
           },
           "BField": {
             "type": "number",
-            "format": "double"
+            "description": "Local total geomagnetic flux density in tesla.",
+            "format": "double",
+            "x-si-unit": "T"
           },
           "Convergence": {
             "type": "number",
-            "format": "double"
+            "description": "Grid convergence angle in radians.",
+            "format": "double",
+            "x-si-unit": "rad"
           },
           "Latitude": {
             "type": "number",
-            "format": "double"
+            "description": "Geodetic latitude in radians.",
+            "format": "double",
+            "x-si-unit": "rad"
           },
           "EarthRotRate": {
             "type": "number",
-            "format": "double"
+            "description": "Earth angular velocity in radians per second.",
+            "format": "double",
+            "x-osdc-semantic": "EarthAngularVelocity",
+            "x-si-unit": "rad/s"
           },
           "CantAngle": {
             "type": "number",
-            "format": "double"
+            "description": "Planar angle in radians relative to the orthogonal body reference frame's transverse axes, perpendicular to the along-hole tool z-axis. Its sign remains positive while tool inclination is less than or equal to 90 degrees.",
+            "format": "double",
+            "x-osdc-semantic": "SurveyInstrumentCantAngle; reference=OrthogonalBodyFrameCantConvention",
+            "x-si-unit": "rad"
           },
           "GyroRunningSpeed": {
             "type": "number",
+            "description": "Optional gyroscope angular velocity in radians per second.",
             "format": "double",
-            "nullable": true
+            "nullable": true,
+            "x-osdc-semantic": "SurveyToolRunningSpeed",
+            "x-si-unit": "rad/s"
           },
           "ExtRefInitInc": {
             "type": "number",
@@ -1321,18 +1402,27 @@
           },
           "GyroSwitching": {
             "type": "number",
+            "description": "Optional dimensionless gyro switching parameter.",
             "format": "double",
-            "nullable": true
+            "nullable": true,
+            "x-osdc-semantic": "GyroSwitchingParameter",
+            "x-si-unit": "1"
           },
           "GyroMinDist": {
             "type": "number",
+            "description": "Optional minimum distance between gyro initializations in metres.",
             "format": "double",
-            "nullable": true
+            "nullable": true,
+            "x-osdc-semantic": "GyroReinitializationDistance",
+            "x-si-unit": "m"
           },
           "GyroNoiseRed": {
             "type": "number",
+            "description": "Optional dimensionless gyro noise-reduction factor at initialization.",
             "format": "double",
-            "nullable": true
+            "nullable": true,
+            "x-osdc-semantic": "GyroNoiseReductionFactor",
+            "x-si-unit": "1"
           },
           "UseRelDepthError": {
             "type": "boolean"
@@ -1396,7 +1486,8 @@
             },
             "nullable": true
           }
-        }
+        },
+        "description": "Survey-instrument error model with canonical SI values and, for ISCWSA families, authoritative embedded error-source snapshots."
       },
       "SurveyInstrumentBatchCatalogDependencies": {
         "type": "object",

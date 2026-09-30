@@ -124,6 +124,9 @@ public class OpenApiSchemaReferenceUpdater
         if (schema.OneOf != null)
             foreach (var sub in schema.OneOf)
                 UpdateSchemaRef(sub);
+
+        if (schema.Not != null)
+            UpdateSchemaRef(schema.Not);
     }
 
     /// <summary>
@@ -208,6 +211,9 @@ public class OpenApiSchemaReferenceUpdater
             foreach (var s in source.OneOf)
                 clone.OneOf.Add(CloneSchema(s));
         }
+
+        if (source.Not != null)
+            clone.Not = CloneSchema(source.Not);
 
         return clone;
     }

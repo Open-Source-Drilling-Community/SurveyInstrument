@@ -328,7 +328,8 @@ namespace OSDC.Drilling.SurveyInstrument.Service.Managers
         public bool AddErrorSource(ErrorSource? errorSource)
         {
             if (errorSource != null && errorSource.MetaInfo != null && errorSource.MetaInfo.ID != Guid.Empty &&
-                ErrorSourceRevision5.TryValidate(errorSource, requireCurrentCode: true, out _))
+                ErrorSourceRevision5.TryValidate(errorSource, requireCurrentCode: true, out _) &&
+                !(errorSource.IsContinuous && errorSource.IsStationary))
             {
                 //update ErrorSourceTable
                 var connection = _connectionManager.GetConnection();
@@ -396,7 +397,8 @@ namespace OSDC.Drilling.SurveyInstrument.Service.Managers
         {
             bool success = true;
             if (guid != Guid.Empty && errorSource != null && errorSource.MetaInfo != null && errorSource.MetaInfo.ID == guid &&
-                ErrorSourceRevision5.TryValidate(errorSource, requireCurrentCode: false, out _))
+                ErrorSourceRevision5.TryValidate(errorSource, requireCurrentCode: false, out _) &&
+                !(errorSource.IsContinuous && errorSource.IsStationary))
             {
                 var connection = _connectionManager.GetConnection();
                 if (connection != null)

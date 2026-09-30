@@ -631,7 +631,8 @@ namespace OSDC.Drilling.SurveyInstrument.Service.Managers
         {
             bool hasErrorSources = surveyInstrument.ErrorSourceList is { Count: > 0 };
             bool validErrorSources = surveyInstrument.ErrorSourceList?.All(source =>
-                ErrorSourceRevision5.TryValidate(source, requireCurrentCode: true, out _)) ?? true;
+                ErrorSourceRevision5.TryValidate(source, requireCurrentCode: true, out _) &&
+                !(source.IsContinuous && source.IsStationary)) ?? true;
             bool wolffParametersDisabled =
                 !surveyInstrument.UseRelDepthError && surveyInstrument.RelDepthError == null &&
                 !surveyInstrument.UseMisalignment && surveyInstrument.Misalignment == null &&
@@ -729,17 +730,7 @@ namespace OSDC.Drilling.SurveyInstrument.Service.Managers
         /// </summary>
         private void FillDefault()
         {
-            List<OSDC.Drilling.SurveyInstrument.Model.SurveyInstrument?> surveyInstrumentList = [
-                MWD_ISCWSA,
-                MWD_ISCWSA_Rev5_OWSG,
-                MWD_ISCWSA_Rev5_Floating,
-                MWD_ISCWSA_Rev5_Sag_Floating,
-                MWD_ISCWSA_Rev5_Axial,
-                MWD_ISCWSA_Rev5_Axial_Floating,
-                MWD_ISCWSA_Rev5_Axial_Sag,
-                MWD_ISCWSA_Rev5_Axial_Sag_Floating
-                ];
-            foreach (OSDC.Drilling.SurveyInstrument.Model.SurveyInstrument? si in surveyInstrumentList)
+            foreach (OSDC.Drilling.SurveyInstrument.Model.SurveyInstrument si in OfficialRevision5Defaults())
             {
                 AddSurveyInstrument(si);
             }
@@ -751,24 +742,108 @@ namespace OSDC.Drilling.SurveyInstrument.Service.Managers
             foreach (OSDC.Drilling.SurveyInstrument.Model.SurveyInstrument instrument in OfficialRevision5Defaults())
             {
                 Guid id = instrument.MetaInfo!.ID;
-                if (!existingIds.Contains(id) && !AddSurveyInstrument(instrument))
+                if (!existingIds.Contains(id))
                 {
-                    _logger.LogError("Unable to add official ISCWSA Revision 5 survey instrument {InstrumentName} ({InstrumentId})", instrument.Name, id);
+                    if (!AddSurveyInstrument(instrument))
+                    {
+                        _logger.LogError("Unable to add official ISCWSA Revision 5 survey instrument {InstrumentName} ({InstrumentId})", instrument.Name, id);
+                    }
+                    continue;
+                }
+
+                OSDC.Drilling.SurveyInstrument.Model.SurveyInstrument? existing = GetSurveyInstrumentById(id);
+                if (existing != null && EnsureExplicitPropagationModes(existing, out int normalizedCount))
+                {
+                    DateTimeOffset expectedModifiedUtc = existing.LastModificationDate ?? DateTimeOffset.UnixEpoch;
+                    if (UpdateSurveyInstrumentById(id, existing, expectedModifiedUtc))
+                    {
+                        _logger.LogInformation(
+                            "Normalized {NormalizedCount} legacy propagation modes in official ISCWSA Revision 5 survey instrument {InstrumentName} ({InstrumentId})",
+                            normalizedCount, existing.Name, id);
+                    }
+                    else
+                    {
+                        _logger.LogError(
+                            "Unable to normalize legacy propagation modes in official ISCWSA Revision 5 survey instrument {InstrumentName} ({InstrumentId})",
+                            existing.Name, id);
+                    }
                 }
             }
         }
 
-        private static List<OSDC.Drilling.SurveyInstrument.Model.SurveyInstrument> OfficialRevision5Defaults() =>
-        [
-            MWD_ISCWSA,
-            MWD_ISCWSA_Rev5_OWSG,
-            MWD_ISCWSA_Rev5_Floating,
-            MWD_ISCWSA_Rev5_Sag_Floating,
-            MWD_ISCWSA_Rev5_Axial,
-            MWD_ISCWSA_Rev5_Axial_Floating,
-            MWD_ISCWSA_Rev5_Axial_Sag,
-            MWD_ISCWSA_Rev5_Axial_Sag_Floating
-        ];
+        private static List<OSDC.Drilling.SurveyInstrument.Model.SurveyInstrument> OfficialRevision5Defaults()
+        {
+            List<OSDC.Drilling.SurveyInstrument.Model.SurveyInstrument> instruments =
+            [
+                MWD_ISCWSA,
+                MWD_ISCWSA_Rev5_OWSG,
+                MWD_ISCWSA_Rev5_Floating,
+                MWD_ISCWSA_Rev5_Sag_Floating,
+                MWD_ISCWSA_Rev5_Axial,
+                MWD_ISCWSA_Rev5_Axial_Floating,
+                MWD_ISCWSA_Rev5_Axial_Sag,
+                MWD_ISCWSA_Rev5_Axial_Sag_Floating
+            ];
+            foreach (OSDC.Drilling.SurveyInstrument.Model.SurveyInstrument instrument in instruments)
+            {
+                EnsureExplicitPropagationModes(instrument, out _);
+            }
+            return instruments;
+        }
+
+        private static bool EnsureExplicitPropagationModes(
+            OSDC.Drilling.SurveyInstrument.Model.SurveyInstrument instrument, out int normalizedCount)
+        {
+            normalizedCount = 0;
+            if (instrument.ErrorSourceList == null) return false;
+
+            for (int i = 0; i < instrument.ErrorSourceList.Count; i++)
+            {
+                ErrorSource source = instrument.ErrorSourceList[i];
+                if (source.PropagationMode != null || !TryGetLegacyPropagationMode(source, out ErrorPropagationMode mode))
+                {
+                    continue;
+                }
+                instrument.ErrorSourceList[i] = CopyWithPropagationMode(source, mode);
+                normalizedCount++;
+            }
+            return normalizedCount > 0;
+        }
+
+        private static bool TryGetLegacyPropagationMode(ErrorSource source, out ErrorPropagationMode mode)
+        {
+            mode = source.EffectivePropagationMode;
+            return true;
+        }
+
+        private static ErrorSource CopyWithPropagationMode(ErrorSource source, ErrorPropagationMode mode) => new()
+        {
+            MetaInfo = source.MetaInfo,
+            ErrorCode = source.ErrorCode,
+            Description = source.Description,
+            Index = source.Index,
+            PropagationMode = mode,
+            IsSystematic = source.IsSystematic,
+            IsRandom = source.IsRandom,
+            IsGlobal = source.IsGlobal,
+            SingularIssues = source.SingularIssues,
+            IsContinuous = source.IsContinuous,
+            IsStationary = source.IsStationary,
+            KOperatorImposed = source.KOperatorImposed,
+            Magnitude = source.Magnitude,
+            MagnitudeQuantity = source.MagnitudeQuantity,
+            UseInclinationInterval = source.UseInclinationInterval,
+            StartInclination = source.StartInclination,
+            EndInclination = source.EndInclination,
+            InitInclination = source.InitInclination,
+            WeightingFunctionMD = source.WeightingFunctionMD,
+            WeightingFunctionIncl = source.WeightingFunctionIncl,
+            WeightingFunctionAzim = source.WeightingFunctionAzim,
+            VerticalHoleWeightingFunctionNorth = source.VerticalHoleWeightingFunctionNorth,
+            VerticalHoleWeightingFunctionEast = source.VerticalHoleWeightingFunctionEast,
+            VerticalHoleWeightingFunctionVertical = source.VerticalHoleWeightingFunctionVertical,
+            WeightingFunctionDepthGyro = source.WeightingFunctionDepthGyro
+        };
 
         #region Default survey instruments
 

@@ -37,6 +37,8 @@ public sealed class SurveyInstrumentManagerPersistenceTests
             {
                 Assert.That(instrument.ErrorSourceList, Is.All.Matches<ErrorSource>(source =>
                     ErrorSourceRevision5.TryValidate(source, requireCurrentCode: true, out _)), instrument.Name);
+                Assert.That(instrument.ErrorSourceList, Is.All.Matches<ErrorSource>(source =>
+                    source.PropagationMode != null), $"{instrument.Name} must publish an explicit Revision 5 propagation mode");
 
                 ErrorSource decU = instrument.ErrorSourceList.Single(source => source.ErrorCode == ErrorCode.DEC_U);
                 Assert.That(decU.Magnitude, Is.EqualTo(0.16 * DegreesToRadians).Within(1e-15), instrument.Name);
@@ -144,6 +146,24 @@ public sealed class SurveyInstrumentManagerPersistenceTests
                 Assert.That(command.ExecuteNonQuery(), Is.EqualTo(1));
             }
 
+            SurveyInstrumentModel preMigrationOfficial = SurveyInstrumentManager.MWD_ISCWSA;
+            Assert.That(preMigrationOfficial.ErrorSourceList, Has.Some.Matches<ErrorSource>(source => source.PropagationMode == null));
+            using (SqliteConnection connection = connections.GetConnection()!)
+            using (SqliteCommand command = connection.CreateCommand())
+            {
+                command.CommandText = "INSERT INTO SurveyInstrumentTable " +
+                    "(ID, MetaInfo, Name, Description, CreationDate, LastModificationDate, SurveyInstrument) " +
+                    "VALUES ($id, $meta, $name, $description, $created, $modified, $document)";
+                command.Parameters.AddWithValue("$id", preMigrationOfficial.MetaInfo!.ID.ToString());
+                command.Parameters.AddWithValue("$meta", System.Text.Json.JsonSerializer.Serialize(preMigrationOfficial.MetaInfo, JsonSettings.Options));
+                command.Parameters.AddWithValue("$name", preMigrationOfficial.Name);
+                command.Parameters.AddWithValue("$description", preMigrationOfficial.Description);
+                command.Parameters.AddWithValue("$created", preMigrationOfficial.CreationDate!.Value.ToString("O"));
+                command.Parameters.AddWithValue("$modified", preMigrationOfficial.LastModificationDate!.Value.ToString("O"));
+                command.Parameters.AddWithValue("$document", System.Text.Json.JsonSerializer.Serialize(preMigrationOfficial, JsonSettings.Options));
+                Assert.That(command.ExecuteNonQuery(), Is.EqualTo(1));
+            }
+
             ConstructorInfo constructor = typeof(SurveyInstrumentManager).GetConstructor(
                 BindingFlags.Instance | BindingFlags.NonPublic, null,
                 [typeof(ILogger<SurveyInstrumentManager>), typeof(ILogger<ErrorSourceManager>), typeof(SqlConnectionManager)], null)!;
@@ -156,6 +176,12 @@ public sealed class SurveyInstrumentManagerPersistenceTests
                 Assert.That(manager.GetAllSurveyInstrument()!.OfType<SurveyInstrumentModel>()
                     .Count(instrument => instrument.Name!.StartsWith("ISCWSA MWD")), Is.EqualTo(8));
                 Assert.That(manager.Count, Is.EqualTo(9));
+                List<ErrorSource> migratedSources = manager.GetSurveyInstrumentById(preMigrationOfficial.MetaInfo.ID)!.ErrorSourceList!;
+                Assert.That(migratedSources, Is.All.Matches<ErrorSource>(source => source.PropagationMode != null));
+                Assert.That(migratedSources.Single(source => source.ErrorCode == ErrorCode.DEC_U).PropagationMode,
+                    Is.EqualTo(ErrorPropagationMode.WellByWell));
+                Assert.That(migratedSources.Single(source => source.ErrorCode == ErrorCode.DEC_OS).PropagationMode,
+                    Is.EqualTo(ErrorPropagationMode.Global));
             });
         }
         finally
@@ -163,6 +189,32 @@ public sealed class SurveyInstrumentManagerPersistenceTests
             SqliteConnection.ClearAllPools();
             if (File.Exists(path)) File.Delete(path);
         }
+    }
+
+    [Test]
+    public void Iscwsa_model_rejects_simultaneous_stationary_and_continuous_modes()
+    {
+        var instrument = new SurveyInstrumentModel
+        {
+            MetaInfo = new MetaInfo { ID = Guid.NewGuid() },
+            ModelType = SurveyInstrumentModelType.MWD_ISCWSA,
+            ErrorSourceList =
+            [
+                new ErrorSource
+                {
+                    MetaInfo = new MetaInfo { ID = Guid.NewGuid() },
+                    ErrorCode = ErrorCode.DRFR,
+                    PropagationMode = ErrorPropagationMode.Random,
+                    IsRandom = true,
+                    IsContinuous = true,
+                    IsStationary = true,
+                    Magnitude = 0.35,
+                    MagnitudeQuantity = "DepthDrilling"
+                }
+            ]
+        };
+
+        Assert.That(SurveyInstrumentManager.ValidateModelSemantics(instrument), Is.False);
     }
 
     [Test]

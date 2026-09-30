@@ -53,7 +53,7 @@ The full survey-domain types are not authored directly in this repository. They 
 
 The `Model` project adds repository-specific helper types around them.
 
-The current SurveyInstrument contract uses `OSDC.DotnetLibraries.Drilling.Surveying` 1.3.3 and aligns ISCWSA models with Error Model Definition Revision 5.13. Propagation is a closed `Random`, `Systematic`, `WellByWell`, or `Global` mode; magnitudes are nonnegative one-sigma standard uncertainties in the declared SI quantity. Standard MWD models use `AMIL` (tesla). Axial-correction models use the exact `MFIR`, `MFI-U/OS/OH/OI`, `MDIR`, and `MDI-U/OS/OH/OI` terms. Historic `AMID` and the earlier simplified OSDC axial codes remain readable but cannot be added to a new Revision 5 instrument.
+The current SurveyInstrument contract uses `OSDC.DotnetLibraries.Drilling.Surveying` 1.3.4 and aligns ISCWSA models with Error Model Definition Revision 5.13. Propagation is a closed `Random`, `Systematic`, `WellByWell`, or `Global` mode; magnitudes are nonnegative one-sigma standard uncertainties in the declared SI quantity. Standard MWD models use `AMIL` (tesla). Axial-correction models use the exact `MFIR`, `MFI-U/OS/OH/OI`, `MDIR`, and `MDI-U/OS/OH/OI` terms. Historic `AMID` and the earlier simplified OSDC axial codes remain readable but cannot be added to a new Revision 5 instrument. REST/OpenAPI and MCP publish the same physical meanings, SI units, legacy status, correlation scopes, cant-angle reference/sign convention, and gyro running-speed quantity. Nullable propagation mode is documented only for readable legacy records; startup idempotently fills explicit modes in the eight deterministic official Revision 5 records without replacing any other stored field.
 
 ### Service contract generation
 

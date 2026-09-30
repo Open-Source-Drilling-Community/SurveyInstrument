@@ -8,6 +8,9 @@ using OSDC.Drilling.SurveyInstrument.Service;
 using OSDC.Drilling.SurveyInstrument.Service.Managers;
 using OSDC.Drilling.SurveyInstrument.Service.Mcp;
 using OSDC.Drilling.SurveyInstrument.Service.Mcp.Tools;
+using System;
+using System.IO;
+using System.Reflection;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -29,6 +32,14 @@ builder.Services.AddControllers()
 builder.Services.AddSwaggerGen(config =>
 {
     config.CustomSchemaIds(type => type.FullName);
+    config.SchemaFilter<SurveyInstrumentSemanticSchemaFilter>();
+    string xmlDocumentationPath = Path.Combine(
+        AppContext.BaseDirectory,
+        $"{Assembly.GetExecutingAssembly().GetName().Name}.xml");
+    if (File.Exists(xmlDocumentationPath))
+    {
+        config.IncludeXmlComments(xmlDocumentationPath);
+    }
 });
 
 builder.Services.Configure<McpHubOptions>(builder.Configuration.GetSection(McpHubOptions.SectionName));

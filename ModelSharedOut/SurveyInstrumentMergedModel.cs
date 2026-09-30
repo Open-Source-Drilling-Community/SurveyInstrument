@@ -73,6 +73,9 @@ namespace OSDC.Drilling.SurveyInstrument.ModelShared
         partial void ProcessResponse(System.Net.Http.HttpClient client, System.Net.Http.HttpResponseMessage response);
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
+        /// <summary>
+        /// Returns the list of Guid of all ErrorSource present in the microservice database at endpoint SurveyInstrument/api/ErrorSource
+        /// </summary>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual async System.Threading.Tasks.Task<System.Collections.Generic.ICollection<System.Guid>> GetAllErrorSourceIdAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
@@ -144,6 +147,9 @@ namespace OSDC.Drilling.SurveyInstrument.ModelShared
         }
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
+        /// <summary>
+        /// Performs calculation on the given ErrorSource and adds it to the microservice database, at the endpoint SurveyInstrument/api/ErrorSource
+        /// </summary>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual async System.Threading.Tasks.Task PostErrorSourceAsync(ErrorSource body = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
@@ -213,6 +219,9 @@ namespace OSDC.Drilling.SurveyInstrument.ModelShared
         }
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
+        /// <summary>
+        /// Returns the list of MetaInfo of all ErrorSource present in the microservice database, at endpoint SurveyInstrument/api/ErrorSource/MetaInfo
+        /// </summary>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual async System.Threading.Tasks.Task<System.Collections.Generic.ICollection<MetaInfo>> GetAllErrorSourceMetaInfoAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
@@ -284,6 +293,9 @@ namespace OSDC.Drilling.SurveyInstrument.ModelShared
         }
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
+        /// <summary>
+        /// Returns the ErrorSource identified by its Guid from the microservice database, at endpoint SurveyInstrument/api/ErrorSource/MetaInfo/id
+        /// </summary>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual async System.Threading.Tasks.Task<ErrorSource> GetErrorSourceByIdAsync(System.Guid id, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
@@ -359,6 +371,9 @@ namespace OSDC.Drilling.SurveyInstrument.ModelShared
         }
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
+        /// <summary>
+        /// Performs calculation on the given ErrorSource and updates it in the microservice database, at the endpoint SurveyInstrument/api/ErrorSource/id
+        /// </summary>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual async System.Threading.Tasks.Task PutErrorSourceByIdAsync(System.Guid id, ErrorSource body = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
@@ -432,6 +447,9 @@ namespace OSDC.Drilling.SurveyInstrument.ModelShared
         }
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
+        /// <summary>
+        /// Deletes the ErrorSource of given ID from the microservice database, at the endpoint SurveyInstrument/api/ErrorSource/id
+        /// </summary>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual async System.Threading.Tasks.Task DeleteErrorSourceByIdAsync(System.Guid id, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
@@ -501,6 +519,9 @@ namespace OSDC.Drilling.SurveyInstrument.ModelShared
         }
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
+        /// <summary>
+        /// Returns the list of all ErrorSource present in the microservice database, at endpoint SurveyInstrument/api/ErrorSource/HeavyData
+        /// </summary>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual async System.Threading.Tasks.Task<System.Collections.Generic.ICollection<ErrorSource>> GetAllErrorSourceAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
@@ -572,6 +593,9 @@ namespace OSDC.Drilling.SurveyInstrument.ModelShared
         }
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
+        /// <summary>
+        /// Returns the list of Guid of all SurveyInstrument present in the microservice database at endpoint SurveyInstrument/api/SurveyInstrument
+        /// </summary>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual async System.Threading.Tasks.Task<System.Collections.Generic.ICollection<System.Guid>> GetAllSurveyInstrumentIdAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
@@ -643,6 +667,9 @@ namespace OSDC.Drilling.SurveyInstrument.ModelShared
         }
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
+        /// <summary>
+        /// Performs calculation on the given SurveyInstrument and adds it to the microservice database, at the endpoint SurveyInstrument/api/SurveyInstrument
+        /// </summary>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual async System.Threading.Tasks.Task PostSurveyInstrumentAsync(SurveyInstrument body = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
@@ -712,6 +739,9 @@ namespace OSDC.Drilling.SurveyInstrument.ModelShared
         }
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
+        /// <summary>
+        /// Returns the list of MetaInfo of all SurveyInstrument present in the microservice database, at endpoint SurveyInstrument/api/SurveyInstrument/MetaInfo
+        /// </summary>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual async System.Threading.Tasks.Task<System.Collections.Generic.ICollection<MetaInfo>> GetAllSurveyInstrumentMetaInfoAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
@@ -783,6 +813,9 @@ namespace OSDC.Drilling.SurveyInstrument.ModelShared
         }
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
+        /// <summary>
+        /// Returns the SurveyInstrument identified by its Guid from the microservice database, at endpoint SurveyInstrument/api/SurveyInstrument/MetaInfo/id
+        /// </summary>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual async System.Threading.Tasks.Task<SurveyInstrument> GetSurveyInstrumentByIdAsync(System.Guid id, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
@@ -858,6 +891,9 @@ namespace OSDC.Drilling.SurveyInstrument.ModelShared
         }
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
+        /// <summary>
+        /// Performs calculation on the given SurveyInstrument and updates it in the microservice database, at the endpoint SurveyInstrument/api/SurveyInstrument/id
+        /// </summary>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual async System.Threading.Tasks.Task PutSurveyInstrumentByIdAsync(System.Guid id, SurveyInstrument body = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
@@ -931,6 +967,9 @@ namespace OSDC.Drilling.SurveyInstrument.ModelShared
         }
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
+        /// <summary>
+        /// Deletes the SurveyInstrument of given ID from the microservice database, at the endpoint SurveyInstrument/api/SurveyInstrument/id
+        /// </summary>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual async System.Threading.Tasks.Task DeleteSurveyInstrumentByIdAsync(System.Guid id, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
@@ -1000,6 +1039,9 @@ namespace OSDC.Drilling.SurveyInstrument.ModelShared
         }
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
+        /// <summary>
+        /// Returns the list of all SurveyInstrumentLight present in the microservice database, at endpoint SurveyInstrument/api/SurveyInstrument/LightData
+        /// </summary>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual async System.Threading.Tasks.Task<System.Collections.Generic.ICollection<SurveyInstrumentLight>> GetAllSurveyInstrumentLightAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
@@ -1071,6 +1113,9 @@ namespace OSDC.Drilling.SurveyInstrument.ModelShared
         }
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
+        /// <summary>
+        /// Returns the list of all SurveyInstrument present in the microservice database, at endpoint SurveyInstrument/api/SurveyInstrument/HeavyData
+        /// </summary>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual async System.Threading.Tasks.Task<System.Collections.Generic.ICollection<SurveyInstrument>> GetAllSurveyInstrumentAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
@@ -2354,6 +2399,9 @@ namespace OSDC.Drilling.SurveyInstrument.ModelShared
         }
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
+        /// <summary>
+        /// Returns the usage statistics present in the microservice database at endpoint SurveyInstrument/api/SurveyInstrumentUsageStatistics
+        /// </summary>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual async System.Threading.Tasks.Task<UsageStatisticsSurveyInstrument> GetSurveyInstrumentUsageStatisticsAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken))
@@ -2533,6 +2581,9 @@ namespace OSDC.Drilling.SurveyInstrument.ModelShared
         }
     }
 
+    /// <summary>
+    /// Closed ISCWSA/survey error-source vocabulary. Revision 5 axial-correction terms use MFIR and MFI_U/OS/OH/OI for total magnetic-field uncertainty in tesla, and MDIR and MDI_U/OS/OH/OI for magnetic-dip uncertainty in radians. R is random, U is Well-by-Well, and OS/OH/OI are Global crustal-omission terms for standard, high-definition, and in-field referencing models. AMIL is axial magnetic interference in tesla; AMID and the unsuffixed early OSDC axial terms are legacy read compatibility values and are rejected in new Revision 5 models.
+    /// </summary>
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.4.0.0 (NJsonSchema v11.3.2.0 (Newtonsoft.Json v13.0.0.0))")]
     public enum ErrorCode
     {
@@ -2917,6 +2968,9 @@ namespace OSDC.Drilling.SurveyInstrument.ModelShared
 
     }
 
+    /// <summary>
+    /// Mutually exclusive ISCWSA Revision 5 correlation mode: Random (R) is independent between survey stations; Systematic (S) is correlated between stations in the same survey leg but independent between legs; WellByWell (W) is correlated across legs within the same well but independent between wells; Global (G) is fully correlated across all survey stations, legs, and wells in the project or field. Null is reserved for readable legacy records whose mode is derived from the deprecated boolean flags.
+    /// </summary>
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.4.0.0 (NJsonSchema v11.3.2.0 (Newtonsoft.Json v13.0.0.0))")]
     public enum ErrorPropagationMode
     {
@@ -2935,8 +2989,11 @@ namespace OSDC.Drilling.SurveyInstrument.ModelShared
 
     }
 
+    /// <summary>
+    /// One ISCWSA survey error source. Magnitude is a finite, nonnegative one-sigma standard uncertainty in the SI unit identified by MagnitudeQuantity.
+    /// </summary>
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.4.0.0 (NJsonSchema v11.3.2.0 (Newtonsoft.Json v13.0.0.0))")]
-    public partial class ErrorSource
+    public partial class ErrorSource : object
     {
 
         [System.Text.Json.Serialization.JsonPropertyName("MetaInfo")]
@@ -2949,6 +3006,10 @@ namespace OSDC.Drilling.SurveyInstrument.ModelShared
         [System.Text.Json.Serialization.JsonPropertyName("Description")]
         public string Description { get; set; }
 
+        /// <summary>
+        /// Implementation ordering field only; it has no independent physical meaning.
+        /// </summary>
+
         [System.Text.Json.Serialization.JsonPropertyName("Index")]
         public int Index { get; set; }
 
@@ -2956,11 +3017,23 @@ namespace OSDC.Drilling.SurveyInstrument.ModelShared
         [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter))]
         public ErrorPropagationMode PropagationMode { get; set; }
 
+        /// <summary>
+        /// Deprecated legacy compatibility flag. For current data use the single PropagationMode value.
+        /// </summary>
+
         [System.Text.Json.Serialization.JsonPropertyName("IsSystematic")]
         public bool IsSystematic { get; set; }
 
+        /// <summary>
+        /// Deprecated legacy compatibility flag. For current data use the single PropagationMode value.
+        /// </summary>
+
         [System.Text.Json.Serialization.JsonPropertyName("IsRandom")]
         public bool IsRandom { get; set; }
+
+        /// <summary>
+        /// Deprecated legacy compatibility flag. Global is a distinct PropagationMode, not a flag independent of Random or Systematic.
+        /// </summary>
 
         [System.Text.Json.Serialization.JsonPropertyName("IsGlobal")]
         public bool IsGlobal { get; set; }
@@ -2968,17 +3041,37 @@ namespace OSDC.Drilling.SurveyInstrument.ModelShared
         [System.Text.Json.Serialization.JsonPropertyName("SingularIssues")]
         public bool SingularIssues { get; set; }
 
+        /// <summary>
+        /// Gyroscopic-tool operating-mode flag. Continuous and Stationary are mutually exclusive; both may be false when the distinction does not apply.
+        /// </summary>
+
         [System.Text.Json.Serialization.JsonPropertyName("IsContinuous")]
         public bool IsContinuous { get; set; }
+
+        /// <summary>
+        /// Gyroscopic-tool operating-mode flag. Stationary and Continuous are mutually exclusive; both may be false when the distinction does not apply.
+        /// </summary>
 
         [System.Text.Json.Serialization.JsonPropertyName("IsStationary")]
         public bool IsStationary { get; set; }
 
+        /// <summary>
+        /// Opaque legacy compatibility flag retained until its mathematical behavior and operating boundaries are formally defined.
+        /// </summary>
+
         [System.Text.Json.Serialization.JsonPropertyName("KOperatorImposed")]
         public bool KOperatorImposed { get; set; }
 
+        /// <summary>
+        /// Finite, nonnegative one-sigma standard uncertainty in the SI unit required by ErrorCode.
+        /// </summary>
+
         [System.Text.Json.Serialization.JsonPropertyName("Magnitude")]
         public double? Magnitude { get; set; }
+
+        /// <summary>
+        /// Closed UnitConversion physical-quantity identifier defining Magnitude's dimension and canonical SI unit.
+        /// </summary>
 
         [System.Text.Json.Serialization.JsonPropertyName("MagnitudeQuantity")]
         public string MagnitudeQuantity { get; set; }
@@ -2986,23 +3079,26 @@ namespace OSDC.Drilling.SurveyInstrument.ModelShared
         [System.Text.Json.Serialization.JsonPropertyName("UseInclinationInterval")]
         public bool UseInclinationInterval { get; set; }
 
+        /// <summary>
+        /// Start of the applicable inclination interval in radians.
+        /// </summary>
+
         [System.Text.Json.Serialization.JsonPropertyName("StartInclination")]
         public double? StartInclination { get; set; }
+
+        /// <summary>
+        /// End of the applicable inclination interval in radians.
+        /// </summary>
 
         [System.Text.Json.Serialization.JsonPropertyName("EndInclination")]
         public double? EndInclination { get; set; }
 
+        /// <summary>
+        /// Initial inclination used by the error source in radians when required by the model.
+        /// </summary>
+
         [System.Text.Json.Serialization.JsonPropertyName("InitInclination")]
         public double? InitInclination { get; set; }
-
-        private System.Collections.Generic.IDictionary<string, object> _additionalProperties;
-
-        [System.Text.Json.Serialization.JsonExtensionData]
-        public System.Collections.Generic.IDictionary<string, object> AdditionalProperties
-        {
-            get { return _additionalProperties ?? (_additionalProperties = new System.Collections.Generic.Dictionary<string, object>()); }
-            set { _additionalProperties = value; }
-        }
 
     }
 
@@ -3090,6 +3186,9 @@ namespace OSDC.Drilling.SurveyInstrument.ModelShared
 
     }
 
+    /// <summary>
+    /// Survey-instrument error model with canonical SI values and, for ISCWSA families, authoritative embedded error-source snapshots.
+    /// </summary>
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.4.0.0 (NJsonSchema v11.3.2.0 (Newtonsoft.Json v13.0.0.0))")]
     public partial class SurveyInstrument
     {
@@ -3116,29 +3215,65 @@ namespace OSDC.Drilling.SurveyInstrument.ModelShared
         [System.Text.Json.Serialization.JsonPropertyName("ErrorSourceList")]
         public System.Collections.Generic.ICollection<ErrorSource> ErrorSourceList { get; set; }
 
+        /// <summary>
+        /// Geomagnetic dip (inclination) in radians.
+        /// </summary>
+
         [System.Text.Json.Serialization.JsonPropertyName("Dip")]
         public double Dip { get; set; }
+
+        /// <summary>
+        /// Geomagnetic declination, positive east of true north, in radians.
+        /// </summary>
 
         [System.Text.Json.Serialization.JsonPropertyName("Declination")]
         public double Declination { get; set; }
 
+        /// <summary>
+        /// Local gravitational acceleration in metres per second squared.
+        /// </summary>
+
         [System.Text.Json.Serialization.JsonPropertyName("Gravity")]
         public double Gravity { get; set; }
+
+        /// <summary>
+        /// Local total geomagnetic flux density in tesla.
+        /// </summary>
 
         [System.Text.Json.Serialization.JsonPropertyName("BField")]
         public double BField { get; set; }
 
+        /// <summary>
+        /// Grid convergence angle in radians.
+        /// </summary>
+
         [System.Text.Json.Serialization.JsonPropertyName("Convergence")]
         public double Convergence { get; set; }
+
+        /// <summary>
+        /// Geodetic latitude in radians.
+        /// </summary>
 
         [System.Text.Json.Serialization.JsonPropertyName("Latitude")]
         public double Latitude { get; set; }
 
+        /// <summary>
+        /// Earth angular velocity in radians per second.
+        /// </summary>
+
         [System.Text.Json.Serialization.JsonPropertyName("EarthRotRate")]
         public double EarthRotRate { get; set; }
 
+        /// <summary>
+        /// Planar angle in radians relative to the orthogonal body reference frame's transverse axes, perpendicular to the along-hole tool z-axis. Its sign remains positive while tool inclination is less than or equal to 90 degrees.
+        /// </summary>
+
         [System.Text.Json.Serialization.JsonPropertyName("CantAngle")]
         public double CantAngle { get; set; }
+
+        /// <summary>
+        /// Optional gyroscope angular velocity in radians per second.
+        /// </summary>
 
         [System.Text.Json.Serialization.JsonPropertyName("GyroRunningSpeed")]
         public double? GyroRunningSpeed { get; set; }
@@ -3146,11 +3281,23 @@ namespace OSDC.Drilling.SurveyInstrument.ModelShared
         [System.Text.Json.Serialization.JsonPropertyName("ExtRefInitInc")]
         public double? ExtRefInitInc { get; set; }
 
+        /// <summary>
+        /// Optional dimensionless gyro switching parameter.
+        /// </summary>
+
         [System.Text.Json.Serialization.JsonPropertyName("GyroSwitching")]
         public double? GyroSwitching { get; set; }
 
+        /// <summary>
+        /// Optional minimum distance between gyro initializations in metres.
+        /// </summary>
+
         [System.Text.Json.Serialization.JsonPropertyName("GyroMinDist")]
         public double? GyroMinDist { get; set; }
+
+        /// <summary>
+        /// Optional dimensionless gyro noise-reduction factor at initialization.
+        /// </summary>
 
         [System.Text.Json.Serialization.JsonPropertyName("GyroNoiseRed")]
         public double? GyroNoiseRed { get; set; }

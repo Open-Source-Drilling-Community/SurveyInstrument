@@ -200,6 +200,30 @@ public sealed class McpToolRegistrationTests
     }
 
     [Test]
+    public void Mcp_schemas_publish_complete_iscwsa_semantics_and_legacy_nullability()
+    {
+        string instrument = _tools["survey_instrument_get_by_id"].OutputSchema.ToJsonString();
+        string errorSource = _tools["error_source_get_by_id"].OutputSchema.ToJsonString();
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(instrument, Does.Contain("orthogonal body reference frame"));
+            Assert.That(instrument, Does.Contain("less than or equal to 90 degrees"));
+            Assert.That(instrument, Does.Contain("gyroscope angular velocity in radians per second"));
+            Assert.That(instrument, Does.Contain("\"x-si-unit\":\"rad/s\""));
+            Assert.That(errorSource, Does.Contain("same survey leg but independent between legs"));
+            Assert.That(errorSource, Does.Contain("fully correlated across all survey stations, legs, and wells"));
+            Assert.That(errorSource, Does.Contain("Implementation ordering field only"));
+            Assert.That(errorSource, Does.Contain("Opaque legacy compatibility flag"));
+            Assert.That(errorSource, Does.Contain("MFIR and MFI_U/OS/OH/OI"));
+            Assert.That(errorSource, Does.Contain("MDIR and MDI_U/OS/OH/OI"));
+            Assert.That(errorSource, Does.Contain("\"type\":[\"string\",\"null\"]"));
+            Assert.That(errorSource, Does.Contain("Continuous and Stationary are mutually exclusive"));
+            Assert.That(errorSource, Does.Contain("\"not\""));
+        });
+    }
+
+    [Test]
     public void Batch_tools_publish_versioned_atomic_backup_contracts()
     {
         string export = _tools["survey_instrument_batch_export"].OutputSchema.ToJsonString();

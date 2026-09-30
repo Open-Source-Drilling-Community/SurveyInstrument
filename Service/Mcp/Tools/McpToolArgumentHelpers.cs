@@ -8,6 +8,20 @@ namespace OSDC.Drilling.SurveyInstrument.Service.Mcp.Tools;
 
 internal static class McpToolArgumentHelpers
 {
+    private const string PropagationModeDescription =
+        "Mutually exclusive ISCWSA Revision 5 correlation mode: Random is independent between survey stations; " +
+        "Systematic is correlated between stations in the same survey leg but independent between legs; WellByWell " +
+        "is correlated across legs within the same well but independent between wells; Global is fully correlated " +
+        "across all survey stations, legs, and wells in the project or field. Null is reserved for readable legacy " +
+        "records whose mode is derived from the deprecated flags.";
+
+    private const string ErrorCodeDescription =
+        "Closed ISCWSA/survey error-code vocabulary. Revision 5 axial-correction terms use MFIR and MFI_U/OS/OH/OI " +
+        "for total magnetic-field uncertainty in tesla, and MDIR and MDI_U/OS/OH/OI for magnetic-dip uncertainty in " +
+        "radians. R is Random, U is WellByWell, and OS/OH/OI are Global crustal-omission terms for standard, " +
+        "high-definition, and in-field referencing models. AMIL is axial magnetic interference in tesla. AMID and " +
+        "unsuffixed early OSDC axial codes are legacy read compatibility values and are rejected in new Revision 5 models.";
+
     private static readonly HashSet<string> ProtectedSurveyInstrumentFields =
         new(StringComparer.Ordinal) { "MetaInfo", "CreationDate", "LastModificationDate" };
 
@@ -472,13 +486,13 @@ internal static class McpToolArgumentHelpers
             ["BField"] = Number("Local geomagnetic flux density in tesla (T)."),
             ["Convergence"] = Number("Grid convergence angle in radians."),
             ["Latitude"] = Number("Geodetic latitude in radians."),
-            ["EarthRotRate"] = Number("Earth angular rotation rate in radians per second (rad/s)."),
-            ["CantAngle"] = Number("Gyro cant angle in radians."),
-            ["GyroRunningSpeed"] = NullableNumber("Optional gyro-model running-speed parameter. Supply the model's SI value."),
+            ["EarthRotRate"] = Semantic(Number("Earth angular velocity in radians per second (rad/s)."), "EarthAngularVelocity", "rad/s"),
+            ["CantAngle"] = Semantic(Number("Planar angle in radians relative to the orthogonal body reference frame's transverse axes, perpendicular to the along-hole tool z-axis. Its sign remains positive while tool inclination is less than or equal to 90 degrees."), "SurveyInstrumentCantAngle; reference=OrthogonalBodyFrameCantConvention", "rad"),
+            ["GyroRunningSpeed"] = Semantic(NullableNumber("Optional gyroscope angular velocity in radians per second (rad/s)."), "SurveyToolRunningSpeed", "rad/s"),
             ["ExtRefInitInc"] = NullableNumber("Optional external-reference initial inclination in radians."),
-            ["GyroSwitching"] = NullableNumber("Optional dimensionless gyro switching parameter used by the selected gyro model."),
-            ["GyroMinDist"] = NullableNumber("Optional minimum gyro distance in metres (m)."),
-            ["GyroNoiseRed"] = NullableNumber("Optional dimensionless gyro noise-reduction factor."),
+            ["GyroSwitching"] = Semantic(NullableNumber("Optional dimensionless gyro switching parameter used by the selected gyro model."), "GyroSwitchingParameter", "1"),
+            ["GyroMinDist"] = Semantic(NullableNumber("Optional minimum distance between gyro initializations in metres (m)."), "GyroReinitializationDistance", "m"),
+            ["GyroNoiseRed"] = Semantic(NullableNumber("Optional dimensionless gyro noise-reduction factor at initialization."), "GyroNoiseReductionFactor", "1"),
             ["UseRelDepthError"] = Boolean("Whether RelDepthError participates in the Wolff-DeWardt model."),
             ["RelDepthError"] = NullableNumber("Relative measured-depth error as a dimensionless proportion; for example, 0.001 means 0.1%."),
             ["UseMisalignment"] = Boolean("Whether Misalignment participates in the Wolff-DeWardt model."),
@@ -626,33 +640,47 @@ internal static class McpToolArgumentHelpers
     private static JsonObject ErrorSourceSchema() => new()
     {
         ["type"] = "object",
+        ["description"] = "One ISCWSA survey error source. Magnitude is a finite, nonnegative one-sigma standard uncertainty in the SI unit identified by MagnitudeQuantity.",
         ["properties"] = new JsonObject
         {
             ["MetaInfo"] = MetaInfoSchema("Resource metadata. MetaInfo.ID is supplied by the caller and is the persistent error-source identifier."),
-            ["ErrorCode"] = EnumSchema("Finite ISCWSA/survey-model error-code vocabulary. Use the exact enum spelling.", Enum.GetNames<ErrorCode>()),
+            ["ErrorCode"] = Semantic(EnumSchema(ErrorCodeDescription, Enum.GetNames<ErrorCode>()), "SurveyErrorSourceCode"),
             ["Description"] = NullableString("Human-readable explanation of the physical error source."),
-            ["Index"] = Integer("Ordering or model index assigned to this error source."),
-            ["PropagationMode"] = EnumSchema("Single authoritative ISCWSA Revision 5 correlation mode.", Enum.GetNames<ErrorPropagationMode>()),
+            ["Index"] = Semantic(Integer("Implementation ordering field only; it has no independent physical meaning."), "ErrorSourceOrderingIndex"),
+            ["PropagationMode"] = Semantic(NullableEnumSchema(PropagationModeDescription, Enum.GetNames<ErrorPropagationMode>()), "ErrorPropagationMode"),
             ["IsSystematic"] = Boolean("Deprecated compatibility flag for persisted pre-Revision-5 OSDC records. Use PropagationMode."),
             ["IsRandom"] = Boolean("Deprecated compatibility flag for persisted pre-Revision-5 OSDC records. Use PropagationMode."),
-            ["IsGlobal"] = Boolean("Deprecated compatibility flag for persisted pre-Revision-5 OSDC records. Use PropagationMode."),
+            ["IsGlobal"] = Boolean("Deprecated compatibility flag. Global is a distinct PropagationMode, not a flag independent of Random or Systematic."),
             ["SingularIssues"] = Boolean("Whether the source requires special handling at singular orientations."),
-            ["IsContinuous"] = Boolean("Whether the source acts continuously along the trajectory."),
-            ["IsStationary"] = Boolean("Whether the source is stationary under the selected error model."),
-            ["KOperatorImposed"] = Boolean("Whether the source uses an imposed K-operator treatment."),
-            ["Magnitude"] = new JsonObject
+            ["IsContinuous"] = Boolean("Gyroscopic-tool operating-mode flag. Continuous and Stationary are mutually exclusive; both may be false when the distinction does not apply."),
+            ["IsStationary"] = Boolean("Gyroscopic-tool operating-mode flag. Stationary and Continuous are mutually exclusive; both may be false when the distinction does not apply."),
+            ["KOperatorImposed"] = Semantic(Boolean("Opaque legacy compatibility flag retained until its mathematical behavior and operating boundaries are formally defined."), "KOperatorImposed"),
+            ["Magnitude"] = Semantic(new JsonObject
             {
                 ["type"] = new JsonArray("number", "null"),
                 ["minimum"] = 0,
                 ["description"] = "Finite, nonnegative one-sigma standard uncertainty in the SI unit required by ErrorCode."
-            },
-            ["MagnitudeQuantity"] = NullableString("UnitConversion physical-quantity name that defines Magnitude's dimension and SI unit, for example PlaneAngleDrilling, AccelerationDrilling, or ProportionSmall."),
+            }, "SurveyErrorMagnitude"),
+            ["MagnitudeQuantity"] = Semantic(NullableString("Closed UnitConversion physical-quantity identifier defining Magnitude's dimension and canonical SI unit, for example PlaneAngleDrilling, AccelerationDrilling, or ProportionSmall."), "ErrorMagnitudeQuantityIdentifier"),
             ["UseInclinationInterval"] = Boolean("Whether the source applies only over the inclination interval described by StartInclination and EndInclination."),
-            ["StartInclination"] = NullableNumber("Start of the applicable inclination interval in radians."),
-            ["EndInclination"] = NullableNumber("End of the applicable inclination interval in radians."),
-            ["InitInclination"] = NullableNumber("Initial inclination used by this error source in radians, when required by the model.")
+            ["StartInclination"] = Semantic(NullableNumber("Start of the applicable inclination interval in radians."), "Inclination", "rad"),
+            ["EndInclination"] = Semantic(NullableNumber("End of the applicable inclination interval in radians."), "Inclination", "rad"),
+            ["InitInclination"] = Semantic(NullableNumber("Initial inclination used by this error source in radians, when required by the model."), "Inclination", "rad")
         },
-        ["required"] = new JsonArray("MetaInfo"), ["additionalProperties"] = false
+        ["required"] = new JsonArray("MetaInfo"),
+        ["allOf"] = new JsonArray(new JsonObject
+        {
+            ["not"] = new JsonObject
+            {
+                ["properties"] = new JsonObject
+                {
+                    ["IsContinuous"] = new JsonObject { ["const"] = true },
+                    ["IsStationary"] = new JsonObject { ["const"] = true }
+                },
+                ["required"] = new JsonArray("IsContinuous", "IsStationary")
+            }
+        }),
+        ["additionalProperties"] = false
     };
 
     private static JsonObject MetaInfoSchema(string description) => new()
@@ -691,6 +719,21 @@ internal static class McpToolArgumentHelpers
     {
         var enumValues = new JsonArray(); foreach (string value in values) enumValues.Add(value);
         return new JsonObject { ["type"] = "string", ["description"] = description, ["enum"] = enumValues };
+    }
+    private static JsonObject NullableEnumSchema(string description, params string[] values)
+    {
+        JsonArray enumValues = new(values.Select(value => (JsonNode)value).ToArray());
+        enumValues.Add(null);
+        return new JsonObject
+        {
+            ["type"] = new JsonArray("string", "null"), ["description"] = description, ["enum"] = enumValues
+        };
+    }
+    private static JsonObject Semantic(JsonObject schema, string concept, string? unit = null)
+    {
+        schema["x-osdc-semantic"] = concept;
+        if (unit != null) schema["x-si-unit"] = unit;
+        return schema;
     }
     private static JsonObject NullableArray(JsonObject items, string description) => new()
     {
