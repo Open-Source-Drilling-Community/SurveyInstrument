@@ -6,7 +6,7 @@
 
 - Host the HTTP API under `/SurveyInstrument/api`.
 - Persist `SurveyInstrument` and `ErrorSource` records in SQLite.
-- Seed default error sources and default survey instruments when the database is empty, and idempotently add missing Revision 5 error-source templates to an existing database without rewriting stored instruments or templates.
+- Seed Revision 5 error sources and the eight official OWSG ToolGroup MWD variants when the database is empty, and idempotently add missing Revision 5 templates and official instruments to an existing database without rewriting stored records.
 - Seed the standard identity and survey-feature taxonomies.
 - Publish a merged OpenAPI/Swagger document generated from `ModelSharedOut`.
 - Serve static assets and the generated schema bundle from `wwwroot`.
@@ -91,7 +91,9 @@ The `SurveyInstrumentController` exposes:
 
 ### Error sources
 
-Error-source writes are validated against the ISCWSA Revision 5.13 contract: the propagation mode is one of `Random`, `Systematic`, `WellByWell`, or `Global`; magnitude is a finite nonnegative one-sigma standard uncertainty; enabled inclination intervals are ordered and finite; and known terms require their prescribed SI quantity. New resources cannot use historic `AMID`; existing historic records can still be read and updated for compatibility. The active catalogue includes `AMIL`, `DSTS`, `XCLI1`, `XCLI2`, and the Revision 5 axial-interference correction terms. Startup adds missing Revision 5 templates by stable UUID and does not delete or rewrite existing data.
+Error-source writes are validated against the ISCWSA Revision 5.13 contract: the propagation mode is one of `Random`, `Systematic`, `WellByWell`, or `Global`; magnitude is a finite nonnegative one-sigma standard uncertainty; enabled inclination intervals are ordered and finite; and known terms require their prescribed SI quantity. New resources cannot use historic `AMID` or the earlier simplified OSDC axial codes; existing records remain readable for compatibility. The active catalogue includes `AMIL`, `DSTS`, `XCLI1`, `XCLI2`, and the exact Revision 5 axial terms, including `MFIR`, `MDIR`, and their `U/OS/OH/OI` splits. Startup adds missing Revision 5 templates by stable UUID and does not delete or rewrite existing data.
+
+Fresh database instrument seeds come from the ISCWSA `ToolGroup ISCWSA Rev5` workbook: the standard MWD and MWD+SAG models plus the MWD+AX and MWD+AX+SAG models, each for fixed and floating rigs. Missing official records are also added to an existing database under stable UUIDs without replacing records already present. Persisted magnitudes are SI: angles are radians, magnetic flux densities are tesla, and angle-flux products are radian-tesla. In particular, `AMIL=220 nT` is stored as `220e-9 T`; axial `MFI-*` values are also converted from nT to tesla; and all `*-U` terms use the Well-by-Well propagation mode. Existing databases are deliberately not purged on startup; take an application export plus an independent volume/database snapshot before removing older defaults.
 
 The `ErrorSourceController` exposes the same shape for `ErrorSource` resources:
 

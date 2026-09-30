@@ -63,6 +63,7 @@ namespace OSDC.Drilling.SurveyInstrument.Service.Managers
                     FillDefault();
                 }
             }
+            EnsureOfficialRevision5Defaults();
         }
 
         public static SurveyInstrumentManager GetInstance(ILogger<SurveyInstrumentManager> logger, ILogger<ErrorSourceManager> errorSourceLogger, SqlConnectionManager connectionManager)
@@ -729,26 +730,45 @@ namespace OSDC.Drilling.SurveyInstrument.Service.Managers
         private void FillDefault()
         {
             List<OSDC.Drilling.SurveyInstrument.Model.SurveyInstrument?> surveyInstrumentList = [
-                WdWPoorMag,
-                WdWGoodMag,
-                WdWPoorGyro,
-                WdWGoodGyro,
                 MWD_ISCWSA,
                 MWD_ISCWSA_Rev5_OWSG,
-                Gyro_ISCWSA,
-                Gyro_ISCWSA_Ex1,
-                Gyro_ISCWSA_Ex2,
-                Gyro_ISCWSA_Ex3,
-                Gyro_ISCWSA_Ex4,
-                Gyro_ISCWSA_Ex5,
-                Gyro_ISCWSA_Ex6,
-                SurveyInstrumentAll
+                MWD_ISCWSA_Rev5_Floating,
+                MWD_ISCWSA_Rev5_Sag_Floating,
+                MWD_ISCWSA_Rev5_Axial,
+                MWD_ISCWSA_Rev5_Axial_Floating,
+                MWD_ISCWSA_Rev5_Axial_Sag,
+                MWD_ISCWSA_Rev5_Axial_Sag_Floating
                 ];
             foreach (OSDC.Drilling.SurveyInstrument.Model.SurveyInstrument? si in surveyInstrumentList)
             {
                 AddSurveyInstrument(si);
             }
         }
+
+        private void EnsureOfficialRevision5Defaults()
+        {
+            HashSet<Guid> existingIds = GetAllSurveyInstrumentId()?.ToHashSet() ?? [];
+            foreach (OSDC.Drilling.SurveyInstrument.Model.SurveyInstrument instrument in OfficialRevision5Defaults())
+            {
+                Guid id = instrument.MetaInfo!.ID;
+                if (!existingIds.Contains(id) && !AddSurveyInstrument(instrument))
+                {
+                    _logger.LogError("Unable to add official ISCWSA Revision 5 survey instrument {InstrumentName} ({InstrumentId})", instrument.Name, id);
+                }
+            }
+        }
+
+        private static List<OSDC.Drilling.SurveyInstrument.Model.SurveyInstrument> OfficialRevision5Defaults() =>
+        [
+            MWD_ISCWSA,
+            MWD_ISCWSA_Rev5_OWSG,
+            MWD_ISCWSA_Rev5_Floating,
+            MWD_ISCWSA_Rev5_Sag_Floating,
+            MWD_ISCWSA_Rev5_Axial,
+            MWD_ISCWSA_Rev5_Axial_Floating,
+            MWD_ISCWSA_Rev5_Axial_Sag,
+            MWD_ISCWSA_Rev5_Axial_Sag_Floating
+        ];
 
         #region Default survey instruments
 
@@ -879,9 +899,9 @@ namespace OSDC.Drilling.SurveyInstrument.Service.Managers
             {
                 return new()
                 {
-                    MetaInfo = new MetaInfo() { HttpHostName = "https://app.digiwells.no/", HttpHostBasePath = "SurveyInstrument/api/", HttpEndPoint = "SurveyInstrument/", ID = new Guid("3a811f1f-8b54-4952-a6a7-cf584f5e85c8") },
-                    Name = "MWD_ISCWSA",
-                    Description = "Default MWD_ISCWSA survey instrument",
+                    MetaInfo = new MetaInfo() { HttpHostName = "https://app.digiwells.no/", HttpHostBasePath = "SurveyInstrument/api/", HttpEndPoint = "SurveyInstrument/", ID = new Guid("1c0f1b91-a63d-59b8-ac0d-84c4ddbfecfe") },
+                    Name = "ISCWSA MWD (Fixed Rig) Rev5",
+                    Description = "Official ISCWSA OWSG MWD Revision 5 model for a fixed rig; SI magnitudes converted from ToolGroup ISCWSA Rev5.",
                     CreationDate = DateTimeOffset.UtcNow,
                     LastModificationDate = DateTimeOffset.UtcNow,
                     ModelType = OSDC.DotnetLibraries.Drilling.Surveying.SurveyInstrumentModelType.MWD_ISCWSA,
@@ -914,19 +934,19 @@ namespace OSDC.Drilling.SurveyInstrument.Service.Managers
                         ErrorSourceFactory.Create_DEC_OH(magnitude:0.2 * DEG2RAD),
                         ErrorSourceFactory.Create_DEC_OI(magnitude:0.05 * DEG2RAD),
                         ErrorSourceFactory.Create_DECR(magnitude:0.1 * DEG2RAD),
-                        ErrorSourceFactory.Create_DBH_U(magnitude:2350e-9 * DEG2RAD),
-                        ErrorSourceFactory.Create_DBH_OS(magnitude:3359e-9 * DEG2RAD),
-                        ErrorSourceFactory.Create_DBH_OH(magnitude:2840e-9 * DEG2RAD),
+                        ErrorSourceFactory.Create_DBH_U(magnitude:2350.33e-9 * DEG2RAD),
+                        ErrorSourceFactory.Create_DBH_OS(magnitude:3359.1e-9 * DEG2RAD),
+                        ErrorSourceFactory.Create_DBH_OH(magnitude:2839.77e-9 * DEG2RAD),
                         ErrorSourceFactory.Create_DBH_OI(magnitude:356e-9 * DEG2RAD),
                         ErrorSourceFactory.Create_DBHR(magnitude:3000e-9 * DEG2RAD),
-                        ErrorSourceFactory.Create_AMIL(magnitude:220e-6),
+                        ErrorSourceFactory.Create_AMIL(magnitude:220e-9),
                         ErrorSourceFactory.Create_SAGE(magnitude:0.2 * DEG2RAD),
                         ErrorSourceFactory.Create_XYM1(magnitude:0.1 * DEG2RAD),
                         ErrorSourceFactory.Create_XYM2(magnitude:0.1 * DEG2RAD),
                         ErrorSourceFactory.Create_XYM3E(magnitude:0.3 * DEG2RAD),
                         ErrorSourceFactory.Create_XYM4E(magnitude:0.3 * DEG2RAD),
                         ErrorSourceFactory.Create_XCLH(magnitude:0.167),
-                        ErrorSourceFactory.Create_XCLL(magnitude:0.167),
+                        ErrorSourceFactory.Create_XCLA(magnitude:0.167),
                         ]
                 };
             }
@@ -940,9 +960,9 @@ namespace OSDC.Drilling.SurveyInstrument.Service.Managers
             {
                 return new()
                 {
-                    MetaInfo = new MetaInfo() { HttpHostName = "https://app.digiwells.no/", HttpHostBasePath = "SurveyInstrument/api/", HttpEndPoint = "SurveyInstrument/", ID = new Guid("9d1a0696-22e7-4c50-b3ff-f60bd580f594") },
-                    Name = "MWD_ISCWSA_Rev5_OWSG",
-                    Description = "Default MWD_ISCWSA_Rev5_OWSG survey instrument",
+                    MetaInfo = new MetaInfo() { HttpHostName = "https://app.digiwells.no/", HttpHostBasePath = "SurveyInstrument/api/", HttpEndPoint = "SurveyInstrument/", ID = new Guid("394b2fd7-922c-5820-8ff6-25b4710783a8") },
+                    Name = "ISCWSA MWD+SAG (Fixed Rig) Rev5",
+                    Description = "Official ISCWSA OWSG MWD plus sag-correction Revision 5 model for a fixed rig; SI magnitudes converted from ToolGroup ISCWSA Rev5.",
                     CreationDate = DateTimeOffset.UtcNow,
                     LastModificationDate = DateTimeOffset.UtcNow,
                     ModelType = OSDC.DotnetLibraries.Drilling.Surveying.SurveyInstrumentModelType.MWD_ISCWSA,
@@ -975,24 +995,147 @@ namespace OSDC.Drilling.SurveyInstrument.Service.Managers
                         ErrorSourceFactory.Create_DEC_OH(magnitude:0.2 * DEG2RAD),
                         ErrorSourceFactory.Create_DEC_OI(magnitude:0.05 * DEG2RAD),
                         ErrorSourceFactory.Create_DECR(magnitude:0.1 * DEG2RAD),
-                        ErrorSourceFactory.Create_DBH_U(magnitude:2350e-9 * DEG2RAD),
-                        ErrorSourceFactory.Create_DBH_OS(magnitude:3359e-9 * DEG2RAD),
-                        ErrorSourceFactory.Create_DBH_OH(magnitude:2840e-9 * DEG2RAD),
+                        ErrorSourceFactory.Create_DBH_U(magnitude:2350.33e-9 * DEG2RAD),
+                        ErrorSourceFactory.Create_DBH_OS(magnitude:3359.1e-9 * DEG2RAD),
+                        ErrorSourceFactory.Create_DBH_OH(magnitude:2839.77e-9 * DEG2RAD),
                         ErrorSourceFactory.Create_DBH_OI(magnitude:356e-9 * DEG2RAD),
                         ErrorSourceFactory.Create_DBHR(magnitude:3000e-9 * DEG2RAD),
-                        ErrorSourceFactory.Create_AMIL(magnitude:220e-6),
-                        ErrorSourceFactory.Create_SAGE(magnitude:0.2 * DEG2RAD),
+                        ErrorSourceFactory.Create_AMIL(magnitude:220e-9),
+                        ErrorSourceFactory.Create_SAGE(magnitude:0.08 * DEG2RAD),
                         ErrorSourceFactory.Create_XYM1(magnitude:0.1 * DEG2RAD),
                         ErrorSourceFactory.Create_XYM2(magnitude:0.1 * DEG2RAD),
                         ErrorSourceFactory.Create_XYM3E(magnitude:0.3 * DEG2RAD),
                         ErrorSourceFactory.Create_XYM4E(magnitude:0.3 * DEG2RAD),
                         ErrorSourceFactory.Create_XCLH(magnitude:0.167),
-                        ErrorSourceFactory.Create_XCLL(magnitude:0.167),
+                        ErrorSourceFactory.Create_XCLA(magnitude:0.167),
                         ]
                 };
             }
         }
         #endregion
+
+        public static OSDC.Drilling.SurveyInstrument.Model.SurveyInstrument MWD_ISCWSA_Rev5_Floating
+        {
+            get
+            {
+                OSDC.Drilling.SurveyInstrument.Model.SurveyInstrument instrument = MWD_ISCWSA;
+                instrument.MetaInfo!.ID = new Guid("a4924a97-3b82-551e-8e25-663a2d6b00ed");
+                instrument.Name = "ISCWSA MWD (Floating Rig) Rev5";
+                instrument.Description = "Official ISCWSA OWSG MWD Revision 5 model for a floating rig; SI magnitudes converted from ToolGroup ISCWSA Rev5.";
+                int drfrIndex = instrument.ErrorSourceList!.FindIndex(source => source.ErrorCode == ErrorCode.DRFR);
+                instrument.ErrorSourceList[drfrIndex] = ErrorSourceFactory.Create_DRFR(magnitude: 2.2);
+                instrument.ErrorSourceList.Insert(drfrIndex + 1, ErrorSourceFactory.Create_DRFS(magnitude: 1.0));
+                return instrument;
+            }
+        }
+
+        public static OSDC.Drilling.SurveyInstrument.Model.SurveyInstrument MWD_ISCWSA_Rev5_Sag_Floating
+        {
+            get
+            {
+                OSDC.Drilling.SurveyInstrument.Model.SurveyInstrument instrument = MWD_ISCWSA_Rev5_OWSG;
+                instrument.MetaInfo!.ID = new Guid("42e81a31-178e-55f4-8498-edf7fe3a0e79");
+                instrument.Name = "ISCWSA MWD+SAG (Floating Rig) Rev5";
+                instrument.Description = "Official ISCWSA OWSG MWD plus sag-correction Revision 5 model for a floating rig; SI magnitudes converted from ToolGroup ISCWSA Rev5.";
+                int drfrIndex = instrument.ErrorSourceList!.FindIndex(source => source.ErrorCode == ErrorCode.DRFR);
+                instrument.ErrorSourceList[drfrIndex] = ErrorSourceFactory.Create_DRFR(magnitude: 2.2);
+                instrument.ErrorSourceList.Insert(drfrIndex + 1, ErrorSourceFactory.Create_DRFS(magnitude: 1.0));
+                return instrument;
+            }
+        }
+
+        public static OSDC.Drilling.SurveyInstrument.Model.SurveyInstrument MWD_ISCWSA_Rev5_Axial =>
+            CreateOfficialAxialRevision5Instrument(
+                new Guid("a0f33a2b-6d93-4fa7-aeab-911c8e8d129a"),
+                "ISCWSA MWD + Axial Corr. (Fixed Rig) Rev5", floatingRig: false, sagCorrected: false);
+
+        public static OSDC.Drilling.SurveyInstrument.Model.SurveyInstrument MWD_ISCWSA_Rev5_Axial_Floating =>
+            CreateOfficialAxialRevision5Instrument(
+                new Guid("238f2643-12b7-40ec-81ec-191d84666d20"),
+                "ISCWSA MWD + Axial Corr. (Floating Rig) Rev5", floatingRig: true, sagCorrected: false);
+
+        public static OSDC.Drilling.SurveyInstrument.Model.SurveyInstrument MWD_ISCWSA_Rev5_Axial_Sag =>
+            CreateOfficialAxialRevision5Instrument(
+                new Guid("b5d5e6d1-86ed-482a-ba76-d001e36514b1"),
+                "ISCWSA MWD + Axial Corr. + SAG (Fixed Rig) Rev5", floatingRig: false, sagCorrected: true);
+
+        public static OSDC.Drilling.SurveyInstrument.Model.SurveyInstrument MWD_ISCWSA_Rev5_Axial_Sag_Floating =>
+            CreateOfficialAxialRevision5Instrument(
+                new Guid("97a596e9-dde3-4cd5-9d40-8175c98b088f"),
+                "ISCWSA MWD + Axial Corr. + SAG (Floating Rig) Rev5", floatingRig: true, sagCorrected: true);
+
+        private static OSDC.Drilling.SurveyInstrument.Model.SurveyInstrument CreateOfficialAxialRevision5Instrument(
+            Guid id, string name, bool floatingRig, bool sagCorrected)
+        {
+            List<ErrorSource> sources =
+            [
+                ErrorSourceFactory.Create_DRFR(magnitude: floatingRig ? 2.2 : 0.35),
+                ErrorSourceFactory.Create_DSFS(magnitude: 0.00056),
+                ErrorSourceFactory.Create_DSTG(magnitude: 2.5e-7),
+                ErrorSourceFactory.Create_ABIXY_TI1S(magnitude: 0.004),
+                ErrorSourceFactory.Create_ABIXY_TI2S(magnitude: 0.004),
+                ErrorSourceFactory.Create_ABIZ(magnitude: 0.004),
+                ErrorSourceFactory.Create_ASIXY_TI1S(magnitude: 0.0005),
+                ErrorSourceFactory.Create_ASIXY_TI2S(magnitude: 0.0005),
+                ErrorSourceFactory.Create_ASIXY_TI3S(magnitude: 0.0005),
+                ErrorSourceFactory.Create_ASIZ(magnitude: 0.0005),
+                ErrorSourceFactory.Create_MBIXY_TI1S(magnitude: 70e-9),
+                ErrorSourceFactory.Create_MBIXY_TI2S(magnitude: 70e-9),
+                ErrorSourceFactory.Create_MSIXY_TI1S(magnitude: 0.0016),
+                ErrorSourceFactory.Create_MSIXY_TI2S(magnitude: 0.0016),
+                ErrorSourceFactory.Create_MSIXY_TI3S(magnitude: 0.0016),
+                ErrorSourceFactory.Create_DECR(magnitude: 0.1 * DEG2RAD),
+                ErrorSourceFactory.Create_DBHR(magnitude: 3000e-9 * DEG2RAD),
+                ErrorSourceFactory.Create_MDIR(magnitude: 0.08 * DEG2RAD),
+                ErrorSourceFactory.Create_MFIR(magnitude: 60e-9),
+                ErrorSourceFactory.Create_XYM1(magnitude: 0.1 * DEG2RAD),
+                ErrorSourceFactory.Create_XYM2(magnitude: 0.1 * DEG2RAD),
+                ErrorSourceFactory.Create_XCLA(magnitude: 0.167),
+                ErrorSourceFactory.Create_XCLH(magnitude: 0.167),
+                ErrorSourceFactory.Create_DEC_U(magnitude: 0.16 * DEG2RAD),
+                ErrorSourceFactory.Create_DEC_OS(magnitude: 0.24 * DEG2RAD),
+                ErrorSourceFactory.Create_DBH_U(magnitude: 2350.33e-9 * DEG2RAD),
+                ErrorSourceFactory.Create_DBH_OS(magnitude: 3359.1e-9 * DEG2RAD),
+                ErrorSourceFactory.Create_MFI_U(magnitude: 61.15e-9),
+                ErrorSourceFactory.Create_MFI_OS(magnitude: 88.03e-9),
+                ErrorSourceFactory.Create_MDI_U(magnitude: 0.09 * DEG2RAD),
+                ErrorSourceFactory.Create_MDI_OS(magnitude: 0.14 * DEG2RAD),
+                ErrorSourceFactory.Create_SAGE(magnitude: (sagCorrected ? 0.08 : 0.2) * DEG2RAD),
+                ErrorSourceFactory.Create_XYM3E(magnitude: 0.3 * DEG2RAD),
+                ErrorSourceFactory.Create_XYM4E(magnitude: 0.3 * DEG2RAD),
+                ErrorSourceFactory.Create_DEC_OH(magnitude: 0.2 * DEG2RAD),
+                ErrorSourceFactory.Create_DEC_OI(magnitude: 0.05 * DEG2RAD),
+                ErrorSourceFactory.Create_DBH_OH(magnitude: 2839.77e-9 * DEG2RAD),
+                ErrorSourceFactory.Create_DBH_OI(magnitude: 356e-9 * DEG2RAD),
+                ErrorSourceFactory.Create_MFI_OH(magnitude: 72.85e-9),
+                ErrorSourceFactory.Create_MFI_OI(magnitude: 13e-9),
+                ErrorSourceFactory.Create_MDI_OH(magnitude: 0.11 * DEG2RAD),
+                ErrorSourceFactory.Create_MDI_OI(magnitude: 0.02 * DEG2RAD)
+            ];
+            if (floatingRig)
+                sources.Insert(1, ErrorSourceFactory.Create_DRFS(magnitude: 1.0));
+
+            return new()
+            {
+                MetaInfo = new MetaInfo
+                {
+                    HttpHostName = "https://app.digiwells.no/", HttpHostBasePath = "SurveyInstrument/api/",
+                    HttpEndPoint = "SurveyInstrument/", ID = id
+                },
+                Name = name,
+                Description = $"Official ISCWSA OWSG axial-correction Revision 5 model for a {(floatingRig ? "floating" : "fixed")} rig; SI magnitudes converted from ToolGroup ISCWSA Rev5.",
+                CreationDate = DateTimeOffset.UtcNow,
+                LastModificationDate = DateTimeOffset.UtcNow,
+                ModelType = OSDC.DotnetLibraries.Drilling.Surveying.SurveyInstrumentModelType.MWD_ISCWSA,
+                UseRelDepthError = false,
+                UseMisalignment = false,
+                UseTrueInclination = false,
+                UseReferenceError = false,
+                UseDrillStringMag = false,
+                UseGyroCompassError = false,
+                ErrorSourceList = sources
+            };
+        }
 
         #region SurveyInstrument Gyro_ISCWSA
         private static OSDC.Drilling.SurveyInstrument.Model.SurveyInstrument? _gyro_ISCWSA = null;
@@ -1410,12 +1553,12 @@ namespace OSDC.Drilling.SurveyInstrument.Service.Managers
                         ErrorSourceFactory.Create_DEC_OH(magnitude:0.2 * DEG2RAD),
                         ErrorSourceFactory.Create_DEC_OI(magnitude:0.05 * DEG2RAD),
                         ErrorSourceFactory.Create_DECR(magnitude:0.1 * DEG2RAD),
-                        ErrorSourceFactory.Create_DBH_U(magnitude:2350e-9 * DEG2RAD),
-                        ErrorSourceFactory.Create_DBH_OS(magnitude:3359e-9 * DEG2RAD),
-                        ErrorSourceFactory.Create_DBH_OH(magnitude:2840e-9 * DEG2RAD),
+                        ErrorSourceFactory.Create_DBH_U(magnitude:2350.33e-9 * DEG2RAD),
+                        ErrorSourceFactory.Create_DBH_OS(magnitude:3359.1e-9 * DEG2RAD),
+                        ErrorSourceFactory.Create_DBH_OH(magnitude:2839.77e-9 * DEG2RAD),
                         ErrorSourceFactory.Create_DBH_OI(magnitude:356e-9 * DEG2RAD),
                         ErrorSourceFactory.Create_DBHR(magnitude:3000e-9 * DEG2RAD),
-                        ErrorSourceFactory.Create_AMIL(magnitude:220e-6),
+                        ErrorSourceFactory.Create_AMIL(magnitude:220e-9),
                         ErrorSourceFactory.Create_SAGE(magnitude:0.2 * DEG2RAD),
                         ErrorSourceFactory.Create_XYM1(magnitude:0.1 * DEG2RAD),
                         ErrorSourceFactory.Create_XYM2(magnitude:0.1 * DEG2RAD),

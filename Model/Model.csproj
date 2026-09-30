@@ -18,8 +18,13 @@
 		</Content>
 	</ItemGroup>
 
-	<ItemGroup>
-		<PackageReference Include="OSDC.DotnetLibraries.Drilling.Surveying" Version="1.3.3" />
+	<ItemGroup Condition="'$(UseLocalSurveyingProject)' != 'true'">
+		<PackageReference Include="OSDC.DotnetLibraries.Drilling.Surveying" Version="1.3.4" />
+		<PackageReference Include="OSDC.DotnetLibraries.General.DataManagement" Version="2.2.0" />
+	</ItemGroup>
+
+	<ItemGroup Condition="'$(UseLocalSurveyingProject)' == 'true'">
+		<ProjectReference Include="..\..\DotNetLibraries\OSDC.DotnetLibraries.General\OSDC.DotnetLibraries.Drilling.Surveying\OSDC.DotnetLibraries.Drilling.Surveying.csproj" />
 		<PackageReference Include="OSDC.DotnetLibraries.General.DataManagement" Version="2.2.0" />
 	</ItemGroup>
 

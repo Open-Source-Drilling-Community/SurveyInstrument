@@ -2861,6 +2861,60 @@ namespace OSDC.Drilling.SurveyInstrument.ModelShared
         [System.Runtime.Serialization.EnumMember(Value = @"DBH")]
         DBH = 107,
 
+        [System.Runtime.Serialization.EnumMember(Value = @"ASIXY_TI1S")]
+        ASIXY_TI1S = 108,
+
+        [System.Runtime.Serialization.EnumMember(Value = @"ASIXY_TI2S")]
+        ASIXY_TI2S = 109,
+
+        [System.Runtime.Serialization.EnumMember(Value = @"ASIXY_TI3S")]
+        ASIXY_TI3S = 110,
+
+        [System.Runtime.Serialization.EnumMember(Value = @"MBIXY_TI1S")]
+        MBIXY_TI1S = 111,
+
+        [System.Runtime.Serialization.EnumMember(Value = @"MBIXY_TI2S")]
+        MBIXY_TI2S = 112,
+
+        [System.Runtime.Serialization.EnumMember(Value = @"MSIXY_TI1S")]
+        MSIXY_TI1S = 113,
+
+        [System.Runtime.Serialization.EnumMember(Value = @"MSIXY_TI2S")]
+        MSIXY_TI2S = 114,
+
+        [System.Runtime.Serialization.EnumMember(Value = @"MSIXY_TI3S")]
+        MSIXY_TI3S = 115,
+
+        [System.Runtime.Serialization.EnumMember(Value = @"MDIR")]
+        MDIR = 116,
+
+        [System.Runtime.Serialization.EnumMember(Value = @"MFIR")]
+        MFIR = 117,
+
+        [System.Runtime.Serialization.EnumMember(Value = @"MFI_U")]
+        MFI_U = 118,
+
+        [System.Runtime.Serialization.EnumMember(Value = @"MFI_OS")]
+        MFI_OS = 119,
+
+        [System.Runtime.Serialization.EnumMember(Value = @"MFI_OH")]
+        MFI_OH = 120,
+
+        [System.Runtime.Serialization.EnumMember(Value = @"MFI_OI")]
+        MFI_OI = 121,
+
+        [System.Runtime.Serialization.EnumMember(Value = @"MDI_U")]
+        MDI_U = 122,
+
+        [System.Runtime.Serialization.EnumMember(Value = @"MDI_OS")]
+        MDI_OS = 123,
+
+        [System.Runtime.Serialization.EnumMember(Value = @"MDI_OH")]
+        MDI_OH = 124,
+
+        [System.Runtime.Serialization.EnumMember(Value = @"MDI_OI")]
+        MDI_OI = 125,
+
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.4.0.0 (NJsonSchema v11.3.2.0 (Newtonsoft.Json v13.0.0.0))")]

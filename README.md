@@ -53,7 +53,7 @@ The full survey-domain types are not authored directly in this repository. They 
 
 The `Model` project adds repository-specific helper types around them.
 
-The current SurveyInstrument contract uses `OSDC.DotnetLibraries.Drilling.Surveying` 1.3.2 and aligns ISCWSA models with Error Model Definition Revision 5.13. Propagation is a closed `Random`, `Systematic`, `WellByWell`, or `Global` mode; magnitudes are nonnegative one-sigma standard uncertainties in the declared SI quantity. Current axial-interference models use `AMIL` (tesla). Historic `AMID` records remain readable as planar-angle terms but cannot be added to a new Revision 5 instrument.
+The current SurveyInstrument contract uses `OSDC.DotnetLibraries.Drilling.Surveying` 1.3.3 and aligns ISCWSA models with Error Model Definition Revision 5.13. Propagation is a closed `Random`, `Systematic`, `WellByWell`, or `Global` mode; magnitudes are nonnegative one-sigma standard uncertainties in the declared SI quantity. Standard MWD models use `AMIL` (tesla). Axial-correction models use the exact `MFIR`, `MFI-U/OS/OH/OI`, `MDIR`, and `MDI-U/OS/OH/OI` terms. Historic `AMID` and the earlier simplified OSDC axial codes remain readable but cannot be added to a new Revision 5 instrument.
 
 ### Service contract generation
 
@@ -123,6 +123,8 @@ Default service behavior seeds the database with:
 
 - default `ErrorSource` records
 - default `SurveyInstrument` records
+
+For a fresh database, the instrument records are the eight agreed OWSG ToolGroup Revision 5 MWD variants: standard and axial-correction models for fixed and floating rigs, each with the standard 0.2° sag model and the 0.08° sag-corrected model. Missing official records are added to existing databases under stable UUIDs without replacing stored records. Workbook values are converted before persistence (`deg` to radians, `nT` to tesla, and `deg.nT` to radian-tesla). Older Wolff-de-Wardt, gyro example, and kitchen-sink records remain available in source for compatibility but are no longer seeded because the current ISCWSA downloads do not establish them as Revision 5 ToolGroup models. Existing databases are not destructively rewritten at startup; export and independently snapshot each environment before a reviewed cleanup migration.
 - eight default identity definitions
 - sixteen feature categories and their options
 
