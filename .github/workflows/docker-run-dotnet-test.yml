@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
 
     - name: Build Service docker image
       run: docker build --file Service/Dockerfile --tag apiunittesting/service:latest .
@@ -20,8 +20,21 @@ jobs:
       # mapping http port to 8080 (which is reached by the unit test in ServiceTest, see source code)
       run: docker run -dt -p 8080:8080 apiunittesting/service:latest
 
+    - name: Wait for Service readiness
+      shell: bash
+      run: |
+        for attempt in {1..30}; do
+          if curl --fail --silent http://localhost:8080/SurveyInstrument/api/SurveyInstrument > /dev/null; then
+            exit 0
+          fi
+          sleep 1
+        done
+        docker ps -a
+        docker logs $(docker ps -aq --filter ancestor=apiunittesting/service:latest | head -1)
+        exit 1
+
     - name: Setup .NET
-      uses: actions/setup-dotnet@v3
+      uses: actions/setup-dotnet@v4
       with:
         dotnet-version: 8.0.x
 
