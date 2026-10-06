@@ -3013,9 +3013,13 @@ namespace OSDC.Drilling.SurveyInstrument.ModelShared
         [System.Text.Json.Serialization.JsonPropertyName("Index")]
         public int Index { get; set; }
 
+        /// <summary>
+        /// Mutually exclusive ISCWSA Revision 5 correlation mode: Random (R) is independent between survey stations; Systematic (S) is correlated between stations in the same survey leg but independent between legs; WellByWell (W) is correlated across legs within the same well but independent between wells; Global (G) is fully correlated across all survey stations, legs, and wells in the project or field. Null is reserved for readable legacy records whose mode is derived from the deprecated boolean flags.
+        /// </summary>
+
         [System.Text.Json.Serialization.JsonPropertyName("PropagationMode")]
         [System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter))]
-        public ErrorPropagationMode PropagationMode { get; set; }
+        public ErrorSourcePropagationMode? PropagationMode { get; set; }
 
         /// <summary>
         /// Deprecated legacy compatibility flag. For current data use the single PropagationMode value.
@@ -3814,6 +3818,24 @@ namespace OSDC.Drilling.SurveyInstrument.ModelShared
             get { return _additionalProperties ?? (_additionalProperties = new System.Collections.Generic.Dictionary<string, object>()); }
             set { _additionalProperties = value; }
         }
+
+    }
+
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.4.0.0 (NJsonSchema v11.3.2.0 (Newtonsoft.Json v13.0.0.0))")]
+    public enum ErrorSourcePropagationMode
+    {
+
+        [System.Runtime.Serialization.EnumMember(Value = @"Random")]
+        Random = 0,
+
+        [System.Runtime.Serialization.EnumMember(Value = @"Systematic")]
+        Systematic = 1,
+
+        [System.Runtime.Serialization.EnumMember(Value = @"WellByWell")]
+        WellByWell = 2,
+
+        [System.Runtime.Serialization.EnumMember(Value = @"Global")]
+        Global = 3,
 
     }
 

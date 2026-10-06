@@ -1184,7 +1184,23 @@
             }
           },
           "PropagationMode": {
-            "$ref": "#/components/schemas/OSDC.DotnetLibraries.Drilling.Surveying.ErrorPropagationMode"
+            "enum": [
+              "Random",
+              "Systematic",
+              "WellByWell",
+              "Global"
+            ],
+            "type": "string",
+            "description": "Mutually exclusive ISCWSA Revision 5 correlation mode: Random (R) is independent between survey stations; Systematic (S) is correlated between stations in the same survey leg but independent between legs; WellByWell (W) is correlated across legs within the same well but independent between wells; Global (G) is fully correlated across all survey stations, legs, and wells in the project or field. Null is reserved for readable legacy records whose mode is derived from the deprecated boolean flags.",
+            "nullable": true,
+            "x-osdc-semantic": {
+              "catalogue": "urn:osdc:semantic-catalogue",
+              "catalogueVersion": "0.15.0",
+              "concept": "urn:osdc:semantic:error-propagation-mode",
+              "curationStatus": "Reviewed",
+              "assertionSource": "provider-binding-registry",
+              "requiredContext": [ ]
+            }
           },
           "IsSystematic": {
             "type": "boolean",

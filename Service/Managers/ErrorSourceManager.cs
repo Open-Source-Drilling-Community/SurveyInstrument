@@ -18,6 +18,7 @@ namespace OSDC.Drilling.SurveyInstrument.Service.Managers
     public class ErrorSourceManager
     {
         private static ErrorSourceManager? _instance = null;
+        private static readonly object InstanceLock = new();
         private readonly ILogger<ErrorSourceManager> _logger;
         private readonly SqlConnectionManager _connectionManager;
 
@@ -68,8 +69,15 @@ namespace OSDC.Drilling.SurveyInstrument.Service.Managers
 
         public static ErrorSourceManager GetInstance(ILogger<ErrorSourceManager> logger, SqlConnectionManager connectionManager)
         {
-            _instance ??= new ErrorSourceManager(logger, connectionManager);
-            return _instance;
+            if (_instance != null)
+            {
+                return _instance;
+            }
+
+            lock (InstanceLock)
+            {
+                return _instance ??= new ErrorSourceManager(logger, connectionManager);
+            }
         }
 
         public int Count
@@ -77,7 +85,7 @@ namespace OSDC.Drilling.SurveyInstrument.Service.Managers
             get
             {
                 int count = 0;
-                var connection = _connectionManager.GetConnection();
+                using var connection = _connectionManager.GetConnection();
                 if (connection != null)
                 {
                     var command = connection.CreateCommand();
@@ -105,7 +113,7 @@ namespace OSDC.Drilling.SurveyInstrument.Service.Managers
 
         public bool Clear()
         {
-            var connection = _connectionManager.GetConnection();
+            using var connection = _connectionManager.GetConnection();
             if (connection != null)
             {
                 bool success = false;
@@ -137,7 +145,7 @@ namespace OSDC.Drilling.SurveyInstrument.Service.Managers
         public bool Contains(Guid guid)
         {
             int count = 0;
-            var connection = _connectionManager.GetConnection();
+            using var connection = _connectionManager.GetConnection();
             if (connection != null)
             {
                 var command = connection.CreateCommand();
@@ -169,7 +177,7 @@ namespace OSDC.Drilling.SurveyInstrument.Service.Managers
         public List<Guid>? GetAllErrorSourceId()
         {
             List<Guid> ids = [];
-            var connection = _connectionManager.GetConnection();
+            using var connection = _connectionManager.GetConnection();
             if (connection != null)
             {
                 var command = connection.CreateCommand();
@@ -204,7 +212,7 @@ namespace OSDC.Drilling.SurveyInstrument.Service.Managers
         public List<MetaInfo?>? GetAllErrorSourceMetaInfo()
         {
             List<MetaInfo?> metaInfos = new();
-            var connection = _connectionManager.GetConnection();
+            using var connection = _connectionManager.GetConnection();
             if (connection != null)
             {
                 var command = connection.CreateCommand();
@@ -242,7 +250,7 @@ namespace OSDC.Drilling.SurveyInstrument.Service.Managers
         {
             if (!guid.Equals(Guid.Empty))
             {
-                var connection = _connectionManager.GetConnection();
+                using var connection = _connectionManager.GetConnection();
                 if (connection != null)
                 {
                     ErrorSource? errorSource;
@@ -291,7 +299,7 @@ namespace OSDC.Drilling.SurveyInstrument.Service.Managers
         public List<ErrorSource?>? GetAllErrorSource()
         {
             List<ErrorSource?> vals = [];
-            var connection = _connectionManager.GetConnection();
+            using var connection = _connectionManager.GetConnection();
             if (connection != null)
             {
                 var command = connection.CreateCommand();
@@ -332,7 +340,7 @@ namespace OSDC.Drilling.SurveyInstrument.Service.Managers
                 !(errorSource.IsContinuous && errorSource.IsStationary))
             {
                 //update ErrorSourceTable
-                var connection = _connectionManager.GetConnection();
+                using var connection = _connectionManager.GetConnection();
                 if (connection != null)
                 {
                     using SqliteTransaction transaction = connection.BeginTransaction();
@@ -400,7 +408,7 @@ namespace OSDC.Drilling.SurveyInstrument.Service.Managers
                 ErrorSourceRevision5.TryValidate(errorSource, requireCurrentCode: false, out _) &&
                 !(errorSource.IsContinuous && errorSource.IsStationary))
             {
-                var connection = _connectionManager.GetConnection();
+                using var connection = _connectionManager.GetConnection();
                 if (connection != null)
                 {
                     using SqliteTransaction transaction = connection.BeginTransaction();
@@ -462,7 +470,7 @@ namespace OSDC.Drilling.SurveyInstrument.Service.Managers
         {
             if (!guid.Equals(Guid.Empty))
             {
-                var connection = _connectionManager.GetConnection();
+                using var connection = _connectionManager.GetConnection();
                 if (connection != null)
                 {
                     using var transaction = connection.BeginTransaction();

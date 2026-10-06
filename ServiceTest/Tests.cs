@@ -32,17 +32,18 @@ namespace OSDC.Drilling.SurveyInstrument.ServiceTest
             return new ErrorSource
             {
                 MetaInfo = metaInfo,
-                ErrorCode = ErrorCode.XYM1,
+                ErrorCode = ErrorCode.DRFR,
                 Description = "default descr",
-                Index = 30,
-                IsSystematic = true,
-                IsRandom = false,
+                Index = 1,
+                IsSystematic = false,
+                IsRandom = true,
                 IsGlobal = false,
                 IsContinuous = false,
                 IsStationary = false,
                 KOperatorImposed = false,
                 SingularIssues = false,
-                MagnitudeQuantity = "PlaneAngleDrilling",
+                Magnitude = 0.001,
+                MagnitudeQuantity = "DepthDrilling",
                 UseInclinationInterval = false,
             };
         }

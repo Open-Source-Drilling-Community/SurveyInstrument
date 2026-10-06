@@ -304,7 +304,18 @@ public sealed class McpServerHttpTests
         {
             ["MetaInfo"] = new JsonObject { ["ID"] = sourceId.ToString() },
             ["ErrorCode"] = "DRFR",
-            ["Description"] = "original template"
+            ["Description"] = "original template",
+            ["Index"] = 1,
+            ["IsSystematic"] = false,
+            ["IsRandom"] = true,
+            ["IsGlobal"] = false,
+            ["IsContinuous"] = false,
+            ["IsStationary"] = false,
+            ["KOperatorImposed"] = false,
+            ["SingularIssues"] = false,
+            ["Magnitude"] = 0.5,
+            ["MagnitudeQuantity"] = "DepthDrilling",
+            ["UseInclinationInterval"] = false
         };
         CallToolResult sourceCreated = await _client.CallToolAsync("error_source_create",
             new Dictionary<string, object?> { ["errorSource"] = source }, cancellationToken: CancellationToken.None);

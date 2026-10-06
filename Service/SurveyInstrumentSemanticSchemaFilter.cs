@@ -1,4 +1,6 @@
+using System;
 using System.Collections.Generic;
+using System.Linq;
 using Microsoft.OpenApi.Any;
 using Microsoft.OpenApi.Models;
 using OSDC.DotnetLibraries.Drilling.Surveying;
@@ -54,6 +56,13 @@ internal sealed class SurveyInstrumentSemanticSchemaFilter : ISchemaFilter
             Describe(schema, "PropagationMode", PropagationDescription, "ErrorPropagationMode");
             if (schema.Properties.TryGetValue("PropagationMode", out OpenApiSchema? propagation))
             {
+                // Keep this nullable legacy-read field inline. OpenAPI 3.0 tooling
+                // commonly drops nullable when it is a sibling of an enum $ref.
+                propagation.Reference = null;
+                propagation.AllOf?.Clear();
+                propagation.Type = "string";
+                propagation.Enum = Enum.GetNames<ErrorPropagationMode>()
+                    .Select(value => (IOpenApiAny)new OpenApiString(value)).ToList();
                 propagation.Nullable = true;
             }
             Describe(schema, "IsSystematic", "Deprecated legacy compatibility flag. For current data use the single PropagationMode value.");

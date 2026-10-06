@@ -18,6 +18,7 @@ namespace OSDC.Drilling.SurveyInstrument.Service.Managers
     public class SurveyInstrumentManager
     {
         private static SurveyInstrumentManager? _instance = null;
+        private static readonly object InstanceLock = new();
         private readonly ILogger<SurveyInstrumentManager> _logger;
         private readonly SqlConnectionManager _connectionManager;
         private readonly ErrorSourceManager _errorSourceManager;
@@ -68,8 +69,15 @@ namespace OSDC.Drilling.SurveyInstrument.Service.Managers
 
         public static SurveyInstrumentManager GetInstance(ILogger<SurveyInstrumentManager> logger, ILogger<ErrorSourceManager> errorSourceLogger, SqlConnectionManager connectionManager)
         {
-            _instance ??= new SurveyInstrumentManager(logger, errorSourceLogger, connectionManager);
-            return _instance;
+            if (_instance != null)
+            {
+                return _instance;
+            }
+
+            lock (InstanceLock)
+            {
+                return _instance ??= new SurveyInstrumentManager(logger, errorSourceLogger, connectionManager);
+            }
         }
 
         public int Count
