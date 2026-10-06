@@ -1,4 +1,5 @@
 using System.Text.Json.Nodes;
+using OSDC.DotnetLibraries.Drilling.SemanticCatalogue;
 
 namespace OSDC.Drilling.SurveyInstrument.ServiceTest;
 
@@ -35,6 +36,11 @@ public sealed class OpenApiSemanticContractTests
                 Does.Contain("orthogonal body reference frame"));
             Assert.That(instrument["properties"]!["GyroRunningSpeed"]!["x-si-unit"]!.GetValue<string>(),
                 Is.EqualTo("rad/s"));
+            Assert.That(errorSource["properties"]!["Magnitude"]!["x-osdc-semantic"]!["concept"]!.GetValue<string>(),
+                Is.EqualTo(Concepts.SurveyErrorMagnitude));
+            Assert.That(instrument["properties"]!["CantAngle"]!["x-osdc-semantic"]!["reference"]!.GetValue<string>(),
+                Is.EqualTo(Concepts.OrthogonalBodyFrameCantConvention));
+            Assert.That(instrument["x-osdc-semantic"]!["catalogueVersion"]!.GetValue<string>(), Is.EqualTo("0.15.0"));
         });
     }
 

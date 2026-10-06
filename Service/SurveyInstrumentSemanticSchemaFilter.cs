@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using Microsoft.OpenApi.Any;
 using Microsoft.OpenApi.Models;
 using OSDC.DotnetLibraries.Drilling.Surveying;
+using OSDC.DotnetLibraries.Drilling.SemanticCatalogue;
 using Swashbuckle.AspNetCore.SwaggerGen;
 
 namespace OSDC.Drilling.SurveyInstrument.Service;
@@ -26,6 +27,12 @@ internal sealed class SurveyInstrumentSemanticSchemaFilter : ISchemaFilter
 
     public void Apply(OpenApiSchema schema, SchemaFilterContext context)
     {
+        if (SemanticMetadata.For(context.Type) is { } typeMetadata)
+            schema.Extensions[SemanticMetadata.ExtensionName] = OpenApiAnyFactory.CreateFromJson(typeMetadata.ToJsonString());
+        foreach (var modelProperty in context.Type.GetProperties())
+            if (schema.Properties.TryGetValue(modelProperty.Name, out var target) && SemanticMetadata.For(modelProperty) is { } propertyMetadata)
+                target.Extensions[SemanticMetadata.ExtensionName] = OpenApiAnyFactory.CreateFromJson(propertyMetadata.ToJsonString());
+
         if (context.Type == typeof(ErrorCode))
         {
             schema.Description = ErrorCodeDescription;
@@ -41,6 +48,7 @@ internal sealed class SurveyInstrumentSemanticSchemaFilter : ISchemaFilter
         if (context.Type == typeof(ErrorSource))
         {
             schema.Description = "One ISCWSA survey error source. Magnitude is a finite, nonnegative one-sigma standard uncertainty in the SI unit identified by MagnitudeQuantity.";
+            schema.Extensions[SemanticMetadata.ExtensionName] = OpenApiAnyFactory.CreateFromJson(SurveyInstrumentProviderSemantics.Metadata("SurveyErrorSource").ToJsonString());
             Describe(schema, "ErrorCode", ErrorCodeDescription, "SurveyErrorSourceCode");
             Describe(schema, "Index", "Implementation ordering field only; it has no independent physical meaning.", "ErrorSourceOrderingIndex");
             Describe(schema, "PropagationMode", PropagationDescription, "ErrorPropagationMode");
@@ -56,9 +64,9 @@ internal sealed class SurveyInstrumentSemanticSchemaFilter : ISchemaFilter
             Describe(schema, "KOperatorImposed", "Opaque legacy compatibility flag retained until its mathematical behavior and operating boundaries are formally defined.", "KOperatorImposed");
             Describe(schema, "Magnitude", "Finite, nonnegative one-sigma standard uncertainty in the SI unit required by ErrorCode.", "SurveyErrorMagnitude");
             Describe(schema, "MagnitudeQuantity", "Closed UnitConversion physical-quantity identifier defining Magnitude's dimension and canonical SI unit.", "ErrorMagnitudeQuantityIdentifier");
-            Describe(schema, "StartInclination", "Start of the applicable inclination interval in radians.", unit: "rad");
-            Describe(schema, "EndInclination", "End of the applicable inclination interval in radians.", unit: "rad");
-            Describe(schema, "InitInclination", "Initial inclination used by the error source in radians when required by the model.", unit: "rad");
+            Describe(schema, "StartInclination", "Start of the applicable inclination interval in radians.", "ErrorApplicabilityStart", "rad");
+            Describe(schema, "EndInclination", "End of the applicable inclination interval in radians.", "ErrorApplicabilityEnd", "rad");
+            Describe(schema, "InitInclination", "Initial inclination used by the error source in radians when required by the model.", "ErrorInitializationInclination", "rad");
             AddOperatingModeExclusion(schema);
             return;
         }
@@ -66,14 +74,15 @@ internal sealed class SurveyInstrumentSemanticSchemaFilter : ISchemaFilter
         if (typeof(OSDC.DotnetLibraries.Drilling.Surveying.SurveyInstrument).IsAssignableFrom(context.Type))
         {
             schema.Description = "Survey-instrument error model with canonical SI values and, for ISCWSA families, authoritative embedded error-source snapshots.";
-            Describe(schema, "Dip", "Geomagnetic dip (inclination) in radians.", unit: "rad");
-            Describe(schema, "Declination", "Geomagnetic declination, positive east of true north, in radians.", unit: "rad");
-            Describe(schema, "Gravity", "Local gravitational acceleration in metres per second squared.", unit: "m/s2");
-            Describe(schema, "BField", "Local total geomagnetic flux density in tesla.", unit: "T");
-            Describe(schema, "Convergence", "Grid convergence angle in radians.", unit: "rad");
-            Describe(schema, "Latitude", "Geodetic latitude in radians.", unit: "rad");
+            schema.Extensions[SemanticMetadata.ExtensionName] = OpenApiAnyFactory.CreateFromJson(SurveyInstrumentProviderSemantics.Metadata("SurveyInstrument").ToJsonString());
+            Describe(schema, "Dip", "Geomagnetic dip (inclination) in radians.", "MagneticDip", "rad");
+            Describe(schema, "Declination", "Geomagnetic declination, positive east of true north, in radians.", "MagneticDeclination", "rad");
+            Describe(schema, "Gravity", "Local gravitational acceleration in metres per second squared.", "GravityAcceleration", "m/s2");
+            Describe(schema, "BField", "Local total geomagnetic flux density in tesla.", "EarthMagneticFluxDensity", "T");
+            Describe(schema, "Convergence", "Grid convergence angle in radians.", "GridConvergence", "rad");
+            Describe(schema, "Latitude", "Geodetic latitude in radians.", "Latitude", "rad");
             Describe(schema, "EarthRotRate", "Earth angular velocity in radians per second.", "EarthAngularVelocity", "rad/s");
-            Describe(schema, "CantAngle", "Planar angle in radians relative to the orthogonal body reference frame's transverse axes, perpendicular to the along-hole tool z-axis. Its sign remains positive while tool inclination is less than or equal to 90 degrees.", "SurveyInstrumentCantAngle; reference=OrthogonalBodyFrameCantConvention", "rad");
+            Describe(schema, "CantAngle", "Planar angle in radians relative to the orthogonal body reference frame's transverse axes, perpendicular to the along-hole tool z-axis. Its sign remains positive while tool inclination is less than or equal to 90 degrees.", "SurveyInstrumentCantAngle", "rad");
             Describe(schema, "GyroRunningSpeed", "Optional gyroscope angular velocity in radians per second.", "SurveyToolRunningSpeed", "rad/s");
             Describe(schema, "GyroSwitching", "Optional dimensionless gyro switching parameter.", "GyroSwitchingParameter", "1");
             Describe(schema, "GyroMinDist", "Optional minimum distance between gyro initializations in metres.", "GyroReinitializationDistance", "m");
@@ -86,7 +95,7 @@ internal sealed class SurveyInstrumentSemanticSchemaFilter : ISchemaFilter
     {
         if (!schema.Properties.TryGetValue(propertyName, out OpenApiSchema? property)) return;
         property.Description = description;
-        if (semantic != null) property.Extensions["x-osdc-semantic"] = new OpenApiString(semantic);
+        if (semantic != null) property.Extensions[SemanticMetadata.ExtensionName] = OpenApiAnyFactory.CreateFromJson(SurveyInstrumentProviderSemantics.Metadata(semantic).ToJsonString());
         if (unit != null) property.Extensions["x-si-unit"] = new OpenApiString(unit);
     }
 

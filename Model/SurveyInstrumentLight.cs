@@ -1,4 +1,5 @@
 using OSDC.DotnetLibraries.General.DataManagement;
+using OSDC.DotnetLibraries.Drilling.SemanticCatalogue;
 using System;
 
 namespace OSDC.Drilling.SurveyInstrument.Model
@@ -8,32 +9,32 @@ namespace OSDC.Drilling.SurveyInstrument.Model
     /// Used to avoid loading the complete SurveyInstrument (heavy weight data) each time we only need contextual info on the data
     /// Typically used for listing, sorting and filtering purposes
     /// </summary>
-    public class SurveyInstrumentLight
+    [Semantic(Concepts.SurveyInstrument)] public class SurveyInstrumentLight
     {
         /// <summary>
         /// a MetaInfo for the SurveyInstrumentLight
         /// </summary>
-        public MetaInfo? MetaInfo { get; set; }
+        [Semantic(Concepts.ResourceMetadata)] public MetaInfo? MetaInfo { get; set; }
 
         /// <summary>
         /// name of the data
         /// </summary>
-        public string? Name { get; set; }
+        [Semantic(Concepts.ResourceName)] public string? Name { get; set; }
 
         /// <summary>
         /// a description of the data
         /// </summary>
-        public string? Description { get; set; }
+        [Semantic(Concepts.ResourceDescription)] public string? Description { get; set; }
 
         /// <summary>
         /// the date when the data was created
         /// </summary>
-        public DateTimeOffset? CreationDate { get; set; }
+        [Semantic(Concepts.Instant, Role = Concepts.CreationTime, Reference = Concepts.Utc)] public DateTimeOffset? CreationDate { get; set; }
 
         /// <summary>
         /// the date when the data was last modified
         /// </summary>
-        public DateTimeOffset? LastModificationDate { get; set; }
+        [Semantic(Concepts.Instant, Role = Concepts.LastModificationTime, Reference = Concepts.Utc)] public DateTimeOffset? LastModificationDate { get; set; }
 
         /// <summary>
         /// default constructor required for parsing the data model as a json file

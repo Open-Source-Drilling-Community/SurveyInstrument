@@ -2,6 +2,8 @@
 
 `ModelSharedOut` is the code-generation project that produces the shared OpenAPI artifacts consumed by clients of the SurveyInstrument service.
 
+The generated contract preserves structured `x-osdc-semantic` extensions published by the service.
+
 It is intentionally not a hand-authored domain library. Its job is to merge OpenAPI schema inputs, normalize schema names, generate a C# client/model file, and emit a bundled OpenAPI document for the service to publish.
 
 ## Responsibilities

@@ -487,7 +487,7 @@ internal static class McpToolArgumentHelpers
             ["Convergence"] = Number("Grid convergence angle in radians."),
             ["Latitude"] = Number("Geodetic latitude in radians."),
             ["EarthRotRate"] = Semantic(Number("Earth angular velocity in radians per second (rad/s)."), "EarthAngularVelocity", "rad/s"),
-            ["CantAngle"] = Semantic(Number("Planar angle in radians relative to the orthogonal body reference frame's transverse axes, perpendicular to the along-hole tool z-axis. Its sign remains positive while tool inclination is less than or equal to 90 degrees."), "SurveyInstrumentCantAngle; reference=OrthogonalBodyFrameCantConvention", "rad"),
+            ["CantAngle"] = Semantic(Number("Planar angle in radians relative to the orthogonal body reference frame's transverse axes, perpendicular to the along-hole tool z-axis. Its sign remains positive while tool inclination is less than or equal to 90 degrees."), "SurveyInstrumentCantAngle", "rad"),
             ["GyroRunningSpeed"] = Semantic(NullableNumber("Optional gyroscope angular velocity in radians per second (rad/s)."), "SurveyToolRunningSpeed", "rad/s"),
             ["ExtRefInitInc"] = NullableNumber("Optional external-reference initial inclination in radians."),
             ["GyroSwitching"] = Semantic(NullableNumber("Optional dimensionless gyro switching parameter used by the selected gyro model."), "GyroSwitchingParameter", "1"),
@@ -663,9 +663,9 @@ internal static class McpToolArgumentHelpers
             }, "SurveyErrorMagnitude"),
             ["MagnitudeQuantity"] = Semantic(NullableString("Closed UnitConversion physical-quantity identifier defining Magnitude's dimension and canonical SI unit, for example PlaneAngleDrilling, AccelerationDrilling, or ProportionSmall."), "ErrorMagnitudeQuantityIdentifier"),
             ["UseInclinationInterval"] = Boolean("Whether the source applies only over the inclination interval described by StartInclination and EndInclination."),
-            ["StartInclination"] = Semantic(NullableNumber("Start of the applicable inclination interval in radians."), "Inclination", "rad"),
-            ["EndInclination"] = Semantic(NullableNumber("End of the applicable inclination interval in radians."), "Inclination", "rad"),
-            ["InitInclination"] = Semantic(NullableNumber("Initial inclination used by this error source in radians, when required by the model."), "Inclination", "rad")
+            ["StartInclination"] = Semantic(NullableNumber("Start of the applicable inclination interval in radians."), "ErrorApplicabilityStart", "rad"),
+            ["EndInclination"] = Semantic(NullableNumber("End of the applicable inclination interval in radians."), "ErrorApplicabilityEnd", "rad"),
+            ["InitInclination"] = Semantic(NullableNumber("Initial inclination used by this error source in radians, when required by the model."), "ErrorInitializationInclination", "rad")
         },
         ["required"] = new JsonArray("MetaInfo"),
         ["allOf"] = new JsonArray(new JsonObject
@@ -731,7 +731,7 @@ internal static class McpToolArgumentHelpers
     }
     private static JsonObject Semantic(JsonObject schema, string concept, string? unit = null)
     {
-        schema["x-osdc-semantic"] = concept;
+        schema["x-osdc-semantic"] = SurveyInstrumentProviderSemantics.Metadata(concept);
         if (unit != null) schema["x-si-unit"] = unit;
         return schema;
     }

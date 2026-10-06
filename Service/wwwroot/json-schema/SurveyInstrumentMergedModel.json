@@ -1175,7 +1175,14 @@
             "type": "integer",
             "description": "Implementation ordering field only; it has no independent physical meaning.",
             "format": "int32",
-            "x-osdc-semantic": "ErrorSourceOrderingIndex"
+            "x-osdc-semantic": {
+              "catalogue": "urn:osdc:semantic-catalogue",
+              "catalogueVersion": "0.15.0",
+              "concept": "urn:osdc:semantic:error-source-ordering-index",
+              "curationStatus": "Reviewed",
+              "assertionSource": "provider-binding-registry",
+              "requiredContext": [ ]
+            }
           },
           "PropagationMode": {
             "$ref": "#/components/schemas/ErrorPropagationMode"
@@ -1206,20 +1213,51 @@
           "KOperatorImposed": {
             "type": "boolean",
             "description": "Opaque legacy compatibility flag retained until its mathematical behavior and operating boundaries are formally defined.",
-            "x-osdc-semantic": "KOperatorImposed"
+            "x-osdc-semantic": {
+              "catalogue": "urn:osdc:semantic-catalogue",
+              "catalogueVersion": "0.15.0",
+              "concept": "urn:osdc:semantic:k-operator-imposed",
+              "curationStatus": "Reviewed",
+              "assertionSource": "provider-binding-registry",
+              "requiredContext": [
+                "specific ISCWSA implementation"
+              ]
+            }
           },
           "Magnitude": {
             "type": "number",
             "description": "Finite, nonnegative one-sigma standard uncertainty in the SI unit required by ErrorCode.",
             "format": "double",
             "nullable": true,
-            "x-osdc-semantic": "SurveyErrorMagnitude"
+            "x-osdc-semantic": {
+              "catalogue": "urn:osdc:semantic-catalogue",
+              "catalogueVersion": "0.15.0",
+              "concept": "urn:osdc:semantic:survey-error-magnitude",
+              "curationStatus": "Reviewed",
+              "assertionSource": "provider-binding-registry",
+              "requiredContext": [
+                "error-source code",
+                "magnitude physical quantity",
+                "underlying measurand",
+                "distribution",
+                "physical quantity and units"
+              ]
+            }
           },
           "MagnitudeQuantity": {
             "type": "string",
             "description": "Closed UnitConversion physical-quantity identifier defining Magnitude's dimension and canonical SI unit.",
             "nullable": true,
-            "x-osdc-semantic": "ErrorMagnitudeQuantityIdentifier"
+            "x-osdc-semantic": {
+              "catalogue": "urn:osdc:semantic-catalogue",
+              "catalogueVersion": "0.15.0",
+              "concept": "urn:osdc:semantic:error-magnitude-quantity-identifier",
+              "curationStatus": "Reviewed",
+              "assertionSource": "provider-binding-registry",
+              "requiredContext": [
+                "error-source code"
+              ]
+            }
           },
           "UseInclinationInterval": {
             "type": "boolean"
@@ -1229,6 +1267,27 @@
             "description": "Start of the applicable inclination interval in radians.",
             "format": "double",
             "nullable": true,
+            "x-osdc-semantic": {
+              "catalogue": "urn:osdc:semantic-catalogue",
+              "catalogueVersion": "0.15.0",
+              "concept": "urn:osdc:semantic:wellbore-inclination",
+              "curationStatus": "Reviewed",
+              "assertionSource": "provider-binding-registry",
+              "requiredContext": [
+                "evaluation position",
+                "reference",
+                "axis/sign convention"
+              ],
+              "role": "urn:osdc:semantic:error-applicability-start",
+              "siUnit": "rad",
+              "physicalQuantityStatus": "resolved",
+              "physicalQuantity": {
+                "catalogue": "Conversion.DrillingEngineering",
+                "id": "94ad3e73-2a44-4c60-bbca-188b941f3357",
+                "name": "PlaneAngleDrilling",
+                "siUnitName": "radian"
+              }
+            },
             "x-si-unit": "rad"
           },
           "EndInclination": {
@@ -1236,6 +1295,27 @@
             "description": "End of the applicable inclination interval in radians.",
             "format": "double",
             "nullable": true,
+            "x-osdc-semantic": {
+              "catalogue": "urn:osdc:semantic-catalogue",
+              "catalogueVersion": "0.15.0",
+              "concept": "urn:osdc:semantic:wellbore-inclination",
+              "curationStatus": "Reviewed",
+              "assertionSource": "provider-binding-registry",
+              "requiredContext": [
+                "evaluation position",
+                "reference",
+                "axis/sign convention"
+              ],
+              "role": "urn:osdc:semantic:error-applicability-end",
+              "siUnit": "rad",
+              "physicalQuantityStatus": "resolved",
+              "physicalQuantity": {
+                "catalogue": "Conversion.DrillingEngineering",
+                "id": "94ad3e73-2a44-4c60-bbca-188b941f3357",
+                "name": "PlaneAngleDrilling",
+                "siUnitName": "radian"
+              }
+            },
             "x-si-unit": "rad"
           },
           "InitInclination": {
@@ -1243,10 +1323,39 @@
             "description": "Initial inclination used by the error source in radians when required by the model.",
             "format": "double",
             "nullable": true,
+            "x-osdc-semantic": {
+              "catalogue": "urn:osdc:semantic-catalogue",
+              "catalogueVersion": "0.15.0",
+              "concept": "urn:osdc:semantic:wellbore-inclination",
+              "curationStatus": "Reviewed",
+              "assertionSource": "provider-binding-registry",
+              "requiredContext": [
+                "evaluation position",
+                "reference",
+                "axis/sign convention"
+              ],
+              "role": "urn:osdc:semantic:error-initialization-inclination",
+              "siUnit": "rad",
+              "physicalQuantityStatus": "resolved",
+              "physicalQuantity": {
+                "catalogue": "Conversion.DrillingEngineering",
+                "id": "94ad3e73-2a44-4c60-bbca-188b941f3357",
+                "name": "PlaneAngleDrilling",
+                "siUnitName": "radian"
+              }
+            },
             "x-si-unit": "rad"
           }
         },
-        "description": "One ISCWSA survey error source. Magnitude is a finite, nonnegative one-sigma standard uncertainty in the SI unit identified by MagnitudeQuantity."
+        "description": "One ISCWSA survey error source. Magnitude is a finite, nonnegative one-sigma standard uncertainty in the SI unit identified by MagnitudeQuantity.",
+        "x-osdc-semantic": {
+          "catalogue": "urn:osdc:semantic-catalogue",
+          "catalogueVersion": "0.15.0",
+          "concept": "urn:osdc:semantic:survey-error-source",
+          "curationStatus": "Reviewed",
+          "assertionSource": "provider-binding-registry",
+          "requiredContext": [ ]
+        }
       },
       "SurveyInstrumentModelType": {
         "enum": [
@@ -1341,50 +1450,216 @@
             "type": "number",
             "description": "Geomagnetic dip (inclination) in radians.",
             "format": "double",
+            "x-osdc-semantic": {
+              "catalogue": "urn:osdc:semantic-catalogue",
+              "catalogueVersion": "0.15.0",
+              "concept": "urn:osdc:semantic:magnetic-dip",
+              "curationStatus": "Reviewed",
+              "assertionSource": "provider-binding-registry",
+              "requiredContext": [
+                "position",
+                "instant",
+                "geomagnetic model",
+                "local frame",
+                "geometric object",
+                "horizontal plane",
+                "measurement section",
+                "sign and range"
+              ],
+              "siUnit": "rad",
+              "physicalQuantityStatus": "resolved",
+              "physicalQuantity": {
+                "catalogue": "Conversion.DrillingEngineering",
+                "id": "94ad3e73-2a44-4c60-bbca-188b941f3357",
+                "name": "PlaneAngleDrilling",
+                "siUnitName": "radian"
+              }
+            },
             "x-si-unit": "rad"
           },
           "Declination": {
             "type": "number",
             "description": "Geomagnetic declination, positive east of true north, in radians.",
             "format": "double",
+            "x-osdc-semantic": {
+              "catalogue": "urn:osdc:semantic-catalogue",
+              "catalogueVersion": "0.15.0",
+              "concept": "urn:osdc:semantic:magnetic-declination",
+              "curationStatus": "Reviewed",
+              "assertionSource": "provider-binding-registry",
+              "requiredContext": [
+                "position",
+                "instant",
+                "geomagnetic model",
+                "local frame"
+              ],
+              "siUnit": "rad",
+              "physicalQuantityStatus": "resolved",
+              "physicalQuantity": {
+                "catalogue": "Conversion.DrillingEngineering",
+                "id": "94ad3e73-2a44-4c60-bbca-188b941f3357",
+                "name": "PlaneAngleDrilling",
+                "siUnitName": "radian"
+              }
+            },
             "x-si-unit": "rad"
           },
           "Gravity": {
             "type": "number",
             "description": "Local gravitational acceleration in metres per second squared.",
             "format": "double",
+            "x-osdc-semantic": {
+              "catalogue": "urn:osdc:semantic-catalogue",
+              "catalogueVersion": "0.15.0",
+              "concept": "urn:osdc:semantic:total-gravity-acceleration",
+              "curationStatus": "Reviewed",
+              "assertionSource": "provider-binding-registry",
+              "requiredContext": [
+                "component or magnitude role",
+                "position",
+                "local frame"
+              ],
+              "siUnit": "m/s^2",
+              "physicalQuantityStatus": "resolved",
+              "physicalQuantity": {
+                "catalogue": "Conversion.DrillingEngineering",
+                "id": "b6c99136-8e57-4eea-9a31-fb804bc8ae4b",
+                "name": "AccelerationDrilling",
+                "siUnitName": "metre per second squared"
+              }
+            },
             "x-si-unit": "m/s2"
           },
           "BField": {
             "type": "number",
             "description": "Local total geomagnetic flux density in tesla.",
             "format": "double",
+            "x-osdc-semantic": {
+              "catalogue": "urn:osdc:semantic-catalogue",
+              "catalogueVersion": "0.15.0",
+              "concept": "urn:osdc:semantic:earth-magnetic-flux-density",
+              "curationStatus": "Reviewed",
+              "assertionSource": "provider-binding-registry",
+              "requiredContext": [
+                "position",
+                "instant",
+                "geomagnetic model",
+                "component or magnitude role",
+                "frame for components"
+              ],
+              "siUnit": "T",
+              "physicalQuantityStatus": "resolved",
+              "physicalQuantity": {
+                "catalogue": "Conversion",
+                "id": "ed95aca5-aaf9-4822-b045-342ffcd06ca7",
+                "name": "EarthMagneticFluxDensity",
+                "siUnitName": "tesla"
+              }
+            },
             "x-si-unit": "T"
           },
           "Convergence": {
             "type": "number",
             "description": "Grid convergence angle in radians.",
             "format": "double",
+            "x-osdc-semantic": {
+              "catalogue": "urn:osdc:semantic-catalogue",
+              "catalogueVersion": "0.15.0",
+              "concept": "urn:osdc:semantic:grid-convergence",
+              "curationStatus": "Reviewed",
+              "assertionSource": "provider-binding-registry",
+              "requiredContext": [
+                "projected CRS",
+                "evaluation position",
+                "true/geodetic north",
+                "grid north",
+                "sign convention"
+              ],
+              "reference": "urn:osdc:semantic:grid-convergence-true-to-grid-clockwise",
+              "siUnit": "rad",
+              "physicalQuantityStatus": "resolved",
+              "physicalQuantity": {
+                "catalogue": "Conversion",
+                "id": "fc88c9ff-fa0a-4406-b397-015f3ca062bc",
+                "name": "PlaneAngleGeodesic",
+                "siUnitName": "radian"
+              }
+            },
             "x-si-unit": "rad"
           },
           "Latitude": {
             "type": "number",
             "description": "Geodetic latitude in radians.",
             "format": "double",
+            "x-osdc-semantic": {
+              "catalogue": "urn:osdc:semantic-catalogue",
+              "catalogueVersion": "0.15.0",
+              "concept": "urn:osdc:semantic:geodetic-latitude",
+              "curationStatus": "Reviewed",
+              "assertionSource": "provider-binding-registry",
+              "requiredContext": [
+                "reference",
+                "axis/sign convention"
+              ],
+              "reference": "urn:osdc:semantic:wgs84",
+              "siUnit": "rad",
+              "physicalQuantityStatus": "resolved",
+              "physicalQuantity": {
+                "catalogue": "Conversion",
+                "id": "fc88c9ff-fa0a-4406-b397-015f3ca062bc",
+                "name": "PlaneAngleGeodesic",
+                "siUnitName": "radian"
+              }
+            },
             "x-si-unit": "rad"
           },
           "EarthRotRate": {
             "type": "number",
             "description": "Earth angular velocity in radians per second.",
             "format": "double",
-            "x-osdc-semantic": "EarthAngularVelocity",
+            "x-osdc-semantic": {
+              "catalogue": "urn:osdc:semantic-catalogue",
+              "catalogueVersion": "0.15.0",
+              "concept": "urn:osdc:semantic:earth-angular-velocity",
+              "curationStatus": "Reviewed",
+              "assertionSource": "provider-binding-registry",
+              "requiredContext": [ ],
+              "siUnit": "rad/s",
+              "physicalQuantityStatus": "resolved",
+              "physicalQuantity": {
+                "catalogue": "Conversion.DrillingEngineering",
+                "id": "046cb449-8cab-4d0c-bb28-3e2060f292e5",
+                "name": "AngularVelocityDrilling",
+                "siUnitName": "radian per second"
+              }
+            },
             "x-si-unit": "rad/s"
           },
           "CantAngle": {
             "type": "number",
             "description": "Planar angle in radians relative to the orthogonal body reference frame's transverse axes, perpendicular to the along-hole tool z-axis. Its sign remains positive while tool inclination is less than or equal to 90 degrees.",
             "format": "double",
-            "x-osdc-semantic": "SurveyInstrumentCantAngle; reference=OrthogonalBodyFrameCantConvention",
+            "x-osdc-semantic": {
+              "catalogue": "urn:osdc:semantic-catalogue",
+              "catalogueVersion": "0.15.0",
+              "concept": "urn:osdc:semantic:survey-instrument-cant-angle",
+              "curationStatus": "Reviewed",
+              "assertionSource": "provider-binding-registry",
+              "requiredContext": [
+                "tool body frame",
+                "tool inclination",
+                "K-operator treatment above 90 degrees"
+              ],
+              "reference": "urn:osdc:semantic:orthogonal-body-frame-cant-convention",
+              "siUnit": "rad",
+              "physicalQuantityStatus": "resolved",
+              "physicalQuantity": {
+                "catalogue": "Conversion.DrillingEngineering",
+                "id": "94ad3e73-2a44-4c60-bbca-188b941f3357",
+                "name": "PlaneAngleDrilling",
+                "siUnitName": "radian"
+              }
+            },
             "x-si-unit": "rad"
           },
           "GyroRunningSpeed": {
@@ -1392,7 +1667,22 @@
             "description": "Optional gyroscope angular velocity in radians per second.",
             "format": "double",
             "nullable": true,
-            "x-osdc-semantic": "SurveyToolRunningSpeed",
+            "x-osdc-semantic": {
+              "catalogue": "urn:osdc:semantic-catalogue",
+              "catalogueVersion": "0.15.0",
+              "concept": "urn:osdc:semantic:survey-tool-running-speed",
+              "curationStatus": "Reviewed",
+              "assertionSource": "provider-binding-registry",
+              "requiredContext": [ ],
+              "siUnit": "m/s",
+              "physicalQuantityStatus": "resolved",
+              "physicalQuantity": {
+                "catalogue": "Conversion",
+                "id": "b3fd17fe-ce71-4ef3-ac99-cf4f5756e81a",
+                "name": "Velocity",
+                "siUnitName": "metre per second"
+              }
+            },
             "x-si-unit": "rad/s"
           },
           "ExtRefInitInc": {
@@ -1405,7 +1695,25 @@
             "description": "Optional dimensionless gyro switching parameter.",
             "format": "double",
             "nullable": true,
-            "x-osdc-semantic": "GyroSwitchingParameter",
+            "x-osdc-semantic": {
+              "catalogue": "urn:osdc:semantic-catalogue",
+              "catalogueVersion": "0.15.0",
+              "concept": "urn:osdc:semantic:gyro-switching-parameter",
+              "curationStatus": "Reviewed",
+              "assertionSource": "provider-binding-registry",
+              "requiredContext": [
+                "gyro model",
+                "cant-angle convention"
+              ],
+              "siUnit": "1",
+              "physicalQuantityStatus": "resolved",
+              "physicalQuantity": {
+                "catalogue": "Conversion",
+                "id": "97555d61-9fc3-4769-9143-6bc2bf51b2d7",
+                "name": "ProportionStandard",
+                "siUnitName": "proportion"
+              }
+            },
             "x-si-unit": "1"
           },
           "GyroMinDist": {
@@ -1413,7 +1721,22 @@
             "description": "Optional minimum distance between gyro initializations in metres.",
             "format": "double",
             "nullable": true,
-            "x-osdc-semantic": "GyroReinitializationDistance",
+            "x-osdc-semantic": {
+              "catalogue": "urn:osdc:semantic-catalogue",
+              "catalogueVersion": "0.15.0",
+              "concept": "urn:osdc:semantic:gyro-reinitialization-distance",
+              "curationStatus": "Reviewed",
+              "assertionSource": "provider-binding-registry",
+              "requiredContext": [ ],
+              "siUnit": "m",
+              "physicalQuantityStatus": "resolved",
+              "physicalQuantity": {
+                "catalogue": "Conversion",
+                "id": "3716ad37-2b0c-4c0b-8936-6c9cdb47ad1d",
+                "name": "LengthStandard",
+                "siUnitName": "metre"
+              }
+            },
             "x-si-unit": "m"
           },
           "GyroNoiseRed": {
@@ -1421,7 +1744,22 @@
             "description": "Optional dimensionless gyro noise-reduction factor at initialization.",
             "format": "double",
             "nullable": true,
-            "x-osdc-semantic": "GyroNoiseReductionFactor",
+            "x-osdc-semantic": {
+              "catalogue": "urn:osdc:semantic-catalogue",
+              "catalogueVersion": "0.15.0",
+              "concept": "urn:osdc:semantic:gyro-noise-reduction-factor",
+              "curationStatus": "Reviewed",
+              "assertionSource": "provider-binding-registry",
+              "requiredContext": [ ],
+              "siUnit": "1",
+              "physicalQuantityStatus": "resolved",
+              "physicalQuantity": {
+                "catalogue": "Conversion",
+                "id": "97555d61-9fc3-4769-9143-6bc2bf51b2d7",
+                "name": "ProportionStandard",
+                "siUnitName": "proportion"
+              }
+            },
             "x-si-unit": "1"
           },
           "UseRelDepthError": {
@@ -1487,7 +1825,18 @@
             "nullable": true
           }
         },
-        "description": "Survey-instrument error model with canonical SI values and, for ISCWSA families, authoritative embedded error-source snapshots."
+        "description": "Survey-instrument error model with canonical SI values and, for ISCWSA families, authoritative embedded error-source snapshots.",
+        "x-osdc-semantic": {
+          "catalogue": "urn:osdc:semantic-catalogue",
+          "catalogueVersion": "0.15.0",
+          "concept": "urn:osdc:semantic:survey-instrument",
+          "curationStatus": "Reviewed",
+          "assertionSource": "provider-binding-registry",
+          "requiredContext": [
+            "owning service",
+            "resource type"
+          ]
+        }
       },
       "SurveyInstrumentBatchCatalogDependencies": {
         "type": "object",
@@ -1792,22 +2141,84 @@
           },
           "Name": {
             "type": "string",
-            "nullable": true
+            "nullable": true,
+            "x-osdc-semantic": {
+              "catalogue": "urn:osdc:semantic-catalogue",
+              "catalogueVersion": "0.15.0",
+              "concept": "urn:osdc:semantic:resource-name",
+              "curationStatus": "Reviewed",
+              "assertionSource": "provider-model-attribute",
+              "requiredContext": [ ],
+              "constraints": [ ]
+            }
           },
           "Description": {
             "type": "string",
-            "nullable": true
+            "nullable": true,
+            "x-osdc-semantic": {
+              "catalogue": "urn:osdc:semantic-catalogue",
+              "catalogueVersion": "0.15.0",
+              "concept": "urn:osdc:semantic:resource-description",
+              "curationStatus": "Reviewed",
+              "assertionSource": "provider-model-attribute",
+              "requiredContext": [ ],
+              "constraints": [ ]
+            }
           },
           "CreationDate": {
             "type": "string",
             "format": "date-time",
-            "nullable": true
+            "nullable": true,
+            "x-osdc-semantic": {
+              "catalogue": "urn:osdc:semantic-catalogue",
+              "catalogueVersion": "0.15.0",
+              "concept": "urn:osdc:semantic:instant",
+              "curationStatus": "Reviewed",
+              "assertionSource": "provider-model-attribute",
+              "role": "urn:osdc:semantic:creation-time",
+              "reference": "urn:osdc:semantic:utc",
+              "requiredContext": [
+                "time scale",
+                "timestamp representation"
+              ],
+              "constraints": [ ],
+              "referenceDefinition": "UTC time-scale reference for a timestamp. Accepted serialization and representable precision are provider concerns.",
+              "referenceRequiredContext": [ ]
+            }
           },
           "LastModificationDate": {
             "type": "string",
             "format": "date-time",
-            "nullable": true
+            "nullable": true,
+            "x-osdc-semantic": {
+              "catalogue": "urn:osdc:semantic-catalogue",
+              "catalogueVersion": "0.15.0",
+              "concept": "urn:osdc:semantic:instant",
+              "curationStatus": "Reviewed",
+              "assertionSource": "provider-model-attribute",
+              "role": "urn:osdc:semantic:last-modification-time",
+              "reference": "urn:osdc:semantic:utc",
+              "requiredContext": [
+                "time scale",
+                "timestamp representation"
+              ],
+              "constraints": [ ],
+              "referenceDefinition": "UTC time-scale reference for a timestamp. Accepted serialization and representable precision are provider concerns.",
+              "referenceRequiredContext": [ ]
+            }
           }
+        },
+        "x-osdc-semantic": {
+          "catalogue": "urn:osdc:semantic-catalogue",
+          "catalogueVersion": "0.15.0",
+          "concept": "urn:osdc:semantic:survey-instrument",
+          "curationStatus": "Reviewed",
+          "assertionSource": "provider-model-attribute",
+          "requiredContext": [
+            "owning service",
+            "resource type"
+          ],
+          "constraints": [ ]
         }
       },
       "UsageStatisticsSurveyInstrument": {
