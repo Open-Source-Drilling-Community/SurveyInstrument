@@ -2,7 +2,7 @@
 
 `Model` is the domain-support project for the SurveyInstrument solution. `ErrorSource` and the physical survey properties come from `OSDC.DotnetLibraries.Drilling.Surveying`; the local `SurveyInstrument` extends that upstream type with identity and feature assignments.
 
-The model and Surveying dependency reference SemanticCatalogue 0.15.0; the service registry binds inherited survey/error fields to the reviewed concepts.
+The model and Surveying dependency reference SemanticCatalogue 0.16.0; the service registry binds inherited survey/error fields to the reviewed concepts.
 
 ## Responsibilities
 

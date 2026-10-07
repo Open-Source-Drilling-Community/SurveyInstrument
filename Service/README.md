@@ -2,7 +2,7 @@
 
 `Service` is the ASP.NET Core Web API project for the SurveyInstrument microservice. It exposes survey instruments, error sources, identity definitions, and feature-category catalogs, stores data in SQLite, publishes a merged OpenAPI document, and serves the usage-statistics endpoint consumed by the UI.
 
-Swagger and MCP use the same provider registry and emit structured SemanticCatalogue 0.15.0 objects rather than transport-specific semantic strings.
+Swagger and MCP use the same provider registry and emit structured SemanticCatalogue 0.16.0 objects rather than transport-specific semantic strings.
 
 ## Responsibilities
 
