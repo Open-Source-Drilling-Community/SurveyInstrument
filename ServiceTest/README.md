@@ -1,8 +1,6 @@
 # ServiceTest
 
-`ServiceTest` is the integration test project for the SurveyInstrument microservice. It exercises the running API through the generated NSwag client from `ModelSharedOut`.
-
-This project is not a pure unit-test suite. It assumes a live service is available and reachable.
+`ServiceTest` is the integration test project for the SurveyInstrument microservice. It exercises an in-process service through the generated NSwag client from `ModelSharedOut`.
 
 ## Responsibilities
 
@@ -21,9 +19,9 @@ This project is not a pure unit-test suite. It assumes a live service is availab
 
 Tests use:
 
-- a real `HttpClient`
+- an `HttpClient` backed by `WebApplicationFactory`
 - a generated `Client` from `OSDC.Drilling.SurveyInstrument.ModelShared`
-- the running API hosted at a configured local base URL
+- the real REST and Streamable HTTP MCP pipelines hosted in process
 
 Because of that, failures can come from:
 
@@ -46,15 +44,7 @@ Because of that, failures can come from:
 
 ## Runtime Assumptions
 
-The current tests default to:
-
-```text
-http://localhost:8080/SurveyInstrument/api/
-```
-
-This base URL is hard-coded in `Tests.cs` and should be updated if your local service runs elsewhere.
-
-The suite also disables TLS certificate validation in the handler for convenience. That is acceptable for local integration testing, but it should not be copied into production code.
+The HTTP fixtures set the service content root explicitly and do not require a listening port, TLS certificate or separately started process.
 
 ## Dependencies
 
@@ -66,13 +56,12 @@ The suite also disables TLS certificate validation in the handler for convenienc
 
 ## Running Tests
 
-The database-safety and MCP registration tests are self-contained. The CRUD tests in `Tests.cs` are live integration tests and require the service to be running first:
+The full suite is self-contained:
 
 ```powershell
 dotnet test .\ServiceTest\ServiceTest.csproj
 ```
 
-If the service runs on another port, update `host` in `Tests.cs` before running.
 
 ## What Is Covered
 
@@ -109,7 +98,6 @@ If the service runs on another port, update `host` in `Tests.cs` before running.
 
 ## Recommended Maintenance
 
-- Keep the test base URL aligned with your local launch configuration.
 - Regenerate `ModelSharedOut` if the service contract changes.
 - Add assertions for new endpoints as the service grows.
 - Consider a dedicated ephemeral database strategy if test concurrency becomes important.
@@ -117,6 +105,4 @@ If the service runs on another port, update `host` in `Tests.cs` before running.
 ## MCP coverage
 
 - `McpToolRegistrationTests.cs` verifies all 27 REST-backed tools, the five MCP-only guarded mutation and read-only integrity tools, and `ping`, including strict input/output schemas, enforcing model discrimination, the complete error-code enum, versioned backup contracts, granular snapshot mutation, snapshot drift, catalog-reference diagnostics, template-update impact warnings, timestamp- and content-token concurrency, titles, safety annotations, and pre-invocation rejection of unknown arguments.
-- `McpServerHttpTests.cs` exercises initialization, tool discovery, structured and fallback success content, schema/model-family rejection, batch round trips, stale timestamp and error-source content-token writes, snapshot warnings and mutation, catalog-reference diagnostics, and stable MCP error envelopes against a running service.
-
-The live HTTP tests require the SurveyInstrument service at the configured test base URL.
+- `McpServerHttpTests.cs` exercises initialization, tool discovery, structured and fallback success content, schema/model-family rejection, batch round trips, stale timestamp and error-source content-token writes, snapshot warnings and mutation, catalog-reference diagnostics, and stable MCP error envelopes against the in-process service.

@@ -7,6 +7,7 @@ using OSDC.Drilling.SurveyInstrument.Service.Controllers;
 using OSDC.Drilling.SurveyInstrument.Service.Mcp;
 using OSDC.Drilling.SurveyInstrument.Service.Mcp.Tools;
 using NUnit.Framework;
+using OSDC.DotnetLibraries.Drilling.SemanticCatalogue;
 
 namespace OSDC.Drilling.SurveyInstrument.ServiceTest;
 
@@ -93,6 +94,18 @@ public sealed class McpToolRegistrationTests
         Assert.That(_tools.Count, Is.EqualTo(EndpointToolMap.Count + 6));
         Assert.That(_tools.Values.Select(tool => tool.Name), Is.Unique);
         Assert.That(_tools.Values.All(tool => !string.IsNullOrWhiteSpace(tool.Description)), Is.True);
+    }
+
+    [Test]
+    public void Inputs_declare_generic_resource_and_evaluation_roles()
+    {
+        string Role(string name) => _tools[name].InputSchema![SemanticMetadata.ExtensionName]!["role"]!.GetValue<string>();
+        Assert.That(Role("survey_instrument_get_all"), Is.EqualTo(Concepts.ResourceCollectionRetrieval));
+        Assert.That(Role("survey_instrument_get_by_id"), Is.EqualTo(Concepts.ResourceRetrieval));
+        Assert.That(Role("survey_instrument_create"), Is.EqualTo(Concepts.ResourceCreation));
+        Assert.That(Role("survey_instrument_patch_by_id"), Is.EqualTo(Concepts.ResourcePartialUpdate));
+        Assert.That(Role("survey_instrument_delete_by_id"), Is.EqualTo(Concepts.ResourceDeletion));
+        Assert.That(Role("survey_instrument_validate_catalog_references"), Is.EqualTo(Concepts.StatelessEvaluation));
     }
 
     [Test]

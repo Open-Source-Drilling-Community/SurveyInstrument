@@ -112,7 +112,8 @@ string relativeSwaggerPath = "/swagger/merged/swagger.json";
 string fullSwaggerPath = $"{basePath}{relativeSwaggerPath}";
 string customVersion = "Merged API Version 1";
 
-var mergedDoc = SwaggerMiddlewareExtensions.ReadOpenApiDocument("wwwroot/json-schema/SurveyInstrumentMergedModel.json");
+var mergedDoc = SwaggerMiddlewareExtensions.ReadOpenApiDocument(
+    System.IO.Path.Combine(app.Environment.ContentRootPath, "wwwroot", "json-schema", "SurveyInstrumentMergedModel.json"));
 app.UseCustomSwagger(mergedDoc, relativeSwaggerPath);
 app.UseSwaggerUI(c =>
 {
@@ -134,3 +135,5 @@ app.MapControllers();
 app.MapFallbackToFile("index.html");
 
 app.Run();
+
+public partial class Program { }

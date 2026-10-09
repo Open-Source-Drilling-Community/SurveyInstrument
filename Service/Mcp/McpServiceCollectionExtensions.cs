@@ -33,8 +33,10 @@ public static class McpServiceCollectionExtensions
         JsonNode? inputSchema,
         Func<IServiceProvider, JsonObject?, CancellationToken, Task<JsonNode?>> invokeAsync)
     {
+        inputSchema ??= EmptyInputSchema();
+        McpOperationSemantics.Apply(name, inputSchema);
         services.AddSingleton<IMcpTool>(sp => new DelegateMcpTool(
-            name, description, inputSchema ?? EmptyInputSchema(), InferOutputSchema(name), InferBehavior(name),
+            name, description, inputSchema, InferOutputSchema(name), InferBehavior(name),
             (arguments, cancellationToken) => invokeAsync(sp, arguments, cancellationToken)));
         services.AddSingleton<McpServerTool>(sp => new LegacyMcpServerToolAdapter(
             sp.GetServices<IMcpTool>().Last(tool => tool.Name == name), sp.GetRequiredService<ILoggerFactory>()));

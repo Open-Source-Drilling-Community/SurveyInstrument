@@ -40,7 +40,7 @@ public sealed class OpenApiSemanticContractTests
                 Is.EqualTo(Concepts.SurveyErrorMagnitude));
             Assert.That(instrument["properties"]!["CantAngle"]!["x-osdc-semantic"]!["reference"]!.GetValue<string>(),
                 Is.EqualTo(Concepts.OrthogonalBodyFrameCantConvention));
-            Assert.That(instrument["x-osdc-semantic"]!["catalogueVersion"]!.GetValue<string>(), Is.EqualTo("0.16.0"));
+            Assert.That(instrument["x-osdc-semantic"]!["catalogueVersion"]!.GetValue<string>(), Is.EqualTo("0.18.0"));
         });
     }
 

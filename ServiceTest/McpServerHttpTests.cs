@@ -1,6 +1,9 @@
 using System.Text.Json.Nodes;
+using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging.Abstractions;
+using Microsoft.Extensions.Logging;
 using ModelContextProtocol.Client;
 using ModelContextProtocol.Protocol;
 using ModelContextProtocol.Server;
@@ -11,22 +14,29 @@ using NUnit.Framework;
 namespace OSDC.Drilling.SurveyInstrument.ServiceTest;
 
 [TestFixture]
+[NonParallelizable]
 public sealed class McpServerHttpTests
 {
-    private const string McpEndpoint = "http://localhost:8080/surveyinstrument/api/mcp";
-
+    private WebApplicationFactory<Program> _factory = default!;
+    private HttpClient _httpClient = default!;
     private HttpClientTransport _transport = default!;
     private McpClient _client = default!;
 
     [OneTimeSetUp]
     public async Task OneTimeSetUp()
     {
+        _factory = new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
+        {
+            builder.UseContentRoot(Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "../../../../Service")));
+            builder.ConfigureLogging(logging => logging.ClearProviders());
+        });
+        _httpClient = _factory.CreateClient();
         var transportOptions = new HttpClientTransportOptions
         {
-            Endpoint = new Uri(McpEndpoint),
-            TransportMode = HttpTransportMode.AutoDetect
+            Endpoint = new Uri(_httpClient.BaseAddress!, "SurveyInstrument/api/mcp"),
+            TransportMode = HttpTransportMode.StreamableHttp
         };
-        _transport = new HttpClientTransport(transportOptions, NullLoggerFactory.Instance);
+        _transport = new HttpClientTransport(transportOptions, _httpClient, NullLoggerFactory.Instance, ownsHttpClient: false);
         _client = await McpClient.CreateAsync(
             _transport,
             new McpClientOptions
@@ -52,6 +62,8 @@ public sealed class McpServerHttpTests
         {
             await _transport.DisposeAsync();
         }
+        _httpClient?.Dispose();
+        _factory?.Dispose();
     }
 
     [Test]
