@@ -1,3 +1,4 @@
+using OSDC.Drilling.SurveyInstrument.Service;
 using System;
 using System.Collections.Generic;
 using Microsoft.AspNetCore.Http;
@@ -14,12 +15,35 @@ namespace OSDC.Drilling.SurveyInstrument.Service.Controllers
     [ApiController]
     public class SurveyInstrumentController : ControllerBase
     {
+        private readonly SqlConnectionManager _discoveryConnections;
+
+        /// <summary>Discover SurveyInstrument resources as bounded light records; retrieve selected full records by ID.</summary>
+        [HttpGet("LightData", Name = "DiscoverSurveyInstrument")]
+        public ActionResult<OSDC.Drilling.SurveyInstrument.Model.SurveyInstrumentDiscoveryPage> DiscoverSurveyInstrument([FromQuery] int offset = 0, [FromQuery] int limit = 50, [FromQuery] string? name = null)
+        {
+            UsageStatisticsSurveyInstrument.Instance.IncrementDiscoveryRequestsPerDay();
+            if (offset < 0 || limit < 1 || limit > 200 || name?.Length > 200)
+                return BadRequest(new { error = "invalid_discovery_query", message = "Offset must be non-negative, limit 1–200, name at most 200 characters, and UUID filters non-empty." });
+            try
+            {
+                var records = DiscoveryRecords.ReadPage<OSDC.Drilling.SurveyInstrument.Model.SurveyInstrumentLight>(_discoveryConnections.GetConnection(), "SurveyInstrumentTable", "SurveyInstrument", offset, limit, name,
+                    new System.Collections.Generic.Dictionary<string, object?> {  }, out int total);
+                return Ok(new OSDC.Drilling.SurveyInstrument.Model.SurveyInstrumentDiscoveryPage { Items = records, Offset = offset, Limit = limit, TotalCount = total,
+                    NextOffset = offset < total && records.Count < total - offset ? offset + records.Count : null });
+            }
+            catch (System.Exception ex) when (ex is Microsoft.Data.Sqlite.SqliteException or System.Text.Json.JsonException or System.InvalidOperationException)
+            {
+                return StatusCode(500, new { error = "discovery_failed" });
+            }
+        }
+
         private readonly ILogger<SurveyInstrumentManager> _logger;
         private readonly SurveyInstrumentManager _surveyInstrumentManager;
         private readonly SurveyInstrumentBatchService _batchService;
 
         public SurveyInstrumentController(ILogger<SurveyInstrumentManager> logger, ILogger<ErrorSourceManager> errorSourceLogger, SqlConnectionManager connectionManager)
         {
+            _discoveryConnections = connectionManager;
             _logger = logger;
             _surveyInstrumentManager = SurveyInstrumentManager.GetInstance(_logger, errorSourceLogger, connectionManager);
             _batchService = new SurveyInstrumentBatchService(connectionManager);
@@ -94,7 +118,7 @@ namespace OSDC.Drilling.SurveyInstrument.Service.Controllers
         /// Returns the list of all SurveyInstrumentLight present in the microservice database, at endpoint SurveyInstrument/api/SurveyInstrument/LightData
         /// </summary>
         /// <returns>the list of all SurveyInstrumentLight present in the microservice database, at endpoint SurveyInstrument/api/SurveyInstrument/LightData</returns>
-        [HttpGet("LightData", Name = "GetAllSurveyInstrumentLight")]
+        [NonAction]
         public ActionResult<IEnumerable<SurveyInstrumentLight>> GetAllSurveyInstrumentLight()
         {
             UsageStatisticsSurveyInstrument.Instance.IncrementGetAllSurveyInstrumentLightPerDay();
@@ -113,7 +137,7 @@ namespace OSDC.Drilling.SurveyInstrument.Service.Controllers
         /// Returns the list of all SurveyInstrument present in the microservice database, at endpoint SurveyInstrument/api/SurveyInstrument/HeavyData
         /// </summary>
         /// <returns>the list of all SurveyInstrument present in the microservice database, at endpoint SurveyInstrument/api/SurveyInstrument/HeavyData</returns>
-        [HttpGet("HeavyData", Name = "GetAllSurveyInstrument")]
+        [NonAction]
         public ActionResult<IEnumerable<OSDC.Drilling.SurveyInstrument.Model.SurveyInstrument?>> GetAllSurveyInstrument()
         {
             UsageStatisticsSurveyInstrument.Instance.IncrementGetAllSurveyInstrumentPerDay();

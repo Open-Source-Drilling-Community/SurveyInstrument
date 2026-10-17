@@ -17,33 +17,33 @@ public sealed class McpToolRegistrationTests
     private static readonly IReadOnlyDictionary<string, string> EndpointToolMap =
         new Dictionary<string, string>(StringComparer.Ordinal)
         {
-            ["GetAllSurveyInstrumentId"] = "survey_instrument_get_all_ids",
-            ["GetAllSurveyInstrumentMetaInfo"] = "survey_instrument_get_all_meta_info",
-            ["GetSurveyInstrumentById"] = "survey_instrument_get_by_id",
-            ["GetAllSurveyInstrumentLight"] = "survey_instrument_get_all_light",
-            ["GetAllSurveyInstrument"] = "survey_instrument_get_all",
-            ["PostSurveyInstrument"] = "survey_instrument_create",
-            ["PutSurveyInstrumentById"] = "survey_instrument_update_by_id",
-            ["DeleteSurveyInstrumentById"] = "survey_instrument_delete_by_id",
-            ["BatchExportSurveyInstruments"] = "survey_instrument_batch_export",
-            ["BatchRestoreSurveyInstruments"] = "survey_instrument_batch_restore",
-            ["GetAllErrorSourceId"] = "error_source_get_all_ids",
-            ["GetAllErrorSourceMetaInfo"] = "error_source_get_all_meta_info",
-            ["GetErrorSourceById"] = "error_source_get_by_id",
-            ["GetAllErrorSource"] = "error_source_get_all",
-            ["PostErrorSource"] = "error_source_create",
-            ["PutErrorSourceById"] = "error_source_update_by_id",
-            ["DeleteErrorSourceById"] = "error_source_delete_by_id",
-            ["IdentityGetAll"] = "survey_instrument_identity_get_all",
-            ["IdentityGetById"] = "survey_instrument_identity_get_by_id",
-            ["IdentityCreate"] = "survey_instrument_identity_create",
-            ["IdentityUpdate"] = "survey_instrument_identity_update_by_id",
-            ["IdentityDelete"] = "survey_instrument_identity_delete_by_id",
-            ["FeatureGetAll"] = "survey_instrument_feature_category_get_all",
-            ["FeatureGetById"] = "survey_instrument_feature_category_get_by_id",
-            ["FeatureCreate"] = "survey_instrument_feature_category_create",
-            ["FeatureUpdate"] = "survey_instrument_feature_category_update_by_id",
-            ["FeatureDelete"] = "survey_instrument_feature_category_delete_by_id"
+        ["GetAllSurveyInstrumentId"] = "survey_instrument_get_all_ids",
+        ["GetAllSurveyInstrumentMetaInfo"] = "survey_instrument_get_all_meta_info",
+        ["GetSurveyInstrumentById"] = "survey_instrument_get_by_id",
+        ["DiscoverSurveyInstrument"] = "survey_instrument_discover",
+
+        ["PostSurveyInstrument"] = "survey_instrument_create",
+        ["PutSurveyInstrumentById"] = "survey_instrument_update_by_id",
+        ["DeleteSurveyInstrumentById"] = "survey_instrument_delete_by_id",
+        ["BatchExportSurveyInstruments"] = "survey_instrument_batch_export",
+        ["BatchRestoreSurveyInstruments"] = "survey_instrument_batch_restore",
+        ["GetAllErrorSourceId"] = "error_source_get_all_ids",
+        ["GetAllErrorSourceMetaInfo"] = "error_source_get_all_meta_info",
+        ["GetErrorSourceById"] = "error_source_get_by_id",
+        ["DiscoverErrorSource"] = "error_source_discover",
+        ["PostErrorSource"] = "error_source_create",
+        ["PutErrorSourceById"] = "error_source_update_by_id",
+        ["DeleteErrorSourceById"] = "error_source_delete_by_id",
+        ["IdentityDiscover"] = "survey_instrument_identity_discover",
+        ["IdentityGetById"] = "survey_instrument_identity_get_by_id",
+        ["IdentityCreate"] = "survey_instrument_identity_create",
+        ["IdentityUpdate"] = "survey_instrument_identity_update_by_id",
+        ["IdentityDelete"] = "survey_instrument_identity_delete_by_id",
+        ["FeatureDiscover"] = "survey_instrument_feature_category_discover",
+        ["FeatureGetById"] = "survey_instrument_feature_category_get_by_id",
+        ["FeatureCreate"] = "survey_instrument_feature_category_create",
+        ["FeatureUpdate"] = "survey_instrument_feature_category_update_by_id",
+        ["FeatureDelete"] = "survey_instrument_feature_category_delete_by_id",
         };
 
     private ServiceProvider _provider = default!;
@@ -78,7 +78,7 @@ public sealed class McpToolRegistrationTests
             .Select(method => method.Name)
             .ToArray();
 
-        Assert.That(endpointMethods, Is.EquivalentTo(EndpointToolMap.Keys.Take(17)));
+        Assert.That(endpointMethods, Is.EquivalentTo(EndpointToolMap.Keys.Where(key => !key.StartsWith("Identity", StringComparison.Ordinal) && !key.StartsWith("Feature", StringComparison.Ordinal))));
         Assert.That(_tools.Keys, Is.EquivalentTo(EndpointToolMap.Values
             .Append("survey_instrument_patch_by_id")
             .Append("survey_instrument_error_source_mutate")
@@ -100,7 +100,7 @@ public sealed class McpToolRegistrationTests
     public void Inputs_declare_generic_resource_and_evaluation_roles()
     {
         string Role(string name) => _tools[name].InputSchema![SemanticMetadata.ExtensionName]!["role"]!.GetValue<string>();
-        Assert.That(Role("survey_instrument_get_all"), Is.EqualTo(Concepts.ResourceCollectionRetrieval));
+        Assert.That(Role("survey_instrument_discover"), Is.EqualTo(Concepts.ResourceCollectionRetrieval));
         Assert.That(Role("survey_instrument_get_by_id"), Is.EqualTo(Concepts.ResourceRetrieval));
         Assert.That(Role("survey_instrument_create"), Is.EqualTo(Concepts.ResourceCreation));
         Assert.That(Role("survey_instrument_patch_by_id"), Is.EqualTo(Concepts.ResourcePartialUpdate));
@@ -352,8 +352,8 @@ public sealed class McpToolRegistrationTests
     {
         string instrument = _tools["survey_instrument_get_by_id"].OutputSchema.ToJsonString();
         string create = _tools["survey_instrument_create"].OutputSchema.ToJsonString();
-        string errorSources = _tools["error_source_get_all"].OutputSchema.ToJsonString();
-        string features = _tools["survey_instrument_feature_category_get_all"].OutputSchema.ToJsonString();
+        string errorSources = _tools["error_source_discover"].OutputSchema.ToJsonString();
+        string features = _tools["survey_instrument_feature_category_discover"].OutputSchema.ToJsonString();
 
         Assert.Multiple(() =>
         {
@@ -363,7 +363,8 @@ public sealed class McpToolRegistrationTests
             Assert.That(create, Is.EqualTo(instrument));
             Assert.That(errorSources, Does.Contain("MagnitudeQuantity"));
             Assert.That(features, Does.Contain("HasValidityPeriod"));
-            Assert.That(features, Does.Contain("Options"));
+            Assert.That(features, Does.Not.Contain("\"Options\""));
+            Assert.That(_tools["survey_instrument_feature_category_get_by_id"].OutputSchema.ToJsonString(), Does.Contain("\"Options\""));
         });
     }
 

@@ -144,7 +144,7 @@ namespace OSDC.Drilling.SurveyInstrument.ServiceTest
             List<ErrorSource> errorSourceList = new();
             try
             {
-                errorSourceList = (List<ErrorSource>)await nSwagClient.GetAllErrorSourceAsync();
+                errorSourceList = (List<ErrorSource>)await nSwagClient.ListErrorSourceReferencesAsync();
             }
             catch (ApiException ex)
             {
@@ -189,7 +189,7 @@ namespace OSDC.Drilling.SurveyInstrument.ServiceTest
             List<ErrorSource> errorSourceList = new();
             try
             {
-                errorSourceList = (List<ErrorSource>)await nSwagClient.GetAllErrorSourceAsync();
+                errorSourceList = (List<ErrorSource>)await nSwagClient.ListErrorSourceReferencesAsync();
             }
             catch (ApiException ex)
             {
@@ -299,7 +299,7 @@ namespace OSDC.Drilling.SurveyInstrument.ServiceTest
             List<ErrorSource> errorSourceList = new();
             try
             {
-                errorSourceList = (List<ErrorSource>)await nSwagClient.GetAllErrorSourceAsync();
+                errorSourceList = (List<ErrorSource>)await nSwagClient.ListErrorSourceReferencesAsync();
             }
             catch (ApiException ex)
             {
@@ -389,7 +389,7 @@ namespace OSDC.Drilling.SurveyInstrument.ServiceTest
             List<ErrorSource> errorSourceList = new();
             try
             {
-                errorSourceList = (List<ErrorSource>)await nSwagClient.GetAllErrorSourceAsync();
+                errorSourceList = (List<ErrorSource>)await nSwagClient.ListErrorSourceReferencesAsync();
             }
             catch (ApiException ex)
             {
@@ -455,7 +455,7 @@ namespace OSDC.Drilling.SurveyInstrument.ServiceTest
             List<ErrorSource> errorSourceList = new();
             try
             {
-                errorSourceList = (List<ErrorSource>)await nSwagClient.GetAllErrorSourceAsync();
+                errorSourceList = (List<ErrorSource>)await nSwagClient.ListErrorSourceReferencesAsync();
             }
             catch (ApiException ex)
             {
@@ -529,7 +529,7 @@ namespace OSDC.Drilling.SurveyInstrument.ServiceTest
             List<SurveyInstrumentLight> surveyInstrumentLightList = [];
             try
             {
-                surveyInstrumentLightList = (List<SurveyInstrumentLight>)await nSwagClient.GetAllSurveyInstrumentLightAsync();
+                surveyInstrumentLightList = (List<SurveyInstrumentLight>)await nSwagClient.ListSurveyInstrumentLightAsync();
             }
             catch (ApiException ex)
             {
@@ -549,7 +549,7 @@ namespace OSDC.Drilling.SurveyInstrument.ServiceTest
             List<SurveyInstrumentDto> surveyInstrumentList = new();
             try
             {
-                surveyInstrumentList = (List<SurveyInstrumentDto>)await nSwagClient.GetAllSurveyInstrumentAsync();
+                surveyInstrumentList = (List<SurveyInstrumentDto>)await nSwagClient.ListSurveyInstrumentReferencesAsync();
             }
             catch (ApiException ex)
             {
@@ -594,7 +594,7 @@ namespace OSDC.Drilling.SurveyInstrument.ServiceTest
             List<ErrorSource> errorSourceList = new();
             try
             {
-                errorSourceList = (List<ErrorSource>)await nSwagClient.GetAllErrorSourceAsync();
+                errorSourceList = (List<ErrorSource>)await nSwagClient.ListErrorSourceReferencesAsync();
             }
             catch (ApiException ex)
             {
@@ -704,7 +704,7 @@ namespace OSDC.Drilling.SurveyInstrument.ServiceTest
             List<ErrorSource> errorSourceList = new();
             try
             {
-                errorSourceList = (List<ErrorSource>)await nSwagClient.GetAllErrorSourceAsync();
+                errorSourceList = (List<ErrorSource>)await nSwagClient.ListErrorSourceReferencesAsync();
             }
             catch (ApiException ex)
             {
@@ -795,7 +795,7 @@ namespace OSDC.Drilling.SurveyInstrument.ServiceTest
             List<ErrorSource> errorSourceList = new();
             try
             {
-                errorSourceList = (List<ErrorSource>)await nSwagClient.GetAllErrorSourceAsync();
+                errorSourceList = (List<ErrorSource>)await nSwagClient.ListErrorSourceReferencesAsync();
             }
             catch (ApiException ex)
             {

@@ -17,7 +17,7 @@
     private List<SurveyInstrumentIdentity> items = [];
 
     protected override async Task OnInitializedAsync() =>
-        items = (await Api.ClientSurveyInstrument.GetAllSurveyInstrumentIdentityAsync()).ToList();
+        items = (await Api.ClientSurveyInstrument.ListSurveyInstrumentIdentityReferencesAsync()).ToList();
 
     private void Add() => items.Add(new() { MetaInfo = new() { ID = Guid.NewGuid() } });
 
@@ -31,7 +31,7 @@
             else
                 await Api.ClientSurveyInstrument.PostSurveyInstrumentIdentityAsync(item);
         }
-        items = (await Api.ClientSurveyInstrument.GetAllSurveyInstrumentIdentityAsync()).ToList();
+        items = (await Api.ClientSurveyInstrument.ListSurveyInstrumentIdentityReferencesAsync()).ToList();
         Snackbar.Add("Identities saved", Severity.Success);
     }
 

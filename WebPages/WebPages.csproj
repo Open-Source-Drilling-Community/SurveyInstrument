@@ -27,7 +27,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Include="..\ModelSharedOut\SurveyInstrumentMergedModel.cs" Link="GeneratedDtos\%(RecursiveDir)%(Filename)%(Extension)" />
+    <Compile Include="..\ModelSharedOut\SurveyInstrumentMergedModel.cs;..\ModelSharedOut\DiscoveryClientExtensions.cs" Link="GeneratedDtos\%(RecursiveDir)%(Filename)%(Extension)" />
   </ItemGroup>
 
   <ItemGroup>

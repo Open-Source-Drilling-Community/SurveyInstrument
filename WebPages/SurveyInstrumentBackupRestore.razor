@@ -189,7 +189,7 @@
     {
         try
         {
-            _instruments = ((await Api.ClientSurveyInstrument.GetAllSurveyInstrumentLightAsync()) ?? [])
+            _instruments = ((await Api.ClientSurveyInstrument.ListSurveyInstrumentLightAsync()) ?? [])
                 .Where(item => item?.MetaInfo?.ID is Guid id && id != Guid.Empty)
                 .OrderBy(item => item.Name, StringComparer.OrdinalIgnoreCase).ThenBy(item => item.MetaInfo.ID).ToList();
             _selected = [];

@@ -5,6 +5,54 @@
     "version": "1.0"
   },
   "paths": {
+    "/ErrorSource/LightData": {
+      "get": {
+        "tags": [
+          "ErrorSource"
+        ],
+        "summary": "Discover ErrorSource resources as bounded light records; retrieve selected full records by ID.",
+        "operationId": "DiscoverErrorSource",
+        "parameters": [
+          {
+            "name": "offset",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 0
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 50
+            }
+          },
+          {
+            "name": "name",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OSDC.Drilling.SurveyInstrument.Model.ErrorSourceDiscoveryPage"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/ErrorSource": {
       "get": {
         "tags": [
@@ -182,23 +230,47 @@
         }
       }
     },
-    "/ErrorSource/HeavyData": {
+    "/SurveyInstrument/LightData": {
       "get": {
         "tags": [
-          "ErrorSource"
+          "SurveyInstrument"
         ],
-        "summary": "Returns the list of all ErrorSource present in the microservice database, at endpoint SurveyInstrument/api/ErrorSource/HeavyData",
-        "operationId": "GetAllErrorSource",
+        "summary": "Discover SurveyInstrument resources as bounded light records; retrieve selected full records by ID.",
+        "operationId": "DiscoverSurveyInstrument",
+        "parameters": [
+          {
+            "name": "offset",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 0
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 50
+            }
+          },
+          {
+            "name": "name",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "OK",
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/OSDC.DotnetLibraries.Drilling.Surveying.ErrorSource"
-                  }
+                  "$ref": "#/components/schemas/OSDC.Drilling.SurveyInstrument.Model.SurveyInstrumentDiscoveryPage"
                 }
               }
             }
@@ -383,54 +455,6 @@
         }
       }
     },
-    "/SurveyInstrument/LightData": {
-      "get": {
-        "tags": [
-          "SurveyInstrument"
-        ],
-        "summary": "Returns the list of all SurveyInstrumentLight present in the microservice database, at endpoint SurveyInstrument/api/SurveyInstrument/LightData",
-        "operationId": "GetAllSurveyInstrumentLight",
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/OSDC.Drilling.SurveyInstrument.Model.SurveyInstrumentLight"
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/SurveyInstrument/HeavyData": {
-      "get": {
-        "tags": [
-          "SurveyInstrument"
-        ],
-        "summary": "Returns the list of all SurveyInstrument present in the microservice database, at endpoint SurveyInstrument/api/SurveyInstrument/HeavyData",
-        "operationId": "GetAllSurveyInstrument",
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/OSDC.Drilling.SurveyInstrument.Model.SurveyInstrument"
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/SurveyInstrument/BatchExport": {
       "post": {
         "tags": [
@@ -549,6 +573,54 @@
         }
       }
     },
+    "/SurveyInstrumentFeatureCategory/LightData": {
+      "get": {
+        "tags": [
+          "SurveyInstrumentFeatureCategory"
+        ],
+        "summary": "Discover SurveyInstrumentFeatureCategory resources as bounded light records; retrieve selected full records by ID.",
+        "operationId": "DiscoverSurveyInstrumentFeatureCategory",
+        "parameters": [
+          {
+            "name": "offset",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 0
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 50
+            }
+          },
+          {
+            "name": "name",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OSDC.Drilling.SurveyInstrument.Model.SurveyInstrumentFeatureCategoryDiscoveryPage"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/SurveyInstrumentFeatureCategory": {
       "get": {
         "tags": [
@@ -618,29 +690,6 @@
                   "type": "array",
                   "items": {
                     "$ref": "#/components/schemas/OSDC.DotnetLibraries.General.DataManagement.MetaInfo"
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/SurveyInstrumentFeatureCategory/HeavyData": {
-      "get": {
-        "tags": [
-          "SurveyInstrumentFeatureCategory"
-        ],
-        "operationId": "GetAllSurveyInstrumentFeatureCategory",
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/OSDC.Drilling.SurveyInstrument.Model.SurveyInstrumentFeatureCategory"
                   }
                 }
               }
@@ -759,6 +808,54 @@
         }
       }
     },
+    "/SurveyInstrumentIdentity/LightData": {
+      "get": {
+        "tags": [
+          "SurveyInstrumentIdentity"
+        ],
+        "summary": "Discover SurveyInstrumentIdentity resources as bounded light records; retrieve selected full records by ID.",
+        "operationId": "DiscoverSurveyInstrumentIdentity",
+        "parameters": [
+          {
+            "name": "offset",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 0
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 50
+            }
+          },
+          {
+            "name": "name",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OSDC.Drilling.SurveyInstrument.Model.SurveyInstrumentIdentityDiscoveryPage"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/SurveyInstrumentIdentity": {
       "get": {
         "tags": [
@@ -828,29 +925,6 @@
                   "type": "array",
                   "items": {
                     "$ref": "#/components/schemas/OSDC.DotnetLibraries.General.DataManagement.MetaInfo"
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/SurveyInstrumentIdentity/HeavyData": {
-      "get": {
-        "tags": [
-          "SurveyInstrumentIdentity"
-        ],
-        "operationId": "GetAllSurveyInstrumentIdentity",
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/OSDC.Drilling.SurveyInstrument.Model.SurveyInstrumentIdentity"
                   }
                 }
               }
@@ -1414,6 +1488,114 @@
           "Count": {
             "type": "integer",
             "format": "int64"
+          }
+        },
+        "additionalProperties": false
+      },
+      "OSDC.Drilling.SurveyInstrument.Model.ErrorSourceDiscoveryPage": {
+        "type": "object",
+        "properties": {
+          "Items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OSDC.Drilling.SurveyInstrument.Model.ErrorSourceLight"
+            },
+            "nullable": true
+          },
+          "Offset": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "Limit": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "TotalCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "NextOffset": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "OSDC.Drilling.SurveyInstrument.Model.ErrorSourceLight": {
+        "type": "object",
+        "properties": {
+          "Name": {
+            "type": "string",
+            "nullable": true,
+            "readOnly": true
+          },
+          "MetaInfo": {
+            "$ref": "#/components/schemas/OSDC.DotnetLibraries.General.DataManagement.MetaInfo"
+          },
+          "ErrorCode": {
+            "$ref": "#/components/schemas/OSDC.DotnetLibraries.Drilling.Surveying.ErrorCode"
+          },
+          "Description": {
+            "type": "string",
+            "nullable": true
+          },
+          "Index": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "PropagationMode": {
+            "type": "string",
+            "nullable": true
+          },
+          "IsSystematic": {
+            "type": "boolean"
+          },
+          "IsRandom": {
+            "type": "boolean"
+          },
+          "IsGlobal": {
+            "type": "boolean"
+          },
+          "SingularIssues": {
+            "type": "boolean"
+          },
+          "IsContinuous": {
+            "type": "boolean"
+          },
+          "IsStationary": {
+            "type": "boolean"
+          },
+          "KOperatorImposed": {
+            "type": "boolean"
+          },
+          "Magnitude": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "MagnitudeQuantity": {
+            "type": "string",
+            "nullable": true
+          },
+          "UseInclinationInterval": {
+            "type": "boolean"
+          },
+          "StartInclination": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "EndInclination": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "InitInclination": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
           }
         },
         "additionalProperties": false
@@ -2043,6 +2225,36 @@
         },
         "additionalProperties": false
       },
+      "OSDC.Drilling.SurveyInstrument.Model.SurveyInstrumentDiscoveryPage": {
+        "type": "object",
+        "properties": {
+          "Items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OSDC.Drilling.SurveyInstrument.Model.SurveyInstrumentLight"
+            },
+            "nullable": true
+          },
+          "Offset": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "Limit": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "TotalCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "NextOffset": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
       "OSDC.Drilling.SurveyInstrument.Model.SurveyInstrumentFeatureAssignment": {
         "type": "object",
         "properties": {
@@ -2109,6 +2321,65 @@
         },
         "additionalProperties": false
       },
+      "OSDC.Drilling.SurveyInstrument.Model.SurveyInstrumentFeatureCategoryDiscoveryPage": {
+        "type": "object",
+        "properties": {
+          "Items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OSDC.Drilling.SurveyInstrument.Model.SurveyInstrumentFeatureCategoryLight"
+            },
+            "nullable": true
+          },
+          "Offset": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "Limit": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "TotalCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "NextOffset": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "OSDC.Drilling.SurveyInstrument.Model.SurveyInstrumentFeatureCategoryLight": {
+        "type": "object",
+        "properties": {
+          "MetaInfo": {
+            "$ref": "#/components/schemas/OSDC.DotnetLibraries.General.DataManagement.MetaInfo"
+          },
+          "Name": {
+            "type": "string",
+            "nullable": true
+          },
+          "IsExclusive": {
+            "type": "boolean"
+          },
+          "HasValidityPeriod": {
+            "type": "boolean"
+          },
+          "CreationDate": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "LastModificationDate": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
       "OSDC.Drilling.SurveyInstrument.Model.SurveyInstrumentFeatureOption": {
         "type": "object",
         "properties": {
@@ -2160,6 +2431,59 @@
           },
           "Value": {
             "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "OSDC.Drilling.SurveyInstrument.Model.SurveyInstrumentIdentityDiscoveryPage": {
+        "type": "object",
+        "properties": {
+          "Items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OSDC.Drilling.SurveyInstrument.Model.SurveyInstrumentIdentityLight"
+            },
+            "nullable": true
+          },
+          "Offset": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "Limit": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "TotalCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "NextOffset": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "OSDC.Drilling.SurveyInstrument.Model.SurveyInstrumentIdentityLight": {
+        "type": "object",
+        "properties": {
+          "MetaInfo": {
+            "$ref": "#/components/schemas/OSDC.DotnetLibraries.General.DataManagement.MetaInfo"
+          },
+          "Name": {
+            "type": "string",
+            "nullable": true
+          },
+          "CreationDate": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "LastModificationDate": {
+            "type": "string",
+            "format": "date-time",
             "nullable": true
           }
         },
@@ -2257,6 +2581,9 @@
       "OSDC.Drilling.SurveyInstrument.Model.UsageStatisticsSurveyInstrument": {
         "type": "object",
         "properties": {
+          "DiscoveryRequestsPerDay": {
+            "$ref": "#/components/schemas/OSDC.Drilling.SurveyInstrument.Model.History"
+          },
           "LastSaved": {
             "type": "string",
             "format": "date-time"

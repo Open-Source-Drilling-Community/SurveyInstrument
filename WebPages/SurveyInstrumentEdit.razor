@@ -393,14 +393,16 @@ protected override async Task OnInitializedAsync()
         Parent.Add(this);
         ManageUnits();
 
-        identityCatalog = (await Api.ClientSurveyInstrument.GetAllSurveyInstrumentIdentityAsync()).ToList();
-        featureCatalog = (await Api.ClientSurveyInstrument.GetAllSurveyInstrumentFeatureCategoryAsync()).ToList();
+        identityCatalog = (await Api.ClientSurveyInstrument.ListSurveyInstrumentIdentityReferencesAsync()).ToList();
+        featureCatalog = (await Api.ClientSurveyInstrument.ListSurveyInstrumentFeatureCategoryReferencesAsync()).ToList();
 
         if (CurrentSurveyInstrument != null && CurrentSurveyInstrument.MetaInfo != null)
         {
             CurrentSurveyInstrument.SurveyInstrumentIdentityAssignments ??= [];
             CurrentSurveyInstrument.SurveyInstrumentFeatureAssignments ??= [];
             CopyFrom(CurrentSurveyInstrument);
+            foreach (Guid id in CurrentSurveyInstrument.SurveyInstrumentFeatureAssignments.Where(value => value.FeatureCategoryID.HasValue).Select(value => value.FeatureCategoryID!.Value).Distinct())
+                await Api.ClientSurveyInstrument.LoadSurveyInstrumentFeatureCategoryDetailsAsync(featureCatalog, id);
         }
         else
         {
@@ -524,8 +526,10 @@ private IEnumerable<SurveyInstrumentFeatureOption> OptionsFor(SurveyInstrumentFe
 private bool HasValidity(SurveyInstrumentFeatureAssignment assignment) =>
     featureCatalog.FirstOrDefault(category => category.MetaInfo.ID == assignment.FeatureCategoryID)?.HasValidityPeriod == true;
 
-private void SetFeatureCategory(SurveyInstrumentFeatureAssignment assignment, Guid? categoryId)
+private async Task SetFeatureCategory(SurveyInstrumentFeatureAssignment assignment, Guid? categoryId)
 {
+        if (categoryId is Guid categoryUuid) await Api.ClientSurveyInstrument.LoadSurveyInstrumentFeatureCategoryDetailsAsync(featureCatalog, categoryUuid);
+
     assignment.FeatureCategoryID = categoryId;
     assignment.FeatureOptionID = null;
     if (!HasValidity(assignment))
@@ -660,7 +664,7 @@ private bool IsErrorSourceSelected(ErrorCode code)
     return CurrentSurveyInstrument?.ErrorSourceList?.Any(x => x.ErrorCode == code) == true;
 }
 
-private void SetErrorSourceSelected(ErrorCode code, bool selected)
+private async Task SetErrorSourceSelected(ErrorCode code, bool selected)
 {
     if (CurrentSurveyInstrument == null)
     {
@@ -677,6 +681,7 @@ private void SetErrorSourceSelected(ErrorCode code, bool selected)
             ErrorSource? availableSource = AvailableErrorSourceList?.FirstOrDefault(x => x.ErrorCode == code);
             if (availableSource != null)
             {
+                availableSource = await Api.ClientSurveyInstrument.GetErrorSourceByIdAsync(availableSource.MetaInfo.ID);
                 CurrentSurveyInstrument.ErrorSourceList.Add(availableSource);
             }
         }
@@ -707,7 +712,7 @@ private double? ErrorSourceMagnitude(params ErrorCode[] codes)
     return FindErrorSource(codes)?.Magnitude;
 }
 
-private void UpdateErrorSourceMagnitude(ErrorCode[] codes, double? value)
+private async Task UpdateErrorSourceMagnitude(ErrorCode[] codes, double? value)
 {
     if (CurrentSurveyInstrument == null)
     {
@@ -721,6 +726,7 @@ private void UpdateErrorSourceMagnitude(ErrorCode[] codes, double? value)
         source = AvailableErrorSourceList?.FirstOrDefault(x => codes.Contains(x.ErrorCode));
         if (source != null)
         {
+            source = await Api.ClientSurveyInstrument.GetErrorSourceByIdAsync(source.MetaInfo.ID);
             CurrentSurveyInstrument.ErrorSourceList.Add(source);
         }
     }

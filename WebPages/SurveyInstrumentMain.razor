@@ -69,9 +69,9 @@
             currentSurveyInstrument = null;
 
             logger.LogInformation("Trying to load list of ErrorSource from client: {Host}", Api.HostNameSurveyInstrument);
-            var errorSourceTask = Api.ClientSurveyInstrument.GetAllErrorSourceAsync();
+            var errorSourceTask = Api.ClientSurveyInstrument.ListErrorSourceReferencesAsync();
             logger.LogInformation("Trying to load list of SurveyInstrument from client: {Host}", Api.HostNameSurveyInstrument);
-            var surveyInstrumentTask = Api.ClientSurveyInstrument.GetAllSurveyInstrumentAsync();
+            var surveyInstrumentTask = Api.ClientSurveyInstrument.ListSurveyInstrumentReferencesAsync();
 
             List<Task> loadingTaskList = [surveyInstrumentTask, errorSourceTask];
             while (loadingTaskList.Count > 0)

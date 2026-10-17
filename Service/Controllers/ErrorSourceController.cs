@@ -1,3 +1,4 @@
+using OSDC.Drilling.SurveyInstrument.Service;
 using System;
 using System.Collections.Generic;
 using Microsoft.AspNetCore.Http;
@@ -15,11 +16,34 @@ namespace OSDC.Drilling.SurveyInstrument.Service.Controllers
     [ApiController]
     public class ErrorSourceController : ControllerBase
     {
+        private readonly SqlConnectionManager _discoveryConnections;
+
+        /// <summary>Discover ErrorSource resources as bounded light records; retrieve selected full records by ID.</summary>
+        [HttpGet("LightData", Name = "DiscoverErrorSource")]
+        public ActionResult<OSDC.Drilling.SurveyInstrument.Model.ErrorSourceDiscoveryPage> DiscoverErrorSource([FromQuery] int offset = 0, [FromQuery] int limit = 50, [FromQuery] string? name = null)
+        {
+            UsageStatisticsSurveyInstrument.Instance.IncrementDiscoveryRequestsPerDay();
+            if (offset < 0 || limit < 1 || limit > 200 || name?.Length > 200)
+                return BadRequest(new { error = "invalid_discovery_query", message = "Offset must be non-negative, limit 1–200, name at most 200 characters, and UUID filters non-empty." });
+            try
+            {
+                var records = DiscoveryRecords.ReadPage<OSDC.Drilling.SurveyInstrument.Model.ErrorSourceLight>(_discoveryConnections.GetConnection(), "ErrorSourceTable", "ErrorSource", offset, limit, name,
+                    new System.Collections.Generic.Dictionary<string, object?> {  }, out int total);
+                return Ok(new OSDC.Drilling.SurveyInstrument.Model.ErrorSourceDiscoveryPage { Items = records, Offset = offset, Limit = limit, TotalCount = total,
+                    NextOffset = offset < total && records.Count < total - offset ? offset + records.Count : null });
+            }
+            catch (System.Exception ex) when (ex is Microsoft.Data.Sqlite.SqliteException or System.Text.Json.JsonException or System.InvalidOperationException)
+            {
+                return StatusCode(500, new { error = "discovery_failed" });
+            }
+        }
+
         private readonly ILogger<ErrorSourceManager> _logger;
         private readonly ErrorSourceManager _errorSourceManager;
 
         public ErrorSourceController(ILogger<ErrorSourceManager> logger, SqlConnectionManager connectionManager)
         {
+            _discoveryConnections = connectionManager;
             _logger = logger;
             _errorSourceManager = ErrorSourceManager.GetInstance(_logger, connectionManager);
         }
@@ -93,7 +117,7 @@ namespace OSDC.Drilling.SurveyInstrument.Service.Controllers
         /// Returns the list of all ErrorSource present in the microservice database, at endpoint SurveyInstrument/api/ErrorSource/HeavyData
         /// </summary>
         /// <returns>the list of all ErrorSource present in the microservice database, at endpoint SurveyInstrument/api/ErrorSource/HeavyData</returns>
-        [HttpGet("HeavyData", Name = "GetAllErrorSource")]
+        [NonAction]
         public ActionResult<IEnumerable<ErrorSource?>> GetAllErrorSource()
         {
             UsageStatisticsSurveyInstrument.Instance.IncrementGetAllErrorSourcePerDay();

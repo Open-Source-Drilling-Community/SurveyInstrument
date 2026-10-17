@@ -27,6 +27,7 @@ public static class SurveyInstrumentRestMcpToolRegistrations
 {
     public static IServiceCollection AddSurveyInstrumentRestMcpTools(this IServiceCollection services)
     {
+        services.AddDiscoveryMcpTools();
         AddSurveyInstrumentTools(services);
         AddErrorSourceTools(services);
         AddCatalogTools<IdentityModel>(services, "survey_instrument_identity", "surveyInstrumentIdentity", false,
@@ -49,8 +50,6 @@ public static class SurveyInstrumentRestMcpToolRegistrations
         Func<IServiceProvider, Guid, DateTimeOffset, T?, ActionResult> update,
         Func<IServiceProvider, Guid, DateTimeOffset, ActionResult> delete)
     {
-        services.AddLegacyMcpTool(prefix + "_get_all", "List every survey-instrument catalog definition, including stable UUIDs, server-owned timestamps, names, and feature options where applicable. Read this catalog before assigning a definition to an instrument or attempting an optimistic-concurrency update.", McpToolArgumentHelpers.CreateEmptySchema(),
-            (sp, _, ct) => Invoke(ct, () => all(sp)));
         services.AddLegacyMcpTool(prefix + "_get_by_id", "Retrieve one complete survey-instrument catalog definition by stable UUID, including the latest LastModificationDate concurrency token and all feature options where applicable. An unknown UUID returns not found without changing service state.", McpToolArgumentHelpers.CreateGuidSchema("id", "Catalog definition UUID."),
             (sp, args, ct) => InvokeById(args, ct, id => get(sp, id)));
         services.AddLegacyMcpTool(prefix + "_create", "Create a custom survey-instrument catalog definition using a caller-generated non-empty UUID. The service owns CreationDate and LastModificationDate, rejects duplicate identifiers, and preserves category flags and stable option UUIDs for assignments.", McpToolArgumentHelpers.CreateCatalogSchema(bodyName, feature),
@@ -75,10 +74,6 @@ public static class SurveyInstrumentRestMcpToolRegistrations
             InvokeCatalogReferenceValidation);
         services.AddLegacyMcpTool("survey_instrument_audit_catalog_references", "Validate a deterministic, bounded page of stored survey instruments against the local identity and feature catalogs without changing data. Results identify missing identity definitions, feature categories, and category-scoped options, allowing legacy or imported catalog corruption to be audited without loading every complete record into the MCP response.", McpToolArgumentHelpers.CreateCatalogReferenceAuditSchema(),
             InvokeCatalogReferenceAudit);
-        services.AddLegacyMcpTool("survey_instrument_get_all_light", "List lightweight survey-instrument records containing metadata, name, description, and timestamps. Use this for human-readable discovery; it omits model parameters and error-source details. Retrieve a selected full record by UUID afterward.", McpToolArgumentHelpers.CreateEmptySchema(),
-            (sp, _, ct) => Invoke(ct, () => SurveyInstrumentController(sp).GetAllSurveyInstrumentLight()));
-        services.AddLegacyMcpTool("survey_instrument_get_all", "Retrieve every survey instrument with its complete error-model data, including embedded error sources and physical parameters. This can be a large response; prefer IDs, metadata, or light records for discovery. SI values are used and angles are radians.", McpToolArgumentHelpers.CreateEmptySchema(),
-            (sp, _, ct) => Invoke(ct, () => SurveyInstrumentController(sp).GetAllSurveyInstrument()));
         services.AddLegacyMcpTool("survey_instrument_batch_export", "Create a read-only schema-version-1 logical backup of all survey instruments or an explicit ordered selection. The document contains complete frozen instrument records, referenced identity and feature definitions, and applicable error-source templates. A missing selected UUID rejects the entire export.", McpToolArgumentHelpers.CreateBatchExportSchema(),
             (sp, args, ct) => InvokeWithBodyResult<BatchExportRequestModel, BatchExportDocumentModel>(args, "request", ct,
                 request => SurveyInstrumentController(sp).BatchExportSurveyInstruments(request)));
@@ -105,8 +100,6 @@ public static class SurveyInstrumentRestMcpToolRegistrations
             (sp, _, ct) => Invoke(ct, () => ErrorSourceController(sp).GetAllErrorSourceMetaInfo()));
         services.AddLegacyMcpTool("error_source_get_by_id", "Retrieve one complete error-source template by UUID, including ErrorCode, classification and correlation flags, magnitude, quantity, and optional inclination interval. Copying it into an instrument creates an authoritative snapshot with UUID provenance; later template updates do not propagate. SI units are used.", McpToolArgumentHelpers.CreateGuidSchema("id", "UUID of the independently stored error-source template to retrieve."),
             InvokeErrorSourceGetById);
-        services.AddLegacyMcpTool("error_source_get_all", "Retrieve every independently stored error-source definition with full classification, magnitude, quantity, and inclination-interval data. This can be a large response; prefer IDs or metadata for discovery. Magnitudes use their named quantity's SI unit.", McpToolArgumentHelpers.CreateEmptySchema(),
-            (sp, _, ct) => Invoke(ct, () => ErrorSourceController(sp).GetAllErrorSource()));
         services.AddLegacyMcpTool("error_source_create", "Persist a new reusable survey error-source template. Generate a non-empty errorSource.MetaInfo.ID first; an existing UUID produces a conflict. Instruments embed authoritative snapshots rather than live references, so later template updates do not propagate. Use the named quantity's SI unit.", McpToolArgumentHelpers.CreateErrorSourceSchema(),
             (sp, args, ct) => InvokeWithBody<ErrorSourceModel>(args, "errorSource", ct, data => ErrorSourceController(sp).PostErrorSource(data)));
         services.AddLegacyMcpTool("error_source_update_by_id", "Replace an existing independently stored error-source definition with optimistic concurrency. The path id must match errorSource.MetaInfo.ID and expectedVersionToken must equal the token from the latest error_source_get_by_id read. The success result returns a new token and warns when stored instruments contain same-UUID frozen snapshots; those snapshots remain unchanged. Magnitude uses the named quantity's SI unit and inclination fields use radians.", McpToolArgumentHelpers.CreateErrorSourceSchema(includeId: true, includeExpected: true),

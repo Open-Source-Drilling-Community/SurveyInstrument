@@ -232,3 +232,20 @@ MCP is available over streamable HTTP at `/surveyinstrument/api/mcp` and WebSock
 The tools provide strict input schemas and explicit success-output schemas for full Survey Instrument and Error Source payloads, identity and feature catalogs, embedded assignments, and backup documents. Survey Instrument write schemas enforce `ModelType` as a tagged union by forbidding incompatible family fields, and the service repeats the semantic validation before persistence. `ErrorCode` publishes the complete finite enum. Every tool publishes a human-readable title and MCP safety annotations. Successes provide structured JSON plus text fallback; validation, not-found, conflict, stale-write, and unexpected server failures produce stable sanitized MCP error envelopes. Survey Instrument writes and catalog writes require `expectedModifiedUtc`; standalone Error Source updates and deletes require the SHA-256 `expectedVersionToken` returned by the latest read. Batch restore is schema-versioned, validates the complete document first, and supports `MapExisting` or `MapOrCreateMissing` for exact-UUID identity, feature-category, and error-source-template dependencies. Instruments and any created dependencies are committed in one SQLite transaction. Referenced identity/feature definitions cannot be removed. The standalone Error Source store is explicitly a template library: instruments own embedded snapshots, and template changes never silently rewrite an existing instrument. Physical inputs and outputs use SI: angles are radians, distances are metres, gravity is m/s², magnetic flux density is tesla, and error-source `Magnitude` is expressed in the SI unit identified by `MagnitudeQuantity`.
 
 Survey Instrument creation uses server-owned timestamps and returns the created representation through MCP. Text and complete JSON documents are stored with parameterized SQLite commands, including descriptions containing apostrophes. A timestamp-less legacy record exposes the Unix epoch as its effective concurrency token.
+
+## Bounded light discovery
+
+Resource and catalog discovery returns light pages, with `offset` defaulting to 0 and `limit` defaulting to 50 (allowed range 1–200). Names and relevant resource-reference filters are evaluated on the server. Unbounded full-object `HeavyData` routes and tools, including filtered full-object lists, have been removed. Existing UUID and HTTP-metadata listings remain available; use named light pages for routine discovery.
+
+REST routes and MCP tool names (relative to the service's existing API path base):
+
+- `/ErrorSource/LightData` / `error_source_discover`
+- `/SurveyInstrument/LightData` / `survey_instrument_discover`
+- `/SurveyInstrumentFeatureCategory/LightData` / `survey_instrument_feature_category_discover`
+- `/SurveyInstrumentIdentity/LightData` / `survey_instrument_identity_discover`
+
+Pages contain `Items`, `Offset`, `Limit`, `TotalCount`, and `NextOffset`; `NextOffset` is null on the final page. Offset pages are individually consistent reads, not a snapshot spanning requests: concurrent inserts/deletes can change later pages. Refresh discovery when the underlying collection changes. EarthGeodesy's existing search pages instead expose `Items[].Value`, `Offset`, `Limit`, and `TotalCount`.
+
+Single-record reads, result/chunk reads, and deliberate backup/export/restore operations are preserved. Backups can still contain complete resources and should be treated as explicit bulk operations.
+
+This is a breaking REST/MCP contract change: update generated clients, UIs, and external integrations together with the service release. Removed heavy-list names are not compatibility aliases. No persisted engineering shapes, database names, or storage volumes are changed. Historical usage counters are retained; bounded discovery has a separate additive `DiscoveryRequestsPerDay` history in resource services.

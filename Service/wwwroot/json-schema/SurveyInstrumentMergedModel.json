@@ -6,6 +6,54 @@
     "version": "1.0"
   },
   "paths": {
+    "/ErrorSource/LightData": {
+      "get": {
+        "tags": [
+          "ErrorSource"
+        ],
+        "summary": "Discover ErrorSource resources as bounded light records; retrieve selected full records by ID.",
+        "operationId": "DiscoverErrorSource",
+        "parameters": [
+          {
+            "name": "offset",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 0
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 50
+            }
+          },
+          {
+            "name": "name",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorSourceDiscoveryPage"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/ErrorSource": {
       "get": {
         "tags": [
@@ -183,23 +231,47 @@
         }
       }
     },
-    "/ErrorSource/HeavyData": {
+    "/SurveyInstrument/LightData": {
       "get": {
         "tags": [
-          "ErrorSource"
+          "SurveyInstrument"
         ],
-        "summary": "Returns the list of all ErrorSource present in the microservice database, at endpoint SurveyInstrument/api/ErrorSource/HeavyData",
-        "operationId": "GetAllErrorSource",
+        "summary": "Discover SurveyInstrument resources as bounded light records; retrieve selected full records by ID.",
+        "operationId": "DiscoverSurveyInstrument",
+        "parameters": [
+          {
+            "name": "offset",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 0
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 50
+            }
+          },
+          {
+            "name": "name",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "OK",
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/ErrorSource"
-                  }
+                  "$ref": "#/components/schemas/SurveyInstrumentDiscoveryPage"
                 }
               }
             }
@@ -384,54 +456,6 @@
         }
       }
     },
-    "/SurveyInstrument/LightData": {
-      "get": {
-        "tags": [
-          "SurveyInstrument"
-        ],
-        "summary": "Returns the list of all SurveyInstrumentLight present in the microservice database, at endpoint SurveyInstrument/api/SurveyInstrument/LightData",
-        "operationId": "GetAllSurveyInstrumentLight",
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/SurveyInstrumentLight"
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/SurveyInstrument/HeavyData": {
-      "get": {
-        "tags": [
-          "SurveyInstrument"
-        ],
-        "summary": "Returns the list of all SurveyInstrument present in the microservice database, at endpoint SurveyInstrument/api/SurveyInstrument/HeavyData",
-        "operationId": "GetAllSurveyInstrument",
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/SurveyInstrument"
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/SurveyInstrument/BatchExport": {
       "post": {
         "tags": [
@@ -550,6 +574,54 @@
         }
       }
     },
+    "/SurveyInstrumentFeatureCategory/LightData": {
+      "get": {
+        "tags": [
+          "SurveyInstrumentFeatureCategory"
+        ],
+        "summary": "Discover SurveyInstrumentFeatureCategory resources as bounded light records; retrieve selected full records by ID.",
+        "operationId": "DiscoverSurveyInstrumentFeatureCategory",
+        "parameters": [
+          {
+            "name": "offset",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 0
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 50
+            }
+          },
+          {
+            "name": "name",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SurveyInstrumentFeatureCategoryDiscoveryPage"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/SurveyInstrumentFeatureCategory": {
       "get": {
         "tags": [
@@ -619,29 +691,6 @@
                   "type": "array",
                   "items": {
                     "$ref": "#/components/schemas/MetaInfo"
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/SurveyInstrumentFeatureCategory/HeavyData": {
-      "get": {
-        "tags": [
-          "SurveyInstrumentFeatureCategory"
-        ],
-        "operationId": "GetAllSurveyInstrumentFeatureCategory",
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/SurveyInstrumentFeatureCategory"
                   }
                 }
               }
@@ -760,6 +809,54 @@
         }
       }
     },
+    "/SurveyInstrumentIdentity/LightData": {
+      "get": {
+        "tags": [
+          "SurveyInstrumentIdentity"
+        ],
+        "summary": "Discover SurveyInstrumentIdentity resources as bounded light records; retrieve selected full records by ID.",
+        "operationId": "DiscoverSurveyInstrumentIdentity",
+        "parameters": [
+          {
+            "name": "offset",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 0
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 50
+            }
+          },
+          {
+            "name": "name",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SurveyInstrumentIdentityDiscoveryPage"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/SurveyInstrumentIdentity": {
       "get": {
         "tags": [
@@ -829,29 +926,6 @@
                   "type": "array",
                   "items": {
                     "$ref": "#/components/schemas/MetaInfo"
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/SurveyInstrumentIdentity/HeavyData": {
-      "get": {
-        "tags": [
-          "SurveyInstrumentIdentity"
-        ],
-        "operationId": "GetAllSurveyInstrumentIdentity",
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/SurveyInstrumentIdentity"
                   }
                 }
               }
@@ -1413,6 +1487,112 @@
           "Count": {
             "type": "integer",
             "format": "int64"
+          }
+        }
+      },
+      "ErrorSourceDiscoveryPage": {
+        "type": "object",
+        "properties": {
+          "Items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ErrorSourceLight"
+            },
+            "nullable": true
+          },
+          "Offset": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "Limit": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "TotalCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "NextOffset": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          }
+        }
+      },
+      "ErrorSourceLight": {
+        "type": "object",
+        "properties": {
+          "Name": {
+            "type": "string",
+            "nullable": true,
+            "readOnly": true
+          },
+          "MetaInfo": {
+            "$ref": "#/components/schemas/MetaInfo"
+          },
+          "ErrorCode": {
+            "$ref": "#/components/schemas/ErrorCode"
+          },
+          "Description": {
+            "type": "string",
+            "nullable": true
+          },
+          "Index": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "PropagationMode": {
+            "type": "string",
+            "nullable": true
+          },
+          "IsSystematic": {
+            "type": "boolean"
+          },
+          "IsRandom": {
+            "type": "boolean"
+          },
+          "IsGlobal": {
+            "type": "boolean"
+          },
+          "SingularIssues": {
+            "type": "boolean"
+          },
+          "IsContinuous": {
+            "type": "boolean"
+          },
+          "IsStationary": {
+            "type": "boolean"
+          },
+          "KOperatorImposed": {
+            "type": "boolean"
+          },
+          "Magnitude": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "MagnitudeQuantity": {
+            "type": "string",
+            "nullable": true
+          },
+          "UseInclinationInterval": {
+            "type": "boolean"
+          },
+          "StartInclination": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "EndInclination": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "InitInclination": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
           }
         }
       },
@@ -2032,6 +2212,35 @@
           }
         }
       },
+      "SurveyInstrumentDiscoveryPage": {
+        "type": "object",
+        "properties": {
+          "Items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SurveyInstrumentLight"
+            },
+            "nullable": true
+          },
+          "Offset": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "Limit": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "TotalCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "NextOffset": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          }
+        }
+      },
       "SurveyInstrumentFeatureAssignment": {
         "type": "object",
         "properties": {
@@ -2096,6 +2305,63 @@
           }
         }
       },
+      "SurveyInstrumentFeatureCategoryDiscoveryPage": {
+        "type": "object",
+        "properties": {
+          "Items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SurveyInstrumentFeatureCategoryLight"
+            },
+            "nullable": true
+          },
+          "Offset": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "Limit": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "TotalCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "NextOffset": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          }
+        }
+      },
+      "SurveyInstrumentFeatureCategoryLight": {
+        "type": "object",
+        "properties": {
+          "MetaInfo": {
+            "$ref": "#/components/schemas/MetaInfo"
+          },
+          "Name": {
+            "type": "string",
+            "nullable": true
+          },
+          "IsExclusive": {
+            "type": "boolean"
+          },
+          "HasValidityPeriod": {
+            "type": "boolean"
+          },
+          "CreationDate": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "LastModificationDate": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          }
+        }
+      },
       "SurveyInstrumentFeatureOption": {
         "type": "object",
         "properties": {
@@ -2145,6 +2411,57 @@
           },
           "Value": {
             "type": "string",
+            "nullable": true
+          }
+        }
+      },
+      "SurveyInstrumentIdentityDiscoveryPage": {
+        "type": "object",
+        "properties": {
+          "Items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SurveyInstrumentIdentityLight"
+            },
+            "nullable": true
+          },
+          "Offset": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "Limit": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "TotalCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "NextOffset": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          }
+        }
+      },
+      "SurveyInstrumentIdentityLight": {
+        "type": "object",
+        "properties": {
+          "MetaInfo": {
+            "$ref": "#/components/schemas/MetaInfo"
+          },
+          "Name": {
+            "type": "string",
+            "nullable": true
+          },
+          "CreationDate": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "LastModificationDate": {
+            "type": "string",
+            "format": "date-time",
             "nullable": true
           }
         }
@@ -2240,6 +2557,9 @@
       "UsageStatisticsSurveyInstrument": {
         "type": "object",
         "properties": {
+          "DiscoveryRequestsPerDay": {
+            "$ref": "#/components/schemas/History"
+          },
           "LastSaved": {
             "type": "string",
             "format": "date-time"
