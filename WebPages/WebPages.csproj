@@ -31,7 +31,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="OSDC.UnitConversion.DrillingRazorMudComponents" Version="3.4.8" />
+    <PackageReference Include="OSDC.UnitConversion.DrillingRazorMudComponents" Version="3.4.9" />
     <PackageReference Include="OSDC.DotnetLibraries.Drilling.WebAppUtils" Version="1.1.5" />
   </ItemGroup>
 
