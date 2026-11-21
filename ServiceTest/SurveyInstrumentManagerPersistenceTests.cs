@@ -192,6 +192,66 @@ public sealed class SurveyInstrumentManagerPersistenceTests
     }
 
     [Test]
+    public void Existing_read_only_gyro_default_is_repaired_from_canonical_iscwsa_semantics()
+    {
+        string path = Path.Combine(TestContext.CurrentContext.WorkDirectory, $"SurveyInstrumentGyroMigration_{Guid.NewGuid():N}.db");
+        using ILoggerFactory loggers = LoggerFactory.Create(builder => builder.ClearProviders());
+        try
+        {
+            var connections = new SqlConnectionManager($"Data Source={path};Pooling=False",
+                loggers.CreateLogger<SqlConnectionManager>());
+            SurveyInstrumentModel legacy = SurveyInstrumentManager.Gyro_ISCWSA_Ex1;
+            legacy.ErrorSourceList!.Insert(legacy.ErrorSourceList.Count - 1,
+                ErrorSourceFactory.Create_DSFS(magnitude: 0.5));
+            Assert.That(SurveyInstrumentManager.ValidateModelSemantics(legacy), Is.False,
+                "Duplicate error codes must not be accepted by the service contract");
+
+            using (SqliteConnection connection = connections.GetConnection()!)
+            using (SqliteCommand command = connection.CreateCommand())
+            {
+                command.CommandText = "INSERT INTO SurveyInstrumentTable " +
+                    "(ID, MetaInfo, Name, Description, CreationDate, LastModificationDate, SurveyInstrument) " +
+                    "VALUES ($id, $meta, $name, $description, $created, $modified, $document)";
+                command.Parameters.AddWithValue("$id", legacy.MetaInfo!.ID.ToString());
+                command.Parameters.AddWithValue("$meta", System.Text.Json.JsonSerializer.Serialize(legacy.MetaInfo, JsonSettings.Options));
+                command.Parameters.AddWithValue("$name", legacy.Name);
+                command.Parameters.AddWithValue("$description", legacy.Description);
+                command.Parameters.AddWithValue("$created", legacy.CreationDate!.Value.ToString("O"));
+                command.Parameters.AddWithValue("$modified", legacy.LastModificationDate!.Value.ToString("O"));
+                command.Parameters.AddWithValue("$document", System.Text.Json.JsonSerializer.Serialize(legacy, JsonSettings.Options));
+                Assert.That(command.ExecuteNonQuery(), Is.EqualTo(1));
+            }
+
+            ConstructorInfo constructor = typeof(SurveyInstrumentManager).GetConstructor(
+                BindingFlags.Instance | BindingFlags.NonPublic, null,
+                [typeof(ILogger<SurveyInstrumentManager>), typeof(ILogger<ErrorSourceManager>), typeof(SqlConnectionManager)], null)!;
+            var manager = (SurveyInstrumentManager)constructor.Invoke(
+                [loggers.CreateLogger<SurveyInstrumentManager>(), loggers.CreateLogger<ErrorSourceManager>(), connections]);
+
+            SurveyInstrumentModel repaired = manager.GetSurveyInstrumentById(legacy.MetaInfo.ID)!;
+            Assert.Multiple(() =>
+            {
+                Assert.That(repaired.ErrorSourceList, Has.Count.EqualTo(21));
+                Assert.That(repaired.ErrorSourceList!.Select(source => source.ErrorCode), Is.Unique);
+                Assert.That(repaired.ErrorSourceList, Is.All.Matches<ErrorSource>(source =>
+                    source.PropagationMode != null &&
+                    ErrorSourceRevision5.TryValidate(source, requireCurrentCode: true, out _)));
+                Assert.That(repaired.ErrorSourceList.Single(source => source.ErrorCode == ErrorCode.AXY_MS).MagnitudeQuantity,
+                    Is.EqualTo("PlaneAngleDrilling"));
+                Assert.That(repaired.ErrorSourceList.Single(source => source.ErrorCode == ErrorCode.AXY_MS).EffectivePropagationMode,
+                    Is.EqualTo(ErrorPropagationMode.Systematic));
+                Assert.That(repaired.ErrorSourceList.Single(source => source.ErrorCode == ErrorCode.DSFS).Magnitude,
+                    Is.EqualTo(0.001));
+            });
+        }
+        finally
+        {
+            SqliteConnection.ClearAllPools();
+            if (File.Exists(path)) File.Delete(path);
+        }
+    }
+
+    [Test]
     public void Iscwsa_model_rejects_simultaneous_stationary_and_continuous_modes()
     {
         var instrument = new SurveyInstrumentModel

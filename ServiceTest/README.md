@@ -87,6 +87,7 @@ dotnet test .\ServiceTest\ServiceTest.csproj
 - fresh database creation and legacy schema adoption
 - fail-closed behavior for malformed, unknown, incomplete, or newer schemas
 - preservation of existing rows during the schema-version migration
+- fixed-ID default migration of gyro `DSFS`, `AXY-MS` quantity, and explicit ISCWSA propagation modes
 - MCP registration, JSON schemas, annotations, concurrency guards, and HTTP envelopes
 
 ## Known Limitations

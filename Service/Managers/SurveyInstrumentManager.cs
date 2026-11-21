@@ -641,6 +641,8 @@ namespace OSDC.Drilling.SurveyInstrument.Service.Managers
             bool validErrorSources = surveyInstrument.ErrorSourceList?.All(source =>
                 ErrorSourceRevision5.TryValidate(source, requireCurrentCode: true, out _) &&
                 !(source.IsContinuous && source.IsStationary)) ?? true;
+            bool hasUniqueErrorCodes = surveyInstrument.ErrorSourceList?
+                .Select(source => source.ErrorCode).Distinct().Count() == surveyInstrument.ErrorSourceList?.Count;
             bool wolffParametersDisabled =
                 !surveyInstrument.UseRelDepthError && surveyInstrument.RelDepthError == null &&
                 !surveyInstrument.UseMisalignment && surveyInstrument.Misalignment == null &&
@@ -657,9 +659,9 @@ namespace OSDC.Drilling.SurveyInstrument.Service.Managers
                 OSDC.DotnetLibraries.Drilling.Surveying.SurveyInstrumentModelType.Gyro_WolffDeWardt =>
                     !hasErrorSources && !surveyInstrument.UseDrillStringMag && surveyInstrument.DrillStringMag == null,
                 OSDC.DotnetLibraries.Drilling.Surveying.SurveyInstrumentModelType.MWD_ISCWSA =>
-                    hasErrorSources && validErrorSources && wolffParametersDisabled,
+                    hasErrorSources && validErrorSources && hasUniqueErrorCodes && wolffParametersDisabled,
                 OSDC.DotnetLibraries.Drilling.Surveying.SurveyInstrumentModelType.Gyro_ISCWSA =>
-                    hasErrorSources && validErrorSources && wolffParametersDisabled,
+                    hasErrorSources && validErrorSources && hasUniqueErrorCodes && wolffParametersDisabled,
                 _ => false
             };
         }
@@ -758,25 +760,68 @@ namespace OSDC.Drilling.SurveyInstrument.Service.Managers
                     }
                     continue;
                 }
+            }
+
+            foreach ((Guid id, OSDC.Drilling.SurveyInstrument.Model.SurveyInstrument canonical) in DefaultSemanticsForUpgrade())
+            {
+                if (!existingIds.Contains(id))
+                {
+                    continue;
+                }
 
                 OSDC.Drilling.SurveyInstrument.Model.SurveyInstrument? existing = GetSurveyInstrumentById(id);
-                if (existing != null && EnsureExplicitPropagationModes(existing, out int normalizedCount))
+                if (existing == null || existing.ModelType != canonical.ModelType ||
+                    ErrorSourceListsMatch(existing.ErrorSourceList, canonical.ErrorSourceList))
                 {
-                    DateTimeOffset expectedModifiedUtc = existing.LastModificationDate ?? DateTimeOffset.UnixEpoch;
-                    if (UpdateSurveyInstrumentById(id, existing, expectedModifiedUtc))
-                    {
-                        _logger.LogInformation(
-                            "Normalized {NormalizedCount} legacy propagation modes in official ISCWSA Revision 5 survey instrument {InstrumentName} ({InstrumentId})",
-                            normalizedCount, existing.Name, id);
-                    }
-                    else
-                    {
-                        _logger.LogError(
-                            "Unable to normalize legacy propagation modes in official ISCWSA Revision 5 survey instrument {InstrumentName} ({InstrumentId})",
-                            existing.Name, id);
-                    }
+                    continue;
+                }
+
+                existing.ErrorSourceList = canonical.ErrorSourceList;
+                DateTimeOffset expectedModifiedUtc = existing.LastModificationDate ?? DateTimeOffset.UnixEpoch;
+                if (UpdateSurveyInstrumentById(id, existing, expectedModifiedUtc))
+                {
+                    _logger.LogInformation(
+                        "Updated ISCWSA error-source semantics in default survey instrument {InstrumentName} ({InstrumentId})",
+                        existing.Name, id);
+                }
+                else
+                {
+                    _logger.LogError(
+                        "Unable to update ISCWSA error-source semantics in default survey instrument {InstrumentName} ({InstrumentId})",
+                        existing.Name, id);
                 }
             }
+        }
+
+        private static bool ErrorSourceListsMatch(List<ErrorSource>? left, List<ErrorSource>? right) =>
+            JsonSerializer.Serialize(left, JsonSettings.Options) == JsonSerializer.Serialize(right, JsonSettings.Options);
+
+        private static Dictionary<Guid, OSDC.Drilling.SurveyInstrument.Model.SurveyInstrument> DefaultSemanticsForUpgrade()
+        {
+            List<OSDC.Drilling.SurveyInstrument.Model.SurveyInstrument> defaults =
+            [
+                .. OfficialRevision5Defaults(),
+                Gyro_ISCWSA,
+                Gyro_ISCWSA_Ex1,
+                Gyro_ISCWSA_Ex2,
+                Gyro_ISCWSA_Ex3,
+                Gyro_ISCWSA_Ex4,
+                Gyro_ISCWSA_Ex5,
+                Gyro_ISCWSA_Ex6,
+                SurveyInstrumentAll
+            ];
+            foreach (OSDC.Drilling.SurveyInstrument.Model.SurveyInstrument instrument in defaults)
+            {
+                NormalizeErrorSourceSemantics(instrument, out _);
+            }
+
+            Dictionary<Guid, OSDC.Drilling.SurveyInstrument.Model.SurveyInstrument> result =
+                defaults.ToDictionary(instrument => instrument.MetaInfo!.ID);
+
+            // These stable IDs were used by deployed read-only defaults before the Revision 5 names were aligned.
+            result[new Guid("3a811f1f-8b54-4952-a6a7-cf584f5e85c8")] = defaults[0];
+            result[new Guid("9d1a0696-22e7-4c50-b3ff-f60bd580f594")] = defaults[1];
+            return result;
         }
 
         private static List<OSDC.Drilling.SurveyInstrument.Model.SurveyInstrument> OfficialRevision5Defaults()
@@ -794,12 +839,12 @@ namespace OSDC.Drilling.SurveyInstrument.Service.Managers
             ];
             foreach (OSDC.Drilling.SurveyInstrument.Model.SurveyInstrument instrument in instruments)
             {
-                EnsureExplicitPropagationModes(instrument, out _);
+                NormalizeErrorSourceSemantics(instrument, out _);
             }
             return instruments;
         }
 
-        private static bool EnsureExplicitPropagationModes(
+        private static bool NormalizeErrorSourceSemantics(
             OSDC.Drilling.SurveyInstrument.Model.SurveyInstrument instrument, out int normalizedCount)
         {
             normalizedCount = 0;
@@ -808,23 +853,20 @@ namespace OSDC.Drilling.SurveyInstrument.Service.Managers
             for (int i = 0; i < instrument.ErrorSourceList.Count; i++)
             {
                 ErrorSource source = instrument.ErrorSourceList[i];
-                if (source.PropagationMode != null || !TryGetLegacyPropagationMode(source, out ErrorPropagationMode mode))
+                ErrorPropagationMode mode = source.PropagationMode ?? source.EffectivePropagationMode;
+                string? quantity = ErrorSourceRevision5.ExpectedMagnitudeQuantity(source.ErrorCode) ?? source.MagnitudeQuantity;
+                if (source.PropagationMode == mode && source.MagnitudeQuantity == quantity)
                 {
                     continue;
                 }
-                instrument.ErrorSourceList[i] = CopyWithPropagationMode(source, mode);
+                instrument.ErrorSourceList[i] = CopyWithSemantics(source, mode, quantity);
                 normalizedCount++;
             }
             return normalizedCount > 0;
         }
 
-        private static bool TryGetLegacyPropagationMode(ErrorSource source, out ErrorPropagationMode mode)
-        {
-            mode = source.EffectivePropagationMode;
-            return true;
-        }
-
-        private static ErrorSource CopyWithPropagationMode(ErrorSource source, ErrorPropagationMode mode) => new()
+        private static ErrorSource CopyWithSemantics(
+            ErrorSource source, ErrorPropagationMode mode, string? magnitudeQuantity) => new()
         {
             MetaInfo = source.MetaInfo,
             ErrorCode = source.ErrorCode,
@@ -839,7 +881,7 @@ namespace OSDC.Drilling.SurveyInstrument.Service.Managers
             IsStationary = source.IsStationary,
             KOperatorImposed = source.KOperatorImposed,
             Magnitude = source.Magnitude,
-            MagnitudeQuantity = source.MagnitudeQuantity,
+            MagnitudeQuantity = magnitudeQuantity,
             UseInclinationInterval = source.UseInclinationInterval,
             StartInclination = source.StartInclination,
             EndInclination = source.EndInclination,
@@ -852,6 +894,10 @@ namespace OSDC.Drilling.SurveyInstrument.Service.Managers
             VerticalHoleWeightingFunctionVertical = source.VerticalHoleWeightingFunctionVertical,
             WeightingFunctionDepthGyro = source.WeightingFunctionDepthGyro
         };
+
+        private static ErrorSource CreateAxyMisalignment(double magnitude) =>
+            CopyWithSemantics(ErrorSourceFactory.Create_AXY_MS(magnitude: magnitude),
+                ErrorPropagationMode.Systematic, "PlaneAngleDrilling");
 
         #region Default survey instruments
 
@@ -1247,7 +1293,7 @@ namespace OSDC.Drilling.SurveyInstrument.Service.Managers
                     ErrorSourceList = [
                         ErrorSourceFactory.Create_AXY_B(magnitude:0.005),
                         ErrorSourceFactory.Create_AXY_SF(magnitude:0.0005),
-                        ErrorSourceFactory.Create_AXY_MS(magnitude:0.05 * DEG2RAD),
+                        CreateAxyMisalignment(magnitude:0.05 * DEG2RAD),
                         ErrorSourceFactory.Create_AXY_GB(magnitude:0.005),
                         ErrorSourceFactory.Create_GXY_B1(magnitude:0.1 * DEG2RAD / 3600.0, startInclination:0.0 * DEG2RAD, endInclination:150.0 * DEG2RAD, initInclination:0.0 * DEG2RAD),
                         ErrorSourceFactory.Create_GXY_B2(magnitude:0.1 * DEG2RAD / 3600.0, startInclination:0.0 * DEG2RAD, endInclination:150.0 * DEG2RAD, initInclination:0.0 * DEG2RAD),
@@ -1299,7 +1345,7 @@ namespace OSDC.Drilling.SurveyInstrument.Service.Managers
                     ErrorSourceList = [
                         ErrorSourceFactory.Create_AXY_B(magnitude:0.005),
                         ErrorSourceFactory.Create_AXY_SF(magnitude:0.0005),
-                        ErrorSourceFactory.Create_AXY_MS(magnitude:0.05 * DEG2RAD),
+                        CreateAxyMisalignment(magnitude:0.05 * DEG2RAD),
                         ErrorSourceFactory.Create_AXY_GB(magnitude:0.005),
                         ErrorSourceFactory.Create_GXY_B1(magnitude:0.1 * DEG2RAD / 3600.0, startInclination:0.0 * DEG2RAD, endInclination:150.0 * DEG2RAD, initInclination:0.0 * DEG2RAD),
                         ErrorSourceFactory.Create_GXY_B2(magnitude:0.1 * DEG2RAD / 3600.0, startInclination:0.0 * DEG2RAD, endInclination:150.0 * DEG2RAD, initInclination:0.0 * DEG2RAD),
@@ -1316,7 +1362,6 @@ namespace OSDC.Drilling.SurveyInstrument.Service.Managers
                         ErrorSourceFactory.Create_XYM4(magnitude:0.2 * DEG2RAD),
                         ErrorSourceFactory.Create_SAG(magnitude:0.1 * DEG2RAD),
                         ErrorSourceFactory.Create_DRFR(magnitude:0.5),
-                        ErrorSourceFactory.Create_DSFS(magnitude:0.5),
                         ErrorSourceFactory.Create_DSFS(magnitude:0.001),
                         ErrorSourceFactory.Create_DSTG(magnitude:5.0e-7),
                         ]
@@ -1350,7 +1395,7 @@ namespace OSDC.Drilling.SurveyInstrument.Service.Managers
                     ErrorSourceList = [
                         ErrorSourceFactory.Create_AXY_B(magnitude:0.005),
                         ErrorSourceFactory.Create_AXY_SF(magnitude:0.0005),
-                        ErrorSourceFactory.Create_AXY_MS(magnitude:0.05 * DEG2RAD),
+                        CreateAxyMisalignment(magnitude:0.05 * DEG2RAD),
                         ErrorSourceFactory.Create_AXY_GB(magnitude:0.005),
                         ErrorSourceFactory.Create_EXT_REF(magnitude:5.0 * DEG2RAD),
                         ErrorSourceFactory.Create_EXT_TIE(magnitude:0.0 * DEG2RAD),
@@ -1363,7 +1408,6 @@ namespace OSDC.Drilling.SurveyInstrument.Service.Managers
                         ErrorSourceFactory.Create_XYM4(magnitude:0.2 * DEG2RAD),
                         ErrorSourceFactory.Create_SAG(magnitude:0.1 * DEG2RAD),
                         ErrorSourceFactory.Create_DRFR(magnitude:0.5),
-                        ErrorSourceFactory.Create_DSFS(magnitude:0.5),
                         ErrorSourceFactory.Create_DSFS(magnitude:0.001),
                         ErrorSourceFactory.Create_DSTG(magnitude:5.0e-7),
                         ]
@@ -1416,7 +1460,6 @@ namespace OSDC.Drilling.SurveyInstrument.Service.Managers
                         ErrorSourceFactory.Create_XYM4(magnitude:0.2 * DEG2RAD),
                         ErrorSourceFactory.Create_SAG(magnitude:0.1 * DEG2RAD),
                         ErrorSourceFactory.Create_DRFR(magnitude:0.5),
-                        ErrorSourceFactory.Create_DSFS(magnitude:0.5),
                         ErrorSourceFactory.Create_DSFS(magnitude:0.001),
                         ErrorSourceFactory.Create_DSTG(magnitude:5.0e-7),
                         ]
@@ -1452,7 +1495,7 @@ namespace OSDC.Drilling.SurveyInstrument.Service.Managers
                     ErrorSourceList = [
                         ErrorSourceFactory.Create_AXY_B(magnitude:0.005),
                         ErrorSourceFactory.Create_AXY_SF(magnitude:0.0005),
-                        ErrorSourceFactory.Create_AXY_MS(magnitude:0.05 * DEG2RAD),
+                        CreateAxyMisalignment(magnitude:0.05 * DEG2RAD),
                         ErrorSourceFactory.Create_AXY_GB(magnitude:0.005),
                         ErrorSourceFactory.Create_GXY_B1(magnitude:0.1 * DEG2RAD / 3600.0, startInclination:0.0 * DEG2RAD, endInclination:0.0 * DEG2RAD, initInclination:3.0 * DEG2RAD),
                         ErrorSourceFactory.Create_GXY_B2(magnitude:0.1 * DEG2RAD / 3600.0, startInclination:0.0 * DEG2RAD, endInclination:0.0 * DEG2RAD, initInclination:3.0 * DEG2RAD),
@@ -1473,7 +1516,6 @@ namespace OSDC.Drilling.SurveyInstrument.Service.Managers
                         ErrorSourceFactory.Create_XYM4(magnitude:0.2 * DEG2RAD),
                         ErrorSourceFactory.Create_SAG(magnitude:0.1 * DEG2RAD),
                         ErrorSourceFactory.Create_DRFR(magnitude:0.5),
-                        ErrorSourceFactory.Create_DSFS(magnitude:0.5),
                         ErrorSourceFactory.Create_DSFS(magnitude:0.001),
                         ErrorSourceFactory.Create_DSTG(magnitude:5.0e-7),
                         ]
@@ -1529,7 +1571,6 @@ namespace OSDC.Drilling.SurveyInstrument.Service.Managers
                         ErrorSourceFactory.Create_XYM4(magnitude:0.2 * DEG2RAD),
                         ErrorSourceFactory.Create_SAG(magnitude:0.1 * DEG2RAD),
                         ErrorSourceFactory.Create_DRFR(magnitude:0.5),
-                        ErrorSourceFactory.Create_DSFS(magnitude:0.5),
                         ErrorSourceFactory.Create_DSFS(magnitude:0.001),
                         ErrorSourceFactory.Create_DSTG(magnitude:5.0e-7),
                         ]
@@ -1583,7 +1624,6 @@ namespace OSDC.Drilling.SurveyInstrument.Service.Managers
                         ErrorSourceFactory.Create_XYM4(magnitude:0.2 * DEG2RAD),
                         ErrorSourceFactory.Create_SAG(magnitude:0.1 * DEG2RAD),
                         ErrorSourceFactory.Create_DRFR(magnitude:0.5),
-                        ErrorSourceFactory.Create_DSFS(magnitude:0.5),
                         ErrorSourceFactory.Create_DSFS(magnitude:0.001),
                         ErrorSourceFactory.Create_DSTG(magnitude:5.0e-7),
                         ]
@@ -1651,7 +1691,7 @@ namespace OSDC.Drilling.SurveyInstrument.Service.Managers
                         ErrorSourceFactory.Create_XCLL(magnitude:0.167),
                         ErrorSourceFactory.Create_AXY_B(magnitude:0.005),
                         ErrorSourceFactory.Create_AXY_SF(magnitude:0.0005),
-                        ErrorSourceFactory.Create_AXY_MS(magnitude:0.05 * DEG2RAD),
+                        CreateAxyMisalignment(magnitude:0.05 * DEG2RAD),
                         ErrorSourceFactory.Create_AXY_GB(magnitude:0.005),
                         ErrorSourceFactory.Create_GXY_B1(magnitude:0.1 * DEG2RAD / 3600.0, startInclination:0.0 * DEG2RAD, endInclination:150.0 * DEG2RAD, initInclination:0.0 * DEG2RAD),
                         ErrorSourceFactory.Create_GXY_B2(magnitude:0.1 * DEG2RAD / 3600.0, startInclination:0.0 * DEG2RAD, endInclination:150.0 * DEG2RAD, initInclination:0.0 * DEG2RAD),
