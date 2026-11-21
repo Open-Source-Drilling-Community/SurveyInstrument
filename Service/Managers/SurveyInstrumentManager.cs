@@ -1728,12 +1728,12 @@ namespace OSDC.Drilling.SurveyInstrument.Service.Managers
                         ErrorSourceFactory.Create_EXT_MIS(magnitude:0.0 * DEG2RAD),
                         ErrorSourceFactory.Create_ABIXY_TI1S(magnitude:0.0 * DEG2RAD),
                         ErrorSourceFactory.Create_ABIXY_TI2S(magnitude:0.0 * DEG2RAD),
-                        ErrorSourceFactory.Create_GXYZ_GD(magnitude:0.5 * DEG2RAD / 3600.0),
-                        ErrorSourceFactory.Create_GXYZ_RW(magnitude:0.5 * DEG2RAD / Math.Sqrt(3600.0)),
-                        ErrorSourceFactory.Create_GXY_GD(magnitude:0.5 * DEG2RAD / 3600.0),
-                        ErrorSourceFactory.Create_GXY_RW(magnitude:0.5 * DEG2RAD / Math.Sqrt(3600.0)),
-                        ErrorSourceFactory.Create_GZ_GD(magnitude:1.0 * DEG2RAD / 3600.0),
-                        ErrorSourceFactory.Create_GZ_RW(magnitude:1.0 * DEG2RAD / Math.Sqrt(3600.0)),
+                        ErrorSourceFactory.Create_GXYZ_GD(magnitude:0.5 * DEG2RAD / 3600.0, startInclination:0.0 * DEG2RAD, endInclination:150.0 * DEG2RAD),
+                        ErrorSourceFactory.Create_GXYZ_RW(magnitude:0.5 * DEG2RAD / Math.Sqrt(3600.0), startInclination:0.0 * DEG2RAD, endInclination:150.0 * DEG2RAD),
+                        ErrorSourceFactory.Create_GXY_GD(magnitude:0.5 * DEG2RAD / 3600.0, startInclination:0.0 * DEG2RAD, endInclination:150.0 * DEG2RAD, initInclination:0.0 * DEG2RAD),
+                        ErrorSourceFactory.Create_GXY_RW(magnitude:0.5 * DEG2RAD / Math.Sqrt(3600.0), startInclination:0.0 * DEG2RAD, endInclination:150.0 * DEG2RAD, initInclination:0.0 * DEG2RAD),
+                        ErrorSourceFactory.Create_GZ_GD(magnitude:1.0 * DEG2RAD / 3600.0, startInclination:0.0 * DEG2RAD, endInclination:150.0 * DEG2RAD, initInclination:0.0 * DEG2RAD),
+                        ErrorSourceFactory.Create_GZ_RW(magnitude:1.0 * DEG2RAD / Math.Sqrt(3600.0), startInclination:0.0 * DEG2RAD, endInclination:150.0 * DEG2RAD, initInclination:0.0 * DEG2RAD),
                         ]
                 };
             }
